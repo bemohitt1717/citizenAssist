@@ -1,34 +1,16 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../../components/ui/Icon/Icon';
-import { PORTALS } from '../../../../constants/portals';
 import capsuleImage from '../../../../assets/images/customer-care.jpg';
 import './Hero.css';
 
 /**
- * Renders a portal's artwork, falling back to its name as text if the file is
- * not present. The name is always the accessible label either way, so the
- * strip means the same thing to a screen reader as it does on screen.
+ * The hero.
+ *
+ * The portal strip that used to sit at the floor of this section is gone. It named
+ * DigiLocker, UIDAI, NSDL and the rest, which meant carrying third-party
+ * government marks and a non-affiliation line to cover them. Dropping the row
+ * removed both the clutter and the implied-endorsement risk at once.
  */
-const PortalMark = ({ portal }) => {
-  const [hasLogo, setHasLogo] = useState(Boolean(portal.logo));
-
-  if (!hasLogo) {
-    return <span className="ca-hero__portal-name">{portal.name}</span>;
-  }
-
-  return (
-    <img
-      className="ca-hero__portal-mark"
-      src={portal.logo}
-      alt={portal.name}
-      loading="lazy"
-      decoding="async"
-      onError={() => setHasLogo(false)}
-    />
-  );
-};
-
 const Hero = () => (
   <section className="ca-hero" id="top">
     <div className="ca-hero__inner">
@@ -73,34 +55,6 @@ const Hero = () => (
           </span>
         </Link>
       </div>
-    </div>
-
-    <div className="ca-hero__strip">
-      <p className="ca-label ca-hero__strip-label">Portals we help you navigate</p>
-
-      <ul className="ca-hero__portals">
-        {PORTALS.map((portal) => (
-          <li key={portal.id} className="ca-hero__portal">
-            <PortalMark portal={portal} />
-          </li>
-        ))}
-      </ul>
-
-      <a className="ca-hero__scroll" href="#services">
-        <span className="ca-label">Scroll</span>
-        <span className="ca-hero__scroll-dot">
-          <Icon name="arrowDown" size={17} />
-        </span>
-      </a>
-
-      {/* Required, not decorative: these are third-party marks shown for
-          recognition. Removing this line turns the row into an implied
-          endorsement. The full non-affiliation statement lives in the footer;
-          this one only has to cover the marks it sits beside. */}
-      <p className="ca-hero__disclaimer">
-        Names and marks belong to their respective authorities. Citizen Assist is not affiliated
-        with any of them.
-      </p>
     </div>
   </section>
 );

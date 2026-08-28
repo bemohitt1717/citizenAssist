@@ -145,142 +145,9 @@
   gap: 0.75rem;
 }
 
-/* ==========================================================================
-   Floor strip
-   ========================================================================== */
-
-.ca-hero__strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.875rem clamp(1.25rem, 3vw, 2.5rem);
-  width: 100%;
-  max-width: 88rem;
-  margin: 0 auto;
-  padding-block: 1.125rem 1.375rem;
-  border-top: 1px solid var(--color-line);
-}
-
-.ca-hero__strip-label {
-  color: var(--color-ink-subtle);
-}
-
-.ca-hero__portals {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem clamp(1rem, 2.4vw, 2rem);
-  margin: 0;
-  padding: 0;
-  margin-inline: auto;
-  list-style: none;
-}
-
-.ca-hero__portal {
-  display: flex;
-  align-items: center;
-  gap: clamp(0.875rem, 2.2vw, 1.75rem);
-}
-
-/* Clay tick between marks — the warm accent doing separator duty rather than
-   sitting on text. */
-.ca-hero__portal + .ca-hero__portal::before {
-  content: '';
-  flex: none;
-  width: 3px;
-  height: 3px;
-  border-radius: 999px;
-  background-color: var(--color-clay);
-  opacity: 0.55;
-}
-
-/* Real portal marks. Held to a common optical height rather than a common
-   box, because these logos have wildly different aspect ratios, and dimmed
-   a step so a row of saturated third-party brands cannot out-shout the
-   page's own palette. Full colour on hover, for anyone checking. */
-.ca-hero__portal-mark {
-  width: auto;
-  height: clamp(1.125rem, 2.2vw, 1.5rem);
-  object-fit: contain;
-  opacity: 0.72;
-  filter: saturate(0.75);
-  transition:
-    opacity 0.4s var(--ease-out-expo),
-    filter 0.4s var(--ease-out-expo);
-}
-
-.ca-hero__portals:hover .ca-hero__portal-mark {
-  opacity: 1;
-  filter: saturate(1);
-}
-
-/* Shown until a logo file is dropped in, and kept as the accessible name
-   either way. Same tracked caps as the navigation. */
-.ca-hero__portal-name {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-ink-muted);
-}
-
-.ca-hero__disclaimer {
-  flex-basis: 100%;
-  max-width: 68ch;
-  font-size: 0.75rem;
-  line-height: 1.5;
-  font-weight: 500;
-  color: var(--color-ink-subtle);
-}
-
-.ca-hero__scroll {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.625rem;
-  color: var(--color-ink-subtle);
-  transition: color 0.28s var(--ease-out-expo);
-}
-
-.ca-hero__scroll:hover {
-  color: var(--color-ink);
-}
-
-.ca-hero__scroll-dot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  color: var(--color-indigo);
-  background-color: rgb(255 255 255 / 0.4);
-  border: 1px solid var(--color-line-strong);
-  border-radius: 999px;
-  transition:
-    border-color 0.28s var(--ease-out-expo),
-    background-color 0.28s var(--ease-out-expo);
-}
-
-.ca-hero__scroll:hover .ca-hero__scroll-dot {
-  border-color: var(--color-ink);
-  background-color: rgb(22 23 15 / 0.04);
-}
-
-.ca-hero__scroll-dot svg {
-  animation: ca-hero-nudge 2.6s var(--ease-out-expo) 1.6s infinite;
-}
-
-@keyframes ca-hero-nudge {
-  0%,
-  62%,
-  100% {
-    transform: translateY(0);
-  }
-  72% {
-    transform: translateY(0.18rem);
-  }
-}
+/* The floor strip that held the portal marks, the non-affiliation line and the
+   scroll cue is gone. Dropping it took the third-party government marks with it,
+   which removed the implied-endorsement risk along with the clutter. */
 
 /* ==========================================================================
    Entrance — one orchestrated moment.
@@ -291,8 +158,7 @@
 @media (prefers-reduced-motion: no-preference) {
   .ca-hero__line,
   .ca-hero__lede,
-  .ca-hero__actions,
-  .ca-hero__strip {
+  .ca-hero__actions {
     animation: ca-hero-rise 1.05s var(--ease-out-expo) both;
   }
 
@@ -307,9 +173,6 @@
   }
   .ca-hero__actions {
     animation-delay: 0.4s;
-  }
-  .ca-hero__strip {
-    animation-delay: 0.52s;
   }
 
   /* The signature: the capsule opens from a sliver at the centre of the
@@ -338,35 +201,11 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ca-hero__scroll-dot svg {
-    animation: none;
-  }
-}
+
 
 /* ==========================================================================
    Breakpoints
    ========================================================================== */
-
-@media (max-width: 61.99rem) {
-  .ca-hero__strip {
-    justify-content: space-between;
-  }
-
-  .ca-hero__strip-label {
-    order: 1;
-  }
-
-  .ca-hero__scroll {
-    order: 2;
-  }
-
-  .ca-hero__portals {
-    order: 3;
-    flex-basis: 100%;
-    justify-content: flex-start;
-  }
-}
 
 @media (max-width: 47.99rem) {
   .ca-hero__headline {
@@ -389,10 +228,5 @@
     flex: 1 1 100%;
     justify-content: space-between;
     padding-left: 1.375rem;
-  }
-
-  /* Two names read as a sample, five read as a wall at this width. */
-  .ca-hero__portal:nth-child(n + 4) {
-    display: none;
   }
 }

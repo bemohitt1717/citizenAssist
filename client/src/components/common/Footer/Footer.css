@@ -147,10 +147,10 @@
   border-top: 1px solid var(--color-line);
 }
 
-/* This is the most consequential sentence on the page, so it is set at legible
-   size across a full measure, not as fine print. 6.5:1. */
+/* One line now rather than a paragraph, but still at legible size and 6.5:1 —
+   never shrunk into fine print. */
 .ca-footer__legal {
-  max-width: 76ch;
+  max-width: 62ch;
   font-size: 0.8125rem;
   line-height: 1.62;
   font-weight: 500;

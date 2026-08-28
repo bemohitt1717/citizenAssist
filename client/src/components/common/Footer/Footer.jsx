@@ -90,11 +90,13 @@ const Footer = () => (
     </div>
 
     <div className="ca-footer__base">
+      {/* Cut from four sentences to one. This is the only place on the site that
+          states we are not a government body and do not issue certificates —
+          with a name like Citizen Assist and pages about Aadhaar and caste
+          certificates, a visitor can reasonably assume the opposite. */}
       <p className="ca-footer__legal">
-        Citizen Assist is an independent assistance service. It is not a government body and is not
-        affiliated with, endorsed by, or acting on behalf of any government department or portal.
-        Certificates and official documents are issued solely by the competent authority. Charges
-        shown are for our assistance and are separate from any statutory government fee.
+        Not a government body. Certificates are issued by the competent authority; we assist with
+        the process.
       </p>
 
       <p className="ca-footer__copy">
