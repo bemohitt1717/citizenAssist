@@ -1,0 +1,223 @@
+/* ==========================================================================
+   Agent dashboard shell
+
+   The agent's own frame. The admin dashboard has its own, deliberately — the two
+   are separate features and neither should be able to break the other's layout.
+   ========================================================================== */
+
+.ca-agentdash {
+  display: grid;
+  min-height: 100svh;
+  background-color: var(--color-shell);
+}
+
+@media (min-width: 62rem) {
+  .ca-agentdash {
+    grid-template-columns: 15.5rem minmax(0, 1fr);
+  }
+}
+
+/* ==========================================================================
+   Rail
+   ========================================================================== */
+
+.ca-agentdash__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.125rem 1rem;
+  background-color: var(--color-paper);
+  border-bottom: 1px solid var(--color-line);
+}
+
+@media (min-width: 62rem) {
+  .ca-agentdash__rail {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    border-bottom: 0;
+    border-right: 1px solid var(--color-line);
+  }
+}
+
+.ca-agentdash__brand {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 0.25rem;
+  border-radius: 999px;
+}
+
+.ca-agentdash__role {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  align-self: flex-start;
+  padding: 0.3125rem 0.6875rem 0.3125rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-indigo);
+  background-color: var(--color-indigo-tint);
+  border-radius: 999px;
+}
+
+.ca-agentdash__nav {
+  display: grid;
+  gap: 0.1875rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Horizontal, scrollable strip on narrow screens — a stacked rail would push the
+   content itself off the first screen. */
+@media (max-width: 61.99rem) {
+  .ca-agentdash__nav {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    gap: 0.375rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    overscroll-behavior-x: contain;
+  }
+}
+
+.ca-agentdash__link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.014em;
+  white-space: nowrap;
+  color: var(--color-ink-muted);
+  border-radius: 0.75rem;
+  transition:
+    color 0.3s var(--ease-out-expo),
+    background-color 0.3s var(--ease-out-expo);
+}
+
+.ca-agentdash__link:hover {
+  color: var(--color-ink);
+  background-color: rgb(22 23 15 / 0.04);
+}
+
+.ca-agentdash__link.is-active {
+  color: var(--color-paper);
+  background-color: var(--color-indigo);
+}
+
+.ca-agentdash__link svg {
+  flex: none;
+  opacity: 0.85;
+}
+
+.ca-agentdash__count {
+  margin-left: auto;
+  padding: 0.0625rem 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--color-clay);
+  background-color: var(--color-clay-tint);
+  border-radius: 999px;
+}
+
+.ca-agentdash__link.is-active .ca-agentdash__count {
+  color: var(--color-indigo);
+  background-color: rgb(255 255 255 / 0.9);
+}
+
+/* Verification state, at the foot of the rail where it is always in view. */
+.ca-agentdash__standing {
+  display: grid;
+  gap: 0.4375rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-line);
+}
+
+@media (max-width: 61.99rem) {
+  .ca-agentdash__standing {
+    display: none;
+  }
+}
+
+.ca-agentdash__standing-key {
+  color: var(--color-ink-subtle);
+}
+
+/* ==========================================================================
+   Main
+   ========================================================================== */
+
+.ca-agentdash__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ca-agentdash__bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: clamp(1.25rem, 3vw, 2rem) clamp(1.125rem, 3vw, 2.25rem) 0;
+}
+
+.ca-agentdash__heading {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.ca-agentdash__title {
+  font-size: clamp(1.5rem, 3.2vw, 2.125rem);
+  line-height: 1.05;
+  letter-spacing: -0.036em;
+  font-weight: 900;
+}
+
+.ca-agentdash__blurb {
+  max-width: 56ch;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+}
+
+.ca-agentdash__demo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin: clamp(1rem, 2.5vw, 1.5rem) clamp(1.125rem, 3vw, 2.25rem) 0;
+  padding: 0.75rem 0.9375rem;
+  background-color: var(--color-clay-tint);
+  border: 1px dashed rgb(158 78 18 / 0.35);
+  border-radius: 0.875rem;
+}
+
+.ca-agentdash__demo svg {
+  flex: none;
+  margin-top: 0.0625rem;
+  color: var(--color-clay);
+}
+
+.ca-agentdash__demo p {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  font-weight: 500;
+  color: #5c5346;
+}
+
+.ca-agentdash__panel {
+  flex: 1;
+  padding: clamp(1.25rem, 3vw, 2rem) clamp(1.125rem, 3vw, 2.25rem) clamp(2rem, 4vw, 3rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-agentdash__link {
+    transition: none;
+  }
+}

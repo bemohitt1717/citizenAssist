@@ -1,0 +1,75 @@
+/* ==========================================================================
+   Page shell
+
+   The frame shared by the secondary surfaces — become an agent, track a
+   request. A compact bar instead of the full navigation, because these are
+   surfaces you are in the middle of doing something on.
+   ========================================================================== */
+
+.ca-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  padding: clamp(0.875rem, 2vw, 1.5rem);
+  background-color: var(--color-shell);
+}
+
+.ca-shell__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex: none;
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0.375rem clamp(0.25rem, 1vw, 0.75rem) clamp(1rem, 2.5vw, 1.75rem);
+}
+
+.ca-shell__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.8125rem 0.4375rem 0.5625rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-ink-muted);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 999px;
+  transition:
+    color 0.3s var(--ease-out-expo),
+    border-color 0.3s var(--ease-out-expo),
+    background-color 0.3s var(--ease-out-expo);
+}
+
+.ca-shell__back:hover {
+  color: var(--color-ink);
+  border-color: var(--color-ink);
+  background-color: rgb(22 23 15 / 0.04);
+}
+
+.ca-shell__back svg {
+  transform: rotate(180deg);
+  transition: transform 0.4s var(--ease-out-expo);
+}
+
+.ca-shell__back:hover svg {
+  transform: rotate(180deg) translateX(2px);
+}
+
+.ca-shell__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-shell__back,
+  .ca-shell__back svg {
+    transition: none;
+  }
+}

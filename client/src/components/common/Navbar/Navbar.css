@@ -1,0 +1,327 @@
+/* `.ca-sr-only` lives in index.css — see the note there. */
+
+/* ==========================================================================
+   Bar
+   ========================================================================== */
+
+.ca-nav {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  padding: 0.75rem clamp(1rem, 3.5vw, 2.25rem);
+}
+
+.ca-nav__bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: 88rem;
+  margin: 0 auto;
+  padding: 0.4375rem 0.4375rem 0.4375rem 0.3125rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  transition:
+    background-color 0.55s var(--ease-out-expo),
+    border-color 0.55s var(--ease-out-expo),
+    box-shadow 0.55s var(--ease-out-expo),
+    padding 0.55s var(--ease-out-expo);
+}
+
+/* Condensed: the bar detaches from the ground and becomes an island, so the
+   display type can scroll under it without a collision. */
+.ca-nav.is-condensed .ca-nav__bar {
+  padding-left: 0.9375rem;
+  padding-right: 0.4375rem;
+  background-color: rgb(250 246 238 / 0.72);
+  border-color: rgb(22 23 15 / 0.08);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 1px 1px rgb(22 23 15 / 0.03),
+    0 18px 40px -22px rgb(22 23 15 / 0.28);
+  backdrop-filter: saturate(1.4) blur(18px);
+}
+
+.ca-nav__brand {
+  flex: none;
+  display: inline-flex;
+  padding: 0.25rem;
+  border-radius: 999px;
+}
+
+/* ==========================================================================
+   Links
+   Tracked uppercase in full ink — the muted sentence-case version read as
+   disabled text against a warm ground.
+   ========================================================================== */
+
+.ca-nav__links {
+  display: none;
+  align-items: center;
+  gap: clamp(1.25rem, 3vw, 2.75rem);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+.ca-nav__link {
+  position: relative;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.115em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  transition: color 0.3s var(--ease-out-expo);
+}
+
+.ca-nav__link:hover {
+  color: var(--color-indigo);
+}
+
+.ca-nav__link-text {
+  position: relative;
+  display: inline-block;
+}
+
+/* The rule grows from the leading edge in clay — the warm half of the pair,
+   so the hover reads against the indigo the label shifts to. */
+.ca-nav__link-text::after {
+  content: '';
+  position: absolute;
+  inset-inline: -0.1em;
+  bottom: -0.45rem;
+  height: 2px;
+  border-radius: 2px;
+  background-color: var(--color-clay);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.45s var(--ease-out-expo);
+}
+
+.ca-nav__link:hover .ca-nav__link-text::after,
+.ca-nav__link:focus-visible .ca-nav__link-text::after {
+  transform: scaleX(1);
+}
+
+/* ==========================================================================
+   Right-hand actions
+   ========================================================================== */
+
+.ca-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  margin-left: auto;
+}
+
+.ca-nav__track {
+  height: 2.625rem;
+  padding-inline: 1rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.ca-nav__track svg {
+  color: var(--color-indigo);
+  transition: transform 0.45s var(--ease-out-expo);
+}
+
+/* The open stop on the rail advances a hair on hover. */
+.ca-nav__track:hover svg {
+  transform: translateX(0.1rem);
+}
+
+.ca-nav__track-text {
+  display: none;
+}
+
+.ca-nav__login {
+  height: 2.625rem;
+  padding-inline: 1.375rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   Toggle — two rules that morph into a cross
+   ========================================================================== */
+
+.ca-nav__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.625rem;
+  height: 2.625rem;
+  color: var(--color-ink);
+  background-color: rgb(255 255 255 / 0.35);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 999px;
+  transition:
+    border-color 0.3s var(--ease-out-expo),
+    background-color 0.3s var(--ease-out-expo);
+}
+
+.ca-nav__toggle:hover {
+  border-color: var(--color-ink);
+  background-color: var(--color-paper);
+}
+
+.ca-nav__burger {
+  position: relative;
+  display: block;
+  width: 1.125rem;
+  height: 0.75rem;
+}
+
+.ca-nav__burger span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1.75px;
+  border-radius: 2px;
+  background-color: currentColor;
+  transition: transform 0.5s var(--ease-out-expo);
+}
+
+.ca-nav__burger span:first-child {
+  top: 0.0625rem;
+}
+
+.ca-nav__burger span:last-child {
+  bottom: 0.0625rem;
+  width: 72%;
+}
+
+.ca-nav__burger.is-open span:first-child {
+  transform: translateY(0.3125rem) rotate(45deg);
+}
+
+.ca-nav__burger.is-open span:last-child {
+  width: 100%;
+  transform: translateY(-0.3125rem) rotate(-45deg);
+}
+
+/* ==========================================================================
+   Mobile panel
+   ========================================================================== */
+
+.ca-nav__panel {
+  max-width: 88rem;
+  margin: 0.5rem auto 0;
+  padding: 0.5rem;
+  background-color: rgb(250 246 238 / 0.86);
+  border: 1px solid rgb(22 23 15 / 0.08);
+  border-radius: 1.875rem;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 2px 4px rgb(22 23 15 / 0.04),
+    0 32px 64px -30px rgb(22 23 15 / 0.38);
+  backdrop-filter: saturate(1.4) blur(22px);
+}
+
+.ca-nav__panel-links {
+  display: grid;
+}
+
+.ca-nav__panel-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9375rem 0.9375rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  border-radius: 1.25rem;
+  color: var(--color-ink);
+  transition: background-color 0.3s var(--ease-out-expo);
+  animation: ca-nav-link-in 0.6s var(--ease-out-expo) var(--ca-stagger, 0s) both;
+}
+
+/* Each row is wrapped so the stagger delay can be set on the wrapper and
+   inherited, which keeps the animation declaration in the stylesheet rather
+   than spread across inline styles. */
+.ca-nav__panel-item {
+  display: grid;
+}
+
+.ca-nav__panel-item + .ca-nav__panel-item .ca-nav__panel-link {
+  box-shadow: inset 0 1px 0 rgb(22 23 15 / 0.08);
+}
+
+.ca-nav__panel-link:hover {
+  background-color: rgb(255 255 255 / 0.7);
+}
+
+.ca-nav__panel-link svg {
+  color: var(--color-indigo);
+}
+
+.ca-nav__panel-foot {
+  padding: 0.5rem 0.4375rem 0.1875rem;
+}
+
+.ca-nav__panel-cta {
+  justify-content: center;
+  width: 100%;
+  height: 3.25rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@keyframes ca-nav-link-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+    filter: blur(5px);
+  }
+}
+
+@keyframes ca-nav-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+}
+
+.ca-nav__panel.is-open {
+  animation: ca-nav-panel-in 0.5s var(--ease-out-expo) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-nav__panel.is-open,
+  .ca-nav__panel-link,
+  .ca-nav__link-text::after,
+  .ca-nav__burger span,
+  .ca-nav__track svg {
+    animation: none;
+    transition-duration: 0.01ms;
+  }
+}
+
+/* ==========================================================================
+   Breakpoints
+   ========================================================================== */
+
+@media (min-width: 34rem) {
+  .ca-nav__track-text {
+    display: inline;
+  }
+}
+
+@media (min-width: 62rem) {
+  .ca-nav__links {
+    display: flex;
+  }
+
+  .ca-nav__toggle {
+    display: none;
+  }
+
+  .ca-nav__panel {
+    display: none;
+  }
+}

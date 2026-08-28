@@ -1,0 +1,475 @@
+/* ==========================================================================
+   Process stages
+
+   Five scenes built from the product's own furniture. Each timeline runs once
+   on mount — the parent remounts per step — and every element animates from an
+   already-visible default, so with animation suppressed each scene renders
+   complete and legible rather than blank.
+   ========================================================================== */
+
+.ca-stage {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+/* Shared enter: used by every scene's parts via --ca-t as the stagger index. */
+@keyframes ca-stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+    filter: blur(6px);
+  }
+}
+
+/* ==========================================================================
+   1 — Choose
+   ========================================================================== */
+
+.ca-stage__tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.5rem, 1.4vw, 0.875rem);
+  width: 100%;
+  max-width: 26rem;
+}
+
+.ca-stage__tile {
+  display: grid;
+  align-content: end;
+  gap: 0.375rem;
+  aspect-ratio: 4 / 3;
+  padding: 0.6875rem;
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 0.875rem;
+  transition:
+    background-color 0.6s var(--ease-out-expo),
+    transform 0.6s var(--ease-out-expo);
+}
+
+.ca-stage__tile-bar {
+  height: 4px;
+  border-radius: 999px;
+  background-color: rgb(22 23 15 / 0.14);
+}
+
+.ca-stage__tile-bar--short {
+  width: 55%;
+}
+
+/* The chosen tile lifts out of the set and takes the primary. */
+.ca-stage__tile.is-picked {
+  background-color: var(--color-indigo);
+  border-color: var(--color-indigo);
+  box-shadow: 0 2px 4px rgb(20 24 56 / 0.2), 0 20px 34px -18px rgb(20 24 56 / 0.6);
+}
+
+.ca-stage__tile.is-picked .ca-stage__tile-bar {
+  background-color: rgb(255 255 255 / 0.5);
+}
+
+/* ==========================================================================
+   2 — Submit
+   ========================================================================== */
+
+.ca-stage__form {
+  display: grid;
+  gap: 0.875rem;
+  width: 100%;
+  max-width: 22rem;
+  padding: clamp(1rem, 2.4vw, 1.5rem);
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 2px rgb(22 23 15 / 0.04), 0 18px 34px -24px rgb(22 23 15 / 0.4);
+}
+
+.ca-stage__field {
+  display: grid;
+  gap: 0.4375rem;
+}
+
+.ca-stage__field-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--color-ink-subtle);
+}
+
+.ca-stage__field-track {
+  height: 0.5rem;
+  overflow: hidden;
+  background-color: rgb(22 23 15 / 0.08);
+  border-radius: 999px;
+}
+
+.ca-stage__field-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background-color: var(--color-indigo);
+  transform-origin: left center;
+}
+
+.ca-stage__upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.1875rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  background-color: var(--color-cream);
+  border-radius: 0.75rem;
+}
+
+.ca-stage__upload svg:first-child {
+  color: var(--color-ink-muted);
+}
+
+.ca-stage__upload-tick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-left: auto;
+  color: var(--color-paper);
+  background-color: var(--color-indigo);
+  border-radius: 999px;
+}
+
+/* ==========================================================================
+   3 — Assign
+   ========================================================================== */
+
+.ca-stage__agent {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  max-width: 20rem;
+  padding: 1rem 1.125rem;
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 2px rgb(22 23 15 / 0.04), 0 20px 38px -24px rgb(22 23 15 / 0.42);
+}
+
+.ca-stage__avatar {
+  display: inline-flex;
+  flex: none;
+  width: 2.875rem;
+  height: 2.875rem;
+  overflow: hidden;
+  color: var(--color-indigo);
+  background-color: var(--color-indigo-tint);
+  border-radius: 999px;
+}
+
+.ca-stage__avatar svg {
+  width: 100%;
+  height: 100%;
+}
+
+.ca-stage__agent-body {
+  display: grid;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.ca-stage__agent-name,
+.ca-stage__agent-meta {
+  height: 0.5625rem;
+  border-radius: 999px;
+  background-color: rgb(22 23 15 / 0.16);
+  transform-origin: left center;
+}
+
+.ca-stage__agent-meta {
+  width: 58%;
+  height: 0.4375rem;
+  background-color: rgb(22 23 15 / 0.1);
+}
+
+.ca-stage__seal {
+  display: inline-flex;
+  flex: none;
+  width: 2.125rem;
+  height: 2.125rem;
+  color: var(--color-indigo);
+}
+
+.ca-stage__seal svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
+   4 — Review
+   ========================================================================== */
+
+.ca-stage__check {
+  display: grid;
+  gap: 0.8125rem;
+  width: 100%;
+  max-width: 21rem;
+}
+
+.ca-stage__check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.ca-stage__check-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.375rem;
+  height: 1.375rem;
+  color: var(--color-paper);
+  background-color: var(--color-indigo);
+  border-radius: 0.4375rem;
+}
+
+.ca-stage__check-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  color: var(--color-ink);
+}
+
+.ca-stage__check-rule {
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-line);
+}
+
+.ca-stage__check-progress {
+  height: 0.375rem;
+  margin-top: 0.375rem;
+  overflow: hidden;
+  background-color: rgb(22 23 15 / 0.08);
+  border-radius: 999px;
+}
+
+.ca-stage__check-progress-fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background-color: var(--color-clay);
+  transform-origin: left center;
+}
+
+/* ==========================================================================
+   5 — Issue
+   ========================================================================== */
+
+.ca-stage__cert {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: 18rem;
+}
+
+.ca-stage__paper {
+  display: grid;
+  gap: 0.6875rem;
+  width: 100%;
+  padding: 1.375rem 1.25rem 2.25rem;
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgb(22 23 15 / 0.04), 0 22px 40px -24px rgb(22 23 15 / 0.42);
+}
+
+.ca-stage__paper-line {
+  height: 0.4375rem;
+  border-radius: 999px;
+  background-color: rgb(22 23 15 / 0.1);
+}
+
+.ca-stage__paper-line--title {
+  width: 62%;
+  height: 0.75rem;
+  margin-bottom: 0.25rem;
+  background-color: var(--color-ink);
+}
+
+.ca-stage__paper-line--short {
+  width: 44%;
+}
+
+.ca-stage__stamp {
+  position: absolute;
+  right: 0.75rem;
+  bottom: -0.5rem;
+  display: inline-flex;
+  width: 3.75rem;
+  height: 3.75rem;
+  color: var(--color-clay);
+}
+
+.ca-stage__stamp svg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* The impact ring, thrown off as the seal lands. */
+.ca-stage__stamp-ripple {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--color-clay);
+  border-radius: 999px;
+  opacity: 0;
+}
+
+/* ==========================================================================
+   Timelines
+   Only under `no-preference` — with motion reduced every scene above is
+   already in its finished state.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* 1 — tiles arrive in sequence, the chosen one lifts last */
+  .ca-stage__tile {
+    animation: ca-stage-in 0.6s var(--ease-out-expo) calc(var(--ca-t) * 0.06s) both;
+  }
+
+  .ca-stage__tile.is-picked {
+    animation:
+      ca-stage-in 0.6s var(--ease-out-expo) both,
+      ca-tile-pick 0.7s var(--ease-out-expo) 0.5s both;
+  }
+
+  @keyframes ca-tile-pick {
+    from {
+      transform: translateY(0) scale(1);
+    }
+    to {
+      transform: translateY(-0.4rem) scale(1.05);
+    }
+  }
+
+  /* 2 — panel, then each field fills, then the upload lands */
+  .ca-stage__form {
+    animation: ca-stage-in 0.6s var(--ease-out-expo) both;
+  }
+
+  .ca-stage__field-fill {
+    animation: ca-fill 0.85s var(--ease-out-expo) calc(0.28s + var(--ca-t) * 0.24s) both;
+  }
+
+  .ca-stage__upload {
+    animation: ca-stage-in 0.6s var(--ease-out-expo) 1.1s both;
+  }
+
+  @keyframes ca-fill {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  /* 3 — chip arrives, lines settle, seal draws itself */
+  .ca-stage__agent {
+    animation: ca-stage-in 0.65s var(--ease-out-expo) both;
+  }
+
+  .ca-stage__agent-name {
+    animation: ca-fill 0.7s var(--ease-out-expo) 0.32s both;
+  }
+
+  .ca-stage__agent-meta {
+    animation: ca-fill 0.7s var(--ease-out-expo) 0.44s both;
+  }
+
+  .ca-stage__seal-ring {
+    stroke-dasharray: 95;
+    animation: ca-draw 0.9s var(--ease-out-expo) 0.6s both;
+  }
+
+  .ca-stage__seal-tick {
+    stroke-dasharray: 22;
+    animation: ca-draw 0.5s var(--ease-out-expo) 1.15s both;
+  }
+
+  @keyframes ca-draw {
+    from {
+      stroke-dashoffset: 95;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* 4 — each document ticks off, the bar tracks the count */
+  .ca-stage__check-row {
+    animation: ca-stage-in 0.55s var(--ease-out-expo) calc(var(--ca-t) * 0.19s) both;
+  }
+
+  .ca-stage__check-box {
+    animation: ca-tick 0.5s var(--ease-out-expo) calc(0.14s + var(--ca-t) * 0.19s) both;
+  }
+
+  .ca-stage__check-progress-fill {
+    animation: ca-fill 1.15s var(--ease-out-expo) 0.2s both;
+  }
+
+  @keyframes ca-tick {
+    from {
+      transform: scale(0.4);
+      opacity: 0;
+    }
+  }
+
+  /* 5 — the page settles, then the seal comes down on it */
+  .ca-stage__paper {
+    animation: ca-stage-in 0.6s var(--ease-out-expo) both;
+  }
+
+  /* Comes down from well above the page and decelerates hard into place. The
+     weight is carried by the travel distance and the ripple below, not by an
+     overshoot — a seal that bounced back up would be a rubber stamp. */
+  .ca-stage__stamp svg {
+    animation: ca-stamp 0.62s var(--ease-out-expo) 0.55s both;
+  }
+
+  .ca-stage__stamp-ripple {
+    animation: ca-ripple 0.85s var(--ease-out-expo) 0.95s both;
+  }
+
+  @keyframes ca-stamp {
+    from {
+      opacity: 0;
+      transform: scale(2.4) rotate(-18deg);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) rotate(-8deg);
+    }
+  }
+
+  @keyframes ca-ripple {
+    from {
+      opacity: 0.7;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1.75);
+    }
+  }
+}

@@ -1,0 +1,364 @@
+/* ==========================================================================
+   Track a request
+
+   List on the left, the selected request's history on the right. Status is
+   always carried by a label as well as a colour, so it survives greyscale and
+   colour-blind vision.
+   ========================================================================== */
+
+.ca-track {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-bottom: clamp(1.5rem, 4vw, 3rem);
+}
+
+/* ==========================================================================
+   Head
+   ========================================================================== */
+
+.ca-track__head {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: clamp(1.25rem, 3vw, 2rem);
+}
+
+.ca-track__title {
+  font-size: clamp(1.875rem, 4.2vw, 2.75rem);
+  line-height: 1.03;
+  letter-spacing: -0.038em;
+  font-weight: 900;
+}
+
+.ca-track__lede {
+  max-width: 60ch;
+  font-size: 1rem;
+  line-height: 1.62;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+}
+
+/* Marks the records on screen as invented, so nobody reads them as a real
+   account. Remove this when the list comes from the API. */
+.ca-track__demo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  justify-self: start;
+  padding: 0.3125rem 0.6875rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-clay);
+  background-color: var(--color-clay-tint);
+  border-radius: 999px;
+}
+
+/* ==========================================================================
+   Two columns
+   ========================================================================== */
+
+.ca-track__body {
+  display: grid;
+  gap: clamp(0.875rem, 2vw, 1.25rem);
+  align-items: start;
+}
+
+@media (min-width: 60rem) {
+  .ca-track__body {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+  }
+}
+
+/* ==========================================================================
+   List
+   ========================================================================== */
+
+.ca-track__list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ca-track__item {
+  display: grid;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.9375rem 1rem;
+  text-align: left;
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 1.125rem;
+  transition:
+    border-color 0.35s var(--ease-out-expo),
+    box-shadow 0.35s var(--ease-out-expo),
+    transform 0.35s var(--ease-out-expo);
+}
+
+.ca-track__item:hover {
+  border-color: rgb(22 23 15 / 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 1px 2px rgb(22 23 15 / 0.04), 0 16px 30px -20px rgb(22 23 15 / 0.4);
+}
+
+.ca-track__item.is-active {
+  border-color: var(--color-indigo);
+  box-shadow: 0 0 0 1px var(--color-indigo), 0 18px 34px -22px rgb(35 42 92 / 0.5);
+}
+
+.ca-track__item-top {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.ca-track__item-service {
+  font-size: 0.9375rem;
+  font-weight: 900;
+  letter-spacing: -0.026em;
+  line-height: 1.15;
+}
+
+.ca-track__item-ref {
+  margin-left: auto;
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-ink-subtle);
+}
+
+.ca-track__item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+}
+
+/* The status pill itself lives in index.css, because the dashboards use it too
+   and a component stylesheet only loads once that component mounts. */
+
+/* ==========================================================================
+   Progress bar on the card
+   ========================================================================== */
+
+.ca-track__bar {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 0.25rem;
+}
+
+.ca-track__bar-seg {
+  height: 3px;
+  border-radius: 999px;
+  background-color: rgb(22 23 15 / 0.1);
+}
+
+.ca-track__bar-seg.is-filled {
+  background-color: var(--color-indigo);
+}
+
+.ca-track__bar-seg.is-filled-done {
+  background-color: #2e7d4f;
+}
+
+.ca-track__bar-seg.is-filled-warn {
+  background-color: var(--color-clay);
+}
+
+/* ==========================================================================
+   Detail
+   ========================================================================== */
+
+.ca-track__detail {
+  display: grid;
+  gap: 1.125rem;
+  padding: clamp(1.125rem, 2.5vw, 1.625rem);
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 1.375rem;
+}
+
+.ca-track__detail-head {
+  display: grid;
+  gap: 0.625rem;
+}
+
+.ca-track__detail-service {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.ca-track__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-line);
+}
+
+.ca-track__fact {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.ca-track__fact-key {
+  color: var(--color-ink-subtle);
+}
+
+.ca-track__fact-value {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.014em;
+}
+
+/* ==========================================================================
+   Timeline
+   ========================================================================== */
+
+.ca-timeline {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ca-timeline__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.1875rem 0.875rem;
+  padding-bottom: 1.125rem;
+}
+
+.ca-timeline__row:last-child {
+  padding-bottom: 0;
+}
+
+/* The rail runs between markers, not through the last one. */
+.ca-timeline__row:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 0.6875rem;
+  top: 1.625rem;
+  bottom: 0.1875rem;
+  width: 2px;
+  border-radius: 999px;
+  background-color: rgb(22 23 15 / 0.12);
+}
+
+.ca-timeline__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  grid-row: span 2;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-paper);
+  background-color: var(--color-indigo);
+  border-radius: 999px;
+}
+
+/* The most recent entry is the live one — outlined rather than filled, so it
+   reads as still open. */
+.ca-timeline__row:last-child .ca-timeline__mark {
+  color: var(--color-clay);
+  background-color: var(--color-paper);
+  box-shadow: inset 0 0 0 2px var(--color-clay);
+}
+
+.ca-timeline__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.625rem;
+}
+
+.ca-timeline__label {
+  font-size: 0.875rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.ca-timeline__at {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-ink-subtle);
+}
+
+.ca-timeline__note {
+  max-width: 56ch;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+}
+
+/* ==========================================================================
+   Empty state
+   ========================================================================== */
+
+.ca-track__empty {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.875rem;
+  padding: clamp(2.5rem, 8vw, 5rem) 1.5rem;
+  text-align: center;
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 1.375rem;
+}
+
+.ca-track__empty-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  color: var(--color-indigo);
+  background-color: var(--color-indigo-tint);
+  border-radius: 999px;
+}
+
+.ca-track__empty-title {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.ca-track__empty-text {
+  max-width: 42ch;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+}
+
+.ca-track__empty-cta {
+  height: 3rem;
+  margin-top: 0.375rem;
+  padding-left: 1.375rem;
+  padding-right: 0.4375rem;
+  gap: 0.625rem;
+  font-size: 0.9375rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-track__item {
+    transition: none;
+  }
+
+  .ca-track__item:hover {
+    transform: none;
+  }
+}

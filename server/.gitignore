@@ -1,0 +1,17 @@
+node_modules/
+
+# Secrets. The MongoDB connection string will live here — never commit it.
+# Commit .env.example instead, with the keys present and the values blank.
+.env
+.env.*
+!.env.example
+
+logs/
+*.log
+npm-debug.log*
+
+# Uploaded documents, if local disk storage is ever used during development.
+uploads/
+
+.DS_Store
+Thumbs.db

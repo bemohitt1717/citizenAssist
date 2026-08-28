@@ -1,0 +1,106 @@
+/* ==========================================================================
+   Login page
+
+   Warm shell on the form side, a tinted panel on the showcase — the same
+   two-primary tension the rest of the product runs on, used here to separate
+   the thing you do from the thing you read.
+   ========================================================================== */
+
+.ca-login {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  padding: clamp(0.875rem, 2vw, 1.5rem);
+  background-color: var(--color-shell);
+}
+
+/* ==========================================================================
+   Bar
+   ========================================================================== */
+
+.ca-login__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex: none;
+  padding: 0.375rem clamp(0.25rem, 1vw, 0.75rem) clamp(1rem, 2.5vw, 1.75rem);
+}
+
+.ca-login__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4375rem 0.8125rem 0.4375rem 0.5625rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-ink-muted);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 999px;
+  transition:
+    color 0.3s var(--ease-out-expo),
+    border-color 0.3s var(--ease-out-expo),
+    background-color 0.3s var(--ease-out-expo);
+}
+
+.ca-login__back:hover {
+  color: var(--color-ink);
+  border-color: var(--color-ink);
+  background-color: rgb(22 23 15 / 0.04);
+}
+
+.ca-login__back svg {
+  transform: rotate(180deg);
+  transition: transform 0.4s var(--ease-out-expo);
+}
+
+.ca-login__back:hover svg {
+  transform: rotate(180deg) translateX(2px);
+}
+
+/* ==========================================================================
+   Two halves
+   ========================================================================== */
+
+.ca-login__grid {
+  display: grid;
+  flex: 1;
+  gap: clamp(1.5rem, 3.5vw, 3rem);
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+/* Stretches rather than centres, so the form column is the same height as the
+   showcase beside it and can distribute its own content down that height
+   instead of clustering in the middle. */
+.ca-login__pane {
+  display: flex;
+  justify-content: center;
+  padding-block: clamp(0.5rem, 2vw, 1.25rem);
+}
+
+/* The showcase is decorative reinforcement, not instruction — on a phone it
+   would push the form itself below the fold, so it is dropped rather than
+   stacked. Nothing in it is needed to sign in. */
+.ca-showcase {
+  display: none;
+}
+
+@media (min-width: 62rem) {
+  .ca-login__grid {
+    /* Even halves. The form was the narrower column and read as an
+       afterthought beside the panel. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .ca-login__pane {
+    padding-inline: clamp(0.5rem, 2.5vw, 2rem);
+  }
+
+  .ca-showcase {
+    display: flex;
+  }
+}

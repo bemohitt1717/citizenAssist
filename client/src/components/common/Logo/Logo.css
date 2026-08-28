@@ -1,0 +1,52 @@
+.ca-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-ink);
+}
+
+.ca-logo__mark {
+  flex: none;
+}
+
+/* The seal turns once when its lockup is hovered — the only motion the
+   mark has, and it belongs to the stamp metaphor rather than to hover
+   decoration. */
+.ca-logo__ring {
+  transform-origin: center;
+  transition: transform 0.9s var(--ease-out-expo);
+}
+
+.ca-logo:hover .ca-logo__ring,
+a:hover .ca-logo__ring {
+  transform: rotate(120deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-logo__ring {
+    transition: none;
+  }
+
+  .ca-logo:hover .ca-logo__ring,
+  a:hover .ca-logo__ring {
+    transform: none;
+  }
+}
+
+.ca-logo__wordmark {
+  font-size: 1.0625rem;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* "Assist" carries the promise, so it takes the indigo while "Citizen" stays
+   in ink. One family, one size, two tones. */
+.ca-logo__wordmark-tail {
+  color: var(--color-indigo);
+}
+
+.ca-logo__wordmark-tail::before {
+  content: ' ';
+}

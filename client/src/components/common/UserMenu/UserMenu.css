@@ -1,0 +1,170 @@
+/* ==========================================================================
+   User menu
+
+   The chip in the dashboard bar. Opens on hover for a mouse, on click for
+   everything else, and stays open once clicked so it can be used from a
+   keyboard or a touchscreen.
+   ========================================================================== */
+
+.ca-usermenu {
+  position: relative;
+}
+
+.ca-usermenu__chip {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.4375rem 0.75rem 0.4375rem 0.5rem;
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  transition:
+    border-color 0.3s var(--ease-out-expo),
+    box-shadow 0.3s var(--ease-out-expo);
+}
+
+.ca-usermenu__chip:hover,
+.ca-usermenu.is-open .ca-usermenu__chip {
+  border-color: var(--color-line-strong);
+  box-shadow: 0 1px 2px rgb(22 23 15 / 0.04), 0 10px 20px -14px rgb(22 23 15 / 0.35);
+}
+
+.ca-usermenu__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.875rem;
+  height: 1.875rem;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  color: var(--color-paper);
+  background-color: var(--color-indigo);
+  border-radius: 999px;
+}
+
+.ca-usermenu__name {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.014em;
+  white-space: nowrap;
+}
+
+.ca-usermenu__caret {
+  flex: none;
+  color: var(--color-ink-subtle);
+  transition: transform 0.35s var(--ease-out-expo);
+}
+
+.ca-usermenu.is-open .ca-usermenu__caret {
+  transform: rotate(180deg);
+}
+
+/* ==========================================================================
+   Panel
+   ========================================================================== */
+
+.ca-usermenu__panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 40;
+  min-width: 13rem;
+  padding: 0.375rem;
+  background-color: var(--color-paper);
+  border: 1px solid rgb(22 23 15 / 0.12);
+  border-radius: 1.125rem;
+  box-shadow: 0 2px 6px rgb(22 23 15 / 0.06), 0 24px 48px -24px rgb(22 23 15 / 0.4);
+  animation: ca-usermenu-in 0.32s var(--ease-out-expo) both;
+}
+
+@keyframes ca-usermenu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.375rem) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-usermenu__panel {
+    animation: none;
+  }
+
+  .ca-usermenu__caret {
+    transition: none;
+  }
+}
+
+/* Who you are, restated inside the menu — the chip is small and the role is the
+   thing worth being certain about before signing out. */
+.ca-usermenu__who {
+  display: grid;
+  gap: 0.125rem;
+  padding: 0.5625rem 0.625rem 0.6875rem;
+  border-bottom: 1px solid var(--color-line);
+  margin-bottom: 0.375rem;
+}
+
+.ca-usermenu__who-name {
+  font-size: 0.875rem;
+  font-weight: 900;
+  letter-spacing: -0.022em;
+}
+
+.ca-usermenu__who-role {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-subtle);
+}
+
+.ca-usermenu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.5625rem 0.625rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.014em;
+  color: var(--color-ink);
+  border-radius: 0.6875rem;
+  transition:
+    background-color 0.25s var(--ease-out-expo),
+    color 0.25s var(--ease-out-expo);
+}
+
+.ca-usermenu__item:hover {
+  background-color: var(--color-shell);
+}
+
+.ca-usermenu__item svg {
+  flex: none;
+  color: var(--color-ink-subtle);
+}
+
+.ca-usermenu__item:hover svg {
+  color: var(--color-indigo);
+}
+
+/* Sign out is the one item that loses something, so it carries the warm tone
+   rather than sitting identical to Profile. */
+.ca-usermenu__item--out {
+  color: var(--color-clay);
+}
+
+.ca-usermenu__item--out svg {
+  color: var(--color-clay);
+  transform: rotate(180deg);
+}
+
+.ca-usermenu__item--out:hover {
+  background-color: var(--color-clay-tint);
+}
+
+.ca-usermenu__item--out:hover svg {
+  color: var(--color-clay);
+}

@@ -1,0 +1,159 @@
+/* ==========================================================================
+   Services
+
+   A plain equal-width grid — one column, then two, then three. The interest
+   is carried by the card surfaces, not by cell sizes, which keeps the set
+   scannable: six things a citizen is comparing should be comparable.
+   ========================================================================== */
+
+.ca-services {
+  position: relative;
+  padding: clamp(3.5rem, 8vw, 7rem) clamp(1.25rem, 3.5vw, 2.5rem);
+  background-color: var(--color-cream-deep);
+}
+
+/* Hairline seam where the hero's warm pool meets this band, so the two
+   grounds read as two sheets rather than one gradient. */
+.ca-services::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background-color: rgb(22 23 15 / 0.08);
+}
+
+.ca-services__inner {
+  max-width: 82rem;
+  margin: 0 auto;
+}
+
+/* ==========================================================================
+   Head
+   ========================================================================== */
+
+.ca-services__head {
+  display: grid;
+  gap: 1.125rem;
+  max-width: 54rem;
+  margin-bottom: clamp(2rem, 4.5vw, 3.25rem);
+}
+
+.ca-services__title {
+  font-size: clamp(1.75rem, 4.4vw, 3.25rem);
+  line-height: 1.03;
+  letter-spacing: -0.036em;
+  font-weight: 900;
+  max-width: 26ch;
+}
+
+.ca-services__lede {
+  max-width: 62ch;
+  font-size: var(--text-lede);
+  line-height: 1.62;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+}
+
+/* ==========================================================================
+   Grid
+   ========================================================================== */
+
+.ca-grid {
+  display: grid;
+  gap: clamp(0.875rem, 1.4vw, 1.25rem);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 40rem) {
+  .ca-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .ca-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ==========================================================================
+   Transparency band
+   Sand rather than paper or a tint, so the boundary statement reads as a
+   different kind of thing from the six offers above it. Spans the grid.
+   ========================================================================== */
+
+.ca-note {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 1rem clamp(1.5rem, 3vw, 3rem);
+  margin-top: clamp(0.25rem, 1vw, 0.75rem);
+  padding: clamp(1.25rem, 2.2vw, 1.875rem);
+  background-color: var(--color-sand);
+  border: 1px solid rgb(22 23 15 / 0.1);
+  border-radius: 1.625rem;
+}
+
+.ca-note__head {
+  display: flex;
+  align-items: center;
+  gap: 0.8125rem;
+}
+
+.ca-note__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--color-indigo);
+  background-color: rgb(255 255 255 / 0.6);
+  border-radius: 0.9375rem;
+}
+
+.ca-note__title {
+  font-size: 1.0625rem;
+  font-weight: 900;
+  letter-spacing: -0.026em;
+}
+
+.ca-note__body {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* Tinted from the sand it sits on rather than greyed. Holds 5.6:1. */
+.ca-note__text {
+  max-width: 64ch;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  font-weight: 500;
+  color: #55503f;
+}
+
+/* Wide enough for the band to run its statement beside the heading instead of
+   stacking into a tall block nobody finishes. */
+@media (min-width: 56rem) {
+  .ca-note {
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .ca-note__body {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ca-grid:not(.is-revealed) .ca-note {
+    opacity: 0;
+    transform: translateY(1.5rem);
+    filter: blur(7px);
+  }
+
+  .ca-grid.is-revealed .ca-note {
+    animation: ca-svc-in 0.8s var(--ease-out-expo) calc(var(--ca-i, 0) * 0.07s) both;
+  }
+}

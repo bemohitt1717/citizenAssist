@@ -1,0 +1,139 @@
+/* ==========================================================================
+   Confirm dialog
+
+   Small, centred, and always says what will happen rather than asking "are you
+   sure". Used for anything that throws work away — signing out, rejecting an
+   application, cancelling a request.
+   ========================================================================== */
+
+.ca-confirm__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.875rem, 3vw, 1.5rem);
+  background-color: rgb(20 21 14 / 0.42);
+  backdrop-filter: blur(6px) saturate(0.9);
+  animation: ca-confirm-scrim 0.3s var(--ease-out-expo) both;
+}
+
+@keyframes ca-confirm-scrim {
+  from {
+    opacity: 0;
+  }
+}
+
+.ca-confirm {
+  width: 100%;
+  max-width: 24rem;
+  padding: clamp(1.25rem, 3vw, 1.625rem);
+  background-color: var(--color-shell);
+  border: 1px solid rgb(22 23 15 / 0.14);
+  border-radius: 1.5rem;
+  box-shadow: 0 2px 6px rgb(22 23 15 / 0.1), 0 40px 80px -34px rgb(22 23 15 / 0.55);
+  animation: ca-confirm-in 0.42s var(--ease-out-expo) both;
+}
+
+@keyframes ca-confirm-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem) scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-confirm__scrim,
+  .ca-confirm {
+    animation: none;
+  }
+}
+
+.ca-confirm__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: 0.875rem;
+  color: var(--color-indigo);
+  background-color: var(--color-indigo-tint);
+  border-radius: 0.8125rem;
+}
+
+/* Destructive actions take the warm tone, so the dialog itself signals which
+   kind of decision this is before the copy is read. */
+.ca-confirm--undo .ca-confirm__mark {
+  color: var(--color-clay);
+  background-color: var(--color-clay-tint);
+}
+
+.ca-confirm__title {
+  font-size: 1.125rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.ca-confirm__text {
+  max-width: 42ch;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+}
+
+.ca-confirm__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.375rem;
+}
+
+.ca-confirm__go,
+.ca-confirm__cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4375rem;
+  height: 2.875rem;
+  padding-inline: 1.125rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  border-radius: 999px;
+  transition:
+    background-color 0.3s var(--ease-out-expo),
+    border-color 0.3s var(--ease-out-expo),
+    color 0.3s var(--ease-out-expo);
+}
+
+/* Cancel is the wider, calmer option, because staying is the safe outcome. */
+.ca-confirm__cancel {
+  flex: 1;
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line-strong);
+}
+
+.ca-confirm__cancel:hover {
+  border-color: var(--color-ink);
+}
+
+.ca-confirm__go {
+  flex: none;
+  color: var(--color-paper);
+  background-color: var(--color-indigo);
+}
+
+.ca-confirm__go:hover {
+  background-color: var(--color-indigo-hi);
+}
+
+.ca-confirm--undo .ca-confirm__go {
+  background-color: var(--color-clay);
+}
+
+.ca-confirm--undo .ca-confirm__go:hover {
+  background-color: var(--color-clay-hi);
+}

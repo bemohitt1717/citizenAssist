@@ -1,0 +1,213 @@
+/* ==========================================================================
+   Footer
+
+   The page closes on the deepest step of the primary colour, which is the one
+   place a large indigo field belongs: it ends the document rather than
+   competing with anything above it. Every text tone here is tinted from that
+   indigo instead of dropped to grey, and each pairing is verified above 5:1.
+   ========================================================================== */
+
+.ca-footer {
+  position: relative;
+  padding: clamp(3rem, 6vw, 5rem) clamp(1.25rem, 3.5vw, 2.5rem) clamp(1.5rem, 2.5vw, 2rem);
+  background-color: var(--color-shell);
+  color: var(--color-ink);
+}
+
+/* The footer no longer separates itself by going dark, so the rule has to do
+   that work. */
+.ca-footer::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background-color: rgb(22 23 15 / 0.12);
+}
+
+/* Two columns from the smallest screen up. Stacked single-file the footer ran
+   to roughly a full phone screen of links, which put the legal statement and
+   the copyright below a scroll nobody performs.
+   Services holds one column outright (six items) against Platform and Support
+   sharing the other (four plus three), so the two sides land level. */
+.ca-footer__inner {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-areas:
+    'brand    brand'
+    'services platform'
+    'services support';
+  gap: 1.875rem 1.25rem;
+  max-width: 82rem;
+  margin: 0 auto;
+}
+
+.ca-footer__brand {
+  grid-area: brand;
+}
+
+.ca-footer__col--services {
+  grid-area: services;
+}
+
+.ca-footer__col--platform {
+  grid-area: platform;
+}
+
+.ca-footer__col--support {
+  grid-area: support;
+}
+
+/* ==========================================================================
+   Brand block
+   ========================================================================== */
+
+.ca-footer__brand {
+  display: grid;
+  gap: 1rem;
+  max-width: 34ch;
+}
+
+/* On a light ground the mark needs no inversion — it renders exactly as it
+   does in the navigation, which is the point of having one mark. */
+.ca-footer__blurb {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+}
+
+/* ==========================================================================
+   Columns
+   ========================================================================== */
+
+.ca-footer__col {
+  display: grid;
+  gap: 0.9375rem;
+  align-content: start;
+}
+
+/* 5.2:1 on the shell ground. */
+.ca-footer__col-title {
+  color: var(--color-ink-subtle);
+}
+
+.ca-footer__list {
+  display: grid;
+  gap: 0.6875rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 6.5:1 at rest, full ink on hover. */
+.ca-footer__link {
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--color-ink-muted);
+  transition:
+    color 0.3s var(--ease-out-expo),
+    transform 0.3s var(--ease-out-expo);
+}
+
+.ca-footer__link:hover {
+  color: var(--color-ink);
+  transform: translateX(3px);
+}
+
+.ca-footer__link--icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ca-footer__link--icon svg {
+  flex: none;
+  color: var(--color-indigo);
+}
+
+.ca-footer__hours {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-ink-subtle);
+}
+
+/* ==========================================================================
+   Base — the legal boundary, at readable size rather than shrunk away
+   ========================================================================== */
+
+.ca-footer__base {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 82rem;
+  margin: clamp(2.5rem, 5vw, 3.5rem) auto 0;
+  padding-top: clamp(1.25rem, 2.5vw, 1.75rem);
+  border-top: 1px solid var(--color-line);
+}
+
+/* This is the most consequential sentence on the page, so it is set at legible
+   size across a full measure, not as fine print. 6.5:1. */
+.ca-footer__legal {
+  max-width: 76ch;
+  font-size: 0.8125rem;
+  line-height: 1.62;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+}
+
+.ca-footer__copy {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-footer__link:hover {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   Breakpoints
+   ========================================================================== */
+
+/* Enough room for the three link columns to sit side by side, so the named
+   areas are handed back to normal flow. */
+@media (min-width: 40rem) {
+  .ca-footer__inner {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas: none;
+    gap: clamp(2rem, 4vw, 3rem);
+  }
+
+  .ca-footer__brand,
+  .ca-footer__col--services,
+  .ca-footer__col--platform,
+  .ca-footer__col--support {
+    grid-area: auto;
+  }
+
+  .ca-footer__brand {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 64rem) {
+  .ca-footer__inner {
+    grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
+    gap: clamp(2rem, 5vw, 4rem);
+  }
+
+  .ca-footer__brand {
+    grid-column: auto;
+  }
+
+  .ca-footer__base {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 2rem;
+  }
+}

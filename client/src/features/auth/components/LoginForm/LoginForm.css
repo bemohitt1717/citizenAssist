@@ -1,0 +1,417 @@
+/* ==========================================================================
+   Login form
+
+   Fills the height of its column and distributes down it: the heading sits at
+   the top, the controls take the optical centre, and the footnote is pushed to
+   the floor. That is what stops the column reading as a small form floating in
+   a large empty space.
+
+   One field is visible at a time, and everything below it holds position across
+   both steps, so switching from number to code does not reflow the column under
+   the reader.
+   ========================================================================== */
+
+.ca-login__form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 29rem;
+}
+
+/* Absorbs whatever height the column has spare and centres its contents in it,
+   which is what stops a short form floating in a tall empty box. */
+.ca-login__main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   Heading
+   ========================================================================== */
+
+/* The chosen role, and the way back to change it. Reads as a breadcrumb rather
+   than a button, because going back is a correction, not a step. */
+.ca-login__role {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 0.4375rem;
+  margin-bottom: 1rem;
+  padding: 0.3125rem 0.6875rem 0.3125rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 999px;
+  transition:
+    color 0.3s var(--ease-out-expo),
+    border-color 0.3s var(--ease-out-expo);
+}
+
+.ca-login__role:hover {
+  color: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+.ca-login__role svg {
+  transform: rotate(180deg);
+  transition: transform 0.4s var(--ease-out-expo);
+}
+
+.ca-login__role:hover svg {
+  transform: rotate(180deg) translateX(2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-login__role,
+  .ca-login__role svg {
+    transition: none;
+  }
+}
+
+.ca-login__title {
+  font-size: clamp(2rem, 3.9vw, 3rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-weight: 900;
+  max-width: 14ch;
+}
+
+.ca-login__lede {
+  margin-top: 0.875rem;
+  /* Reserved so the taller two-line copy on the code step does not shunt the
+     fields down when the step changes. */
+  min-height: 3.4em;
+  max-width: 38ch;
+  font-size: 1rem;
+  line-height: 1.62;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+}
+
+/* ==========================================================================
+   Demo credentials
+
+   Clay rather than the primary, so it reads as scaffolding for this build and
+   not as part of the finished product.
+   ========================================================================== */
+
+.ca-login__demo {
+  display: grid;
+  gap: 0.625rem;
+  margin-top: 1.125rem;
+  padding: 0.875rem 1rem;
+  background-color: var(--color-clay-tint);
+  border: 1px dashed rgb(158 78 18 / 0.35);
+  border-radius: 0.9375rem;
+}
+
+.ca-login__demo-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-clay);
+}
+
+.ca-login__demo-rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 1.5rem;
+  margin: 0;
+}
+
+.ca-login__demo-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4375rem;
+}
+
+.ca-login__demo-row dt {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #5c5346;
+}
+
+.ca-login__demo-row dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: var(--color-ink);
+}
+
+.ca-login__demo-note {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  font-weight: 500;
+  color: #5c5346;
+}
+
+/* ==========================================================================
+   Body — takes the slack in the column
+   ========================================================================== */
+
+.ca-login__body {
+  display: grid;
+  gap: 1.125rem;
+  margin-top: clamp(1.75rem, 4vh, 2.75rem);
+}
+
+.ca-login__field {
+  display: grid;
+  gap: 0.5625rem;
+}
+
+.ca-login__labelrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ca-login__label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--color-ink);
+}
+
+/* The country code sits inside the field's border rather than beside it, so the
+   number reads as one value. */
+.ca-login__inputwrap {
+  display: flex;
+  align-items: stretch;
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 1rem;
+  transition:
+    border-color 0.3s var(--ease-out-expo),
+    box-shadow 0.3s var(--ease-out-expo);
+}
+
+.ca-login__inputwrap:focus-within {
+  border-color: var(--color-indigo);
+  box-shadow: 0 0 0 3px rgb(35 42 92 / 0.14);
+}
+
+.ca-login__inputwrap:has(.ca-login__input[aria-invalid='true']) {
+  border-color: var(--color-clay);
+}
+
+.ca-login__prefix {
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 1.0625rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--color-ink-muted);
+  border-right: 1px solid var(--color-line);
+}
+
+.ca-login__input {
+  width: 100%;
+  padding: 1rem 1.0625rem;
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--color-ink);
+  background-color: transparent;
+  border: 0;
+}
+
+.ca-login__input:focus {
+  outline: none;
+}
+
+.ca-login__input::placeholder {
+  color: var(--color-ink-subtle);
+  letter-spacing: 0;
+}
+
+/* Standalone version of the field, for the code step. */
+.ca-login__input--otp {
+  padding-block: 0.9375rem;
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 1rem;
+  font-size: 1.625rem;
+  font-weight: 900;
+  /* Wide tracking makes six digits countable at a glance. */
+  letter-spacing: 0.48em;
+  /* Offsets the trailing letter-space so the run of digits sits optically
+     centred rather than pushed left. */
+  text-indent: 0.48em;
+  text-align: center;
+  transition:
+    border-color 0.3s var(--ease-out-expo),
+    box-shadow 0.3s var(--ease-out-expo);
+}
+
+.ca-login__input--otp:focus {
+  border-color: var(--color-indigo);
+  box-shadow: 0 0 0 3px rgb(35 42 92 / 0.14);
+}
+
+.ca-login__input--otp[aria-invalid='true'] {
+  border-color: var(--color-clay);
+}
+
+.ca-login__input--otp::placeholder {
+  letter-spacing: 0.48em;
+}
+
+.ca-login__error {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--color-clay);
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.ca-login__submit {
+  justify-content: space-between;
+  width: 100%;
+  height: 3.5rem;
+  padding-left: 1.5rem;
+  padding-right: 0.5rem;
+  font-size: 1rem;
+}
+
+.ca-login__resend {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-ink-muted);
+  border-radius: 999px;
+  transition: color 0.3s var(--ease-out-expo);
+}
+
+.ca-login__resend:hover:not(:disabled) {
+  color: var(--color-indigo);
+}
+
+.ca-login__resend:disabled {
+  color: var(--color-ink-subtle);
+  cursor: default;
+}
+
+.ca-login__textlink {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-indigo);
+  text-decoration: underline;
+  text-decoration-color: rgb(35 42 92 / 0.35);
+  text-underline-offset: 0.22em;
+  transition: text-decoration-color 0.3s var(--ease-out-expo);
+}
+
+.ca-login__textlink:hover {
+  text-decoration-color: var(--color-indigo);
+}
+
+/* ==========================================================================
+   Divider and Google
+   ========================================================================== */
+
+.ca-login__divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  margin-block: clamp(1.5rem, 3vh, 2rem);
+}
+
+.ca-login__divider::before,
+.ca-login__divider::after {
+  content: '';
+  height: 1px;
+  background-color: var(--color-line);
+}
+
+.ca-login__divider span {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-subtle);
+}
+
+.ca-login__google {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6875rem;
+  width: 100%;
+  height: 3.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 999px;
+  transition:
+    border-color 0.3s var(--ease-out-expo),
+    box-shadow 0.3s var(--ease-out-expo),
+    transform 0.3s var(--ease-out-expo);
+}
+
+.ca-login__google:hover {
+  border-color: var(--color-ink);
+  box-shadow: 0 1px 2px rgb(22 23 15 / 0.05), 0 12px 24px -14px rgb(22 23 15 / 0.35);
+  transform: translateY(-1px);
+}
+
+.ca-login__google:active {
+  transform: scale(0.99);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-login__google:hover,
+  .ca-login__google:active {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   Footnote — pushed to the floor of the column
+   ========================================================================== */
+
+.ca-login__foot {
+  flex: none;
+  padding-top: clamp(1.75rem, 4vh, 2.5rem);
+  max-width: 42ch;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  font-weight: 500;
+  color: var(--color-ink-subtle);
+}
+
+.ca-login__link {
+  font-weight: 700;
+  color: var(--color-indigo);
+  text-decoration: underline;
+  text-decoration-color: rgb(35 42 92 / 0.35);
+  text-underline-offset: 0.2em;
+}
+
+.ca-login__link:hover {
+  text-decoration-color: var(--color-indigo);
+}
