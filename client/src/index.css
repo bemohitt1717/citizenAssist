@@ -82,6 +82,22 @@
     scroll-behavior: smooth;
   }
 
+  /* Nothing should ever be able to scroll the document sideways.
+
+     `clip` rather than `hidden`: hidden on the root turns the body into a scroll
+     container, which silently breaks `position: sticky` on descendants — the
+     dashboard rails and the navbar all rely on it. `clip` contains the overflow
+     without creating a scrollport.
+
+     This is a backstop, not the fix. Anything actually overflowing is still a bug
+     to correct at the source; this only stops one mistake dragging the entire
+     layout off-screen. */
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;

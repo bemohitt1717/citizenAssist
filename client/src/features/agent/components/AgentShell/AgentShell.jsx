@@ -2,7 +2,6 @@ import { Link, NavLink } from 'react-router-dom';
 import Logo from '../../../../components/common/Logo/Logo';
 import UserMenu from '../../../../components/common/UserMenu/UserMenu';
 import Icon from '../../../../components/ui/Icon/Icon';
-import { IS_DEMO_AUTH } from '../../../../constants/demoAuth';
 import { AGENT_COUNTS, AGENT_PROFILE, AGENT_SECTIONS } from '../../agentData';
 import './AgentShell.css';
 
@@ -28,14 +27,25 @@ const AgentShell = ({ activeId, children }) => {
   return (
     <div className="ca-agentdash">
       <nav className="ca-agentdash__rail" aria-label="Agent sections">
-        <Link className="ca-agentdash__brand" to="/" aria-label="Citizen Assist, home">
-          <Logo size={26} />
-        </Link>
+        <div className="ca-agentdash__rail-top">
+          <Link className="ca-agentdash__brand" to="/" aria-label="Citizen Assist, home">
+            <Logo size={26} />
+          </Link>
 
-        <span className="ca-agentdash__role">
-          <Icon name="shieldCheck" size={12} />
-          Service agent
-        </span>
+          {/* No role badge here. Which dashboard you are in is already stated by
+              the identity chip's menu and by the URL, so a third copy was just
+              taking up the strip. */}
+
+          {/* Mobile placement. Hidden from 62rem, where the copy in the page bar
+              takes over. */}
+          <div className="ca-agentdash__rail-menu">
+            <UserMenu
+              name={AGENT_PROFILE.name}
+              roleLabel="Service agent"
+              profileTo="/agent/profile"
+            />
+          </div>
+        </div>
 
         <ul className="ca-agentdash__nav">
           {AGENT_SECTIONS.map((item) => (
@@ -74,22 +84,16 @@ const AgentShell = ({ activeId, children }) => {
             <p className="ca-agentdash__blurb">{section.blurb}</p>
           </div>
 
-          <UserMenu
-            name={AGENT_PROFILE.name}
-            roleLabel="Service agent"
-            profileTo="/agent/profile"
-          />
-        </div>
-
-        {IS_DEMO_AUTH && (
-          <div className="ca-agentdash__demo">
-            <Icon name="shieldCheck" size={16} />
-            <p>
-              Sample data. No citizens, requests or earnings exist yet — these records are invented
-              so the interface can be reviewed.
-            </p>
+          {/* Desktop placement. Hidden below 62rem, where the copy in the sticky
+              rail takes over. */}
+          <div className="ca-agentdash__bar-menu">
+            <UserMenu
+              name={AGENT_PROFILE.name}
+              roleLabel="Service agent"
+              profileTo="/agent/profile"
+            />
           </div>
-        )}
+        </div>
 
         <div className="ca-agentdash__panel">{children}</div>
       </div>

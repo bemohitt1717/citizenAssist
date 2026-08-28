@@ -5,8 +5,9 @@
  * can change independently.
  *
  * All records below are invented for building against. No real citizens, agents,
- * requests or complaints exist. The dashboard shows a "sample data" banner so
- * nothing here can be read as a live figure.
+ * requests or complaints exist. There is no marker for this on the dashboard
+ * itself — the disclosure lives here, in PRODUCT.md and in the README — so do not
+ * read any figure in this file as live, and do not carry one into real copy.
  *
  * ── SCOPE ───────────────────────────────────────────────────────────────────
  * Six sections. Your spec listed analytics separately; it is folded into the dashboard

@@ -5,8 +5,9 @@
  * dashboard can change without touching anything here.
  *
  * All records below are invented for building against. No real agents, citizens
- * or requests exist. The dashboard shows a "sample data" banner so nothing here
- * can be read as a live figure.
+ * or requests exist. There is no marker for this on the dashboard itself — the
+ * disclosure lives here, in PRODUCT.md and in the README — so do not read any
+ * figure in this file as live, and do not carry one into real copy.
  *
  * ── SCOPE ───────────────────────────────────────────────────────────────────
  * Four sections. Your spec listed pending / active / completed / history as

@@ -1,18 +1,29 @@
 /* ==========================================================================
    Admin dashboard shell
 
-   The agent's own frame. The admin dashboard has its own, deliberately — the two
-   are separate features and neither should be able to break the other's layout.
+   The administrator's own frame. The agent dashboard has its own, deliberately —
+   the two are separate features and neither should be able to break the other's
+   layout.
    ========================================================================== */
 
+/* Flex column on mobile, two-column grid from 62rem.
+
+   Not a single-column grid, for two reasons. A sticky grid item can only travel
+   inside its own grid area, and on mobile the rail's area is exactly the rail's
+   height — so `position: sticky` had nowhere to go. And an auto-sized grid column
+   resolves to max-content, which is what let the six-item nav strip widen the
+   whole page past a phone screen. A column flex container takes its width from
+   its parent, so neither problem exists. */
 .ca-admindash {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   min-height: 100svh;
   background-color: var(--color-shell);
 }
 
 @media (min-width: 62rem) {
   .ca-admindash {
+    display: grid;
     grid-template-columns: 15.5rem minmax(0, 1fr);
   }
 }
@@ -21,45 +32,91 @@
    Rail
    ========================================================================== */
 
+/* Sticky at both sizes: a header strip on mobile, a full-height sidebar on
+   desktop. The z-index keeps it above the scrolling panel; it stays low so the
+   confirm dialog's fixed scrim, which renders inside this stacking context,
+   still paints over the whole page. */
 .ca-admindash__rail {
+  position: sticky;
+  top: 0;
+  z-index: 30;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.125rem 1rem;
+  /* Lets the scrolling nav inside actually shrink. Without it the rail is sized
+     by its content and the overflow never engages. */
+  min-width: 0;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
   background-color: var(--color-paper);
   border-bottom: 1px solid var(--color-line);
+  box-shadow: 0 1px 2px rgb(22 23 15 / 0.03), 0 12px 24px -20px rgb(22 23 15 / 0.3);
 }
 
 @media (min-width: 62rem) {
   .ca-admindash__rail {
-    position: sticky;
-    top: 0;
     height: 100svh;
+    gap: 1.25rem;
+    padding: 1.125rem 1rem;
     border-bottom: 0;
     border-right: 1px solid var(--color-line);
+    box-shadow: none;
+  }
+}
+
+/* Mark, role badge and — on mobile only — the identity chip. One row on a phone
+   so the sticky strip stays two lines tall; a stack on desktop. */
+.ca-admindash__rail-top {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+@media (min-width: 62rem) {
+  .ca-admindash__rail-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
   }
 }
 
 .ca-admindash__brand {
   display: inline-flex;
-  align-self: flex-start;
+  flex: none;
   padding: 0.25rem;
   border-radius: 999px;
 }
 
-.ca-admindash__role {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4375rem;
-  align-self: flex-start;
-  padding: 0.3125rem 0.6875rem 0.3125rem 0.5rem;
-  font-size: 0.625rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-indigo);
-  background-color: var(--color-indigo-tint);
-  border-radius: 999px;
+/* The identity chip lives in the sticky strip on mobile and in the page bar on
+   desktop. Rendered in both places and shown in one — each instance owns its own
+   open state, and only ever one is interactive. */
+.ca-admindash__rail-menu {
+  margin-left: auto;
+  flex: none;
+}
+
+/* Last thing to give way on the narrowest screens. The seal alone still reads as
+   the brand, and it buys the room the role badge and the chip need. */
+@media (max-width: 24rem) {
+  .ca-admindash__rail-top .ca-logo__wordmark {
+    display: none;
+  }
+}
+
+@media (min-width: 62rem) {
+  .ca-admindash__rail-menu {
+    display: none;
+  }
+}
+
+.ca-admindash__bar-menu {
+  display: none;
+}
+
+@media (min-width: 62rem) {
+  .ca-admindash__bar-menu {
+    display: block;
+  }
 }
 
 .ca-admindash__nav {
@@ -77,9 +134,21 @@
     grid-auto-flow: column;
     grid-auto-columns: max-content;
     gap: 0.375rem;
+    /* The strip scrolls sideways on its own. `min-width: 0` is what allows it to
+       be narrower than its contents rather than forcing its parent wide, and the
+       negative margin lets it bleed to the rail's edges so the last item does not
+       look clipped mid-padding. */
+    min-width: 0;
+    margin-inline: -1rem;
+    padding-inline: 1rem;
     overflow-x: auto;
     padding-bottom: 0.25rem;
     overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .ca-admindash__nav::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -164,6 +233,7 @@
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
+  min-width: 0;
   padding: clamp(1.25rem, 3vw, 2rem) clamp(1.125rem, 3vw, 2.25rem) 0;
 }
 
@@ -187,29 +257,9 @@
   color: var(--color-ink-muted);
 }
 
-.ca-admindash__demo {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.625rem;
-  margin: clamp(1rem, 2.5vw, 1.5rem) clamp(1.125rem, 3vw, 2.25rem) 0;
-  padding: 0.75rem 0.9375rem;
-  background-color: var(--color-clay-tint);
-  border: 1px dashed rgb(158 78 18 / 0.35);
-  border-radius: 0.875rem;
-}
-
-.ca-admindash__demo svg {
-  flex: none;
-  margin-top: 0.0625rem;
-  color: var(--color-clay);
-}
-
-.ca-admindash__demo p {
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  font-weight: 500;
-  color: #5c5346;
-}
+/* No sample-data marker in the dashboard chrome. The records are still invented —
+   that is stated in adminData.js, in PRODUCT.md and in the README, which is where
+   it belongs rather than on every section heading. */
 
 .ca-admindash__panel {
   flex: 1;

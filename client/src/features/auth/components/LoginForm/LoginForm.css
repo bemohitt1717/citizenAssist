@@ -95,68 +95,6 @@
 }
 
 /* ==========================================================================
-   Demo credentials
-
-   Clay rather than the primary, so it reads as scaffolding for this build and
-   not as part of the finished product.
-   ========================================================================== */
-
-.ca-login__demo {
-  display: grid;
-  gap: 0.625rem;
-  margin-top: 1.125rem;
-  padding: 0.875rem 1rem;
-  background-color: var(--color-clay-tint);
-  border: 1px dashed rgb(158 78 18 / 0.35);
-  border-radius: 0.9375rem;
-}
-
-.ca-login__demo-title {
-  display: flex;
-  align-items: center;
-  gap: 0.4375rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-clay);
-}
-
-.ca-login__demo-rows {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem 1.5rem;
-  margin: 0;
-}
-
-.ca-login__demo-row {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4375rem;
-}
-
-.ca-login__demo-row dt {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #5c5346;
-}
-
-.ca-login__demo-row dd {
-  margin: 0;
-  font-size: 0.9375rem;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-  color: var(--color-ink);
-}
-
-.ca-login__demo-note {
-  font-size: 0.75rem;
-  line-height: 1.45;
-  font-weight: 500;
-  color: #5c5346;
-}
-
-/* ==========================================================================
    Body — takes the slack in the column
    ========================================================================== */
 

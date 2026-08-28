@@ -1,22 +1,24 @@
 /**
- * DEMO SIGN-IN — for reviewing the interface before auth exists.
+ * DEMO SIGN-IN — lets the interface be reviewed before auth exists.
  *
- * There is no backend yet, so the form accepts one hard-coded number and code and
- * sends you to the dashboard for whichever role you picked. The credentials are
- * printed on the sign-in screen on purpose: this is a review build, and a demo
- * you cannot get into is not a demo.
+ * There is no server to verify against, so any well-formed mobile number and
+ * six-digit code is accepted and you land on the dashboard for whichever role you
+ * picked. There is no fixed credential to look up, which is why the panel that
+ * used to print one has been removed.
+ *
+ * ── THIS IS NOT A LOGIN ─────────────────────────────────────────────────────
+ * While `IS_DEMO_AUTH` is true, sign-in guards nothing. There are also no route
+ * guards, so /agent/... and /admin/... are reachable by typing the URL whether you
+ * sign in or not. That is fine for a prototype with invented data and no real
+ * accounts; it is not fine the moment anything real is behind it.
  *
  * ── DELETE THIS FILE WHEN THE API LANDS ─────────────────────────────────────
- * Shipping it would mean a publicly documented credential that signs anyone in as
- * an administrator. `IS_DEMO_AUTH` is the single switch every use is behind, so
- * removing this file will surface every place that needs replacing as a build
- * error rather than leaving a silent hole.
+ * `IS_DEMO_AUTH` is the single switch every use sits behind, so removing this file
+ * turns each one into a build error rather than leaving a silent hole. Add the
+ * route guards at the same time.
  */
 
 export const IS_DEMO_AUTH = true;
-
-export const DEMO_MOBILE = '9876543210';
-export const DEMO_OTP = '123456';
 
 /** Where each role lands after signing in. */
 export const HOME_FOR_ROLE = {

@@ -51,6 +51,19 @@
   white-space: nowrap;
 }
 
+/* On a narrow phone the chip sits in the sticky strip beside the mark and the
+   role badge, and all three will not fit. The name drops to the initials, which
+   is no loss — the open menu restates the full name and the role. */
+@media (max-width: 30rem) {
+  .ca-usermenu__name {
+    display: none;
+  }
+
+  .ca-usermenu__chip {
+    padding-right: 0.4375rem;
+  }
+}
+
 .ca-usermenu__caret {
   flex: none;
   color: var(--color-ink-subtle);

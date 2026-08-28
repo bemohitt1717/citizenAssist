@@ -2,7 +2,6 @@ import { Link, NavLink } from 'react-router-dom';
 import Logo from '../../../../components/common/Logo/Logo';
 import UserMenu from '../../../../components/common/UserMenu/UserMenu';
 import Icon from '../../../../components/ui/Icon/Icon';
-import { IS_DEMO_AUTH } from '../../../../constants/demoAuth';
 import { ADMIN_COUNTS, ADMIN_PROFILE, ADMIN_SECTIONS } from '../../adminData';
 import './AdminShell.css';
 
@@ -34,14 +33,25 @@ const AdminShell = ({ activeId, children }) => {
   return (
     <div className="ca-admindash">
       <nav className="ca-admindash__rail" aria-label="Administrator sections">
-        <Link className="ca-admindash__brand" to="/" aria-label="Citizen Assist, home">
-          <Logo size={26} />
-        </Link>
+        <div className="ca-admindash__rail-top">
+          <Link className="ca-admindash__brand" to="/" aria-label="Citizen Assist, home">
+            <Logo size={26} />
+          </Link>
 
-        <span className="ca-admindash__role">
-          <Icon name="shieldCheck" size={12} />
-          Administrator
-        </span>
+          {/* No role badge here. Which dashboard you are in is already stated by
+              the identity chip's menu and by the URL, so a third copy was just
+              taking up the strip. */}
+
+          {/* Mobile placement. Hidden from 62rem, where the copy in the page bar
+              takes over. */}
+          <div className="ca-admindash__rail-menu">
+            <UserMenu
+              name={ADMIN_PROFILE.name}
+              roleLabel="Administrator"
+              profileTo="/admin/profile"
+            />
+          </div>
+        </div>
 
         <ul className="ca-admindash__nav">
           {ADMIN_SECTIONS.map((item) => {
@@ -90,22 +100,16 @@ const AdminShell = ({ activeId, children }) => {
             <p className="ca-admindash__blurb">{section.blurb}</p>
           </div>
 
-          <UserMenu
-            name={ADMIN_PROFILE.name}
-            roleLabel="Administrator"
-            profileTo="/admin/profile"
-          />
-        </div>
-
-        {IS_DEMO_AUTH && (
-          <div className="ca-admindash__demo">
-            <Icon name="shieldCheck" size={16} />
-            <p>
-              Sample data. No citizens, agents, requests or complaints exist yet — these records are
-              invented so the interface can be reviewed.
-            </p>
+          {/* Desktop placement. Hidden below 62rem, where the copy in the sticky
+              rail takes over. */}
+          <div className="ca-admindash__bar-menu">
+            <UserMenu
+              name={ADMIN_PROFILE.name}
+              roleLabel="Administrator"
+              profileTo="/admin/profile"
+            />
           </div>
-        )}
+        </div>
 
         <div className="ca-admindash__panel">{children}</div>
       </div>

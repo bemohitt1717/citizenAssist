@@ -2,12 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Icon from '../../../../components/ui/Icon/Icon';
 import GoogleMark from '../../../../components/ui/GoogleMark/GoogleMark';
-import {
-  DEMO_MOBILE,
-  DEMO_OTP,
-  HOME_FOR_ROLE,
-  IS_DEMO_AUTH,
-} from '../../../../constants/demoAuth';
+import { HOME_FOR_ROLE, IS_DEMO_AUTH } from '../../../../constants/demoAuth';
 import './LoginForm.css';
 
 /** Seconds a citizen must wait before asking for another OTP. */
@@ -35,8 +30,7 @@ const LoginForm = ({ role, onChangeRole }) => {
   // 'phone' asks for the number. 'otp' asks for the code.
   const [step, setStep] = useState('phone');
 
-  // Prefilled in demo mode so reviewing the dashboards takes two clicks.
-  const [phone, setPhone] = useState(IS_DEMO_AUTH ? DEMO_MOBILE : '');
+  const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [isBusy, setIsBusy] = useState(false);
@@ -101,12 +95,12 @@ const LoginForm = ({ role, onChangeRole }) => {
     setTimeout(() => {
       setIsBusy(false);
 
+      /* No verification until there is a server to verify against. Any
+         well-formed number and code gets through, which is why the panel that
+         used to publish a fixed credential is gone — there is nothing to publish.
+         Delete constants/demoAuth.js once the API lands and this branch, along
+         with every other use of the flag, becomes a build error. */
       if (IS_DEMO_AUTH) {
-        if (phone !== DEMO_MOBILE || otp !== DEMO_OTP) {
-          setError('For this demo, use the number and code shown above.');
-          return;
-        }
-
         navigate(HOME_FOR_ROLE[role.id] ?? '/');
       }
     }, 400);
@@ -149,31 +143,7 @@ const LoginForm = ({ role, onChangeRole }) => {
         {step === 'phone' ? role.lede : `We sent a 6-digit code to +91 ${phone}.`}
       </p>
 
-      {/* Review build only — see constants/demoAuth.js. */}
-      {IS_DEMO_AUTH && (
-        <div className="ca-login__demo">
-          <p className="ca-login__demo-title">
-            <Icon name="shieldCheck" size={14} />
-            Demo sign-in
-          </p>
 
-          <dl className="ca-login__demo-rows">
-            <div className="ca-login__demo-row">
-              <dt>Mobile</dt>
-              <dd data-numeric>{DEMO_MOBILE}</dd>
-            </div>
-            <div className="ca-login__demo-row">
-              <dt>Code</dt>
-              <dd data-numeric>{DEMO_OTP}</dd>
-            </div>
-          </dl>
-
-          <p className="ca-login__demo-note">
-            No accounts exist yet. This signs you into the {role.label.toLowerCase()} view so the
-            interface can be reviewed.
-          </p>
-        </div>
-      )}
 
       {/* ── Step 1: mobile number ───────────────────────────────────────── */}
       {step === 'phone' && (

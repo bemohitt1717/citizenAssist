@@ -163,23 +163,27 @@ foundation and is not required to view any screen.
 
 ### Signing in
 
-There is no authentication yet, so a demo credential is printed on the sign-in
-screen itself and the mobile field arrives prefilled:
+There is no server to verify against yet, so **any** well-formed mobile number and
+six-digit code gets through. Pick a role at `/login`, enter a 10-digit number
+starting 6–9, then any six digits.
 
-| Field | Value |
+| Role | Lands on |
 | --- | --- |
-| Mobile | `9876543210` |
-| Code | `123456` |
-
-Pick any role, send the code, verify. Citizens land on `/track`, agents on
-`/agent/dashboard`, administrators on `/admin/dashboard`.
+| Citizen | `/track` |
+| Service agent | `/agent/dashboard` |
+| Administrator | `/admin/dashboard` |
 
 > [!WARNING]
-> This is gated behind a single flag, `IS_DEMO_AUTH` in
-> `client/src/constants/demoAuth.js`. **Delete that file before any real
-> deployment** — shipping it means a publicly documented credential that signs
-> anyone in as administrator. Deleting it breaks the build at every place that
-> needs replacing, rather than leaving a silent hole.
+> **Sign-in is not a login.** While `IS_DEMO_AUTH` is true in
+> `client/src/constants/demoAuth.js` it guards nothing, and there are no route
+> guards either — `/agent/…` and `/admin/…` open by typing the URL whether you sign
+> in or not.
+>
+> That is fine for a prototype whose data is invented. It stops being fine the
+> moment anything real sits behind it. Delete that file when the API lands and add
+> the route guards at the same time; the flag is the single switch every use sits
+> behind, so removing it turns each one into a build error rather than a silent
+> hole.
 
 ---
 
