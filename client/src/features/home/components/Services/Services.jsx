@@ -1,10 +1,18 @@
 import { SERVICES } from '../../../../constants/services';
 import ServiceCard from '../ServiceCard/ServiceCard';
-import Icon from '../../../../components/ui/Icon/Icon';
 import useReveal from '../../../../hooks/useReveal';
 import usePointerGlow from '../../../../hooks/usePointerGlow';
 import './Services.css';
 
+/**
+ * Services.
+ *
+ * Six cards and nothing else. The "what we do, and what we do not" band that used
+ * to close this grid is gone; the boundary it stated now lives where it is
+ * actually needed — the hero lede says the certificate is issued by the government
+ * office, and the request dialog spells out that the charge is our fee only, on
+ * the step before a citizen commits to anything.
+ */
 const Services = () => {
   const [gridRef, isRevealed] = useReveal();
   /* Attached one level above the grid so it does not collide with the grid's
@@ -26,39 +34,10 @@ const Services = () => {
           </p>
         </header>
 
-        <div
-          ref={gridRef}
-          className={`ca-grid ${isRevealed ? 'is-revealed' : ''}`.trim()}
-        >
+        <div ref={gridRef} className={`ca-grid ${isRevealed ? 'is-revealed' : ''}`.trim()}>
           {SERVICES.map((service, index) => (
             <ServiceCard key={service.id} service={service} index={index} />
           ))}
-
-          {/* Sits inside the grid rather than under it, because the boundary is
-              part of the offer, not a footnote to it. */}
-          <aside className="ca-note" style={{ '--ca-i': SERVICES.length }}>
-            <div className="ca-note__head">
-              <span className="ca-note__icon">
-                <Icon name="shieldCheck" size={22} />
-              </span>
-
-              <h3 className="ca-note__title">What we do, and what we do not</h3>
-            </div>
-
-            <div className="ca-note__body">
-              <p className="ca-note__text">
-                We prepare your file, check it against the requirement list the office is currently
-                using, and follow it through to a decision. The certificate itself is issued and
-                signed by the government authority — never by us.
-              </p>
-
-              <p className="ca-note__text">
-                The amounts above are our assistance charge, shown as a range and separate from any
-                official government fee. Your agent confirms the exact figure with you before any
-                work begins.
-              </p>
-            </div>
-          </aside>
         </div>
       </div>
     </section>
