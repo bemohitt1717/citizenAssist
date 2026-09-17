@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import Navbar, { TOP_SENTINEL_ID } from "./components/common/Navbar/Navbar";
 import Footer from "./components/common/Footer/Footer";
 import LoginPrompt from "./components/common/LoginPrompt/LoginPrompt";
@@ -18,6 +19,20 @@ import RequestFlowHost from "./features/request/RequestFlowHost";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { ProtectedRoute, RoleRoute } from "./routes/ProtectedRoute";
 import { useRequestFlow } from "./features/request/requestFlowContext";
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+// Suppress Google OAuth warnings in production
+if (import.meta.env.PROD) {
+  const originalWarn = console.warn;
+  console.warn = (...args) => {
+    if (args[0]?.includes?.('GSI_LOGGER') || 
+        args[0]?.includes?.('google.accounts.id')) {
+      return; // Suppress Google OAuth warnings
+    }
+    originalWarn.apply(console, args);
+  };
+}
 
 /**
  * Login prompt wrapper component - only shows when user tries to request without login
@@ -57,70 +72,76 @@ const HomeLayout = () => (
 
 const App = () => (
   <ErrorBoundary>
-    <BrowserRouter>
-      <AuthProvider>
-        <RequestFlowProvider>
-          <ScrollToHash />
+    <GoogleOAuthProvider 
+      clientId={GOOGLE_CLIENT_ID}
+      onScriptLoadError={() => console.error('Failed to load Google OAuth script')}
+      onScriptLoadSuccess={() => console.log('Google OAuth script loaded successfully')}
+    >
+      <BrowserRouter>
+        <AuthProvider>
+          <RequestFlowProvider>
+            <ScrollToHash />
 
-          {/* Login prompt shown when user clicks "Start request" without login */}
-          <LoginPromptWrapper />
+            {/* Login prompt shown when user clicks "Start request" without login */}
+            <LoginPromptWrapper />
 
-          <Routes>
-            <Route path="/" element={<HomeLayout />} />
-            <Route path="/services/:serviceId" element={<ServiceDetail />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/become-an-agent" element={<BecomeAgent />} />
+            <Routes>
+              <Route path="/" element={<HomeLayout />} />
+              <Route path="/services/:serviceId" element={<ServiceDetail />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/become-an-agent" element={<BecomeAgent />} />
 
-            <Route element={<ProtectedRoute />}>
-              <Route
-                path="/citizen/:section?"
-                element={
-                  <RoleRoute allowedRoles={["citizen"]}>
-                    <CitizenDashboard />
-                  </RoleRoute>
-                }
-              />
+              <Route element={<ProtectedRoute />}>
+                <Route
+                  path="/citizen/:section?"
+                  element={
+                    <RoleRoute allowedRoles={["citizen"]}>
+                      <CitizenDashboard />
+                    </RoleRoute>
+                  }
+                />
 
-              <Route
-                path="/track"
-                element={
-                  <RoleRoute allowedRoles={["citizen"]}>
-                    <TrackRequest />
-                  </RoleRoute>
-                }
-              />
+                <Route
+                  path="/track"
+                  element={
+                    <RoleRoute allowedRoles={["citizen"]}>
+                      <TrackRequest />
+                    </RoleRoute>
+                  }
+                />
 
-              {/* The section is a URL segment, so each dashboard needs one route
-                  rather than one route per section. */}
-              <Route
-                path="/agent/:section?"
-                element={
-                  <RoleRoute allowedRoles={["agent"]}>
-                    <AgentDashboard />
-                  </RoleRoute>
-                }
-              />
-              <Route
-                path="/admin/:section?"
-                element={
-                  <RoleRoute allowedRoles={["admin"]}>
-                    <AdminDashboard />
-                  </RoleRoute>
-                }
-              />
-            </Route>
+                {/* The section is a URL segment, so each dashboard needs one route
+                    rather than one route per section. */}
+                <Route
+                  path="/agent/:section?"
+                  element={
+                    <RoleRoute allowedRoles={["agent"]}>
+                      <AgentDashboard />
+                    </RoleRoute>
+                  }
+                />
+                <Route
+                  path="/admin/:section?"
+                  element={
+                    <RoleRoute allowedRoles={["admin"]}>
+                      <AdminDashboard />
+                    </RoleRoute>
+                  }
+                />
+              </Route>
 
-            {/* A real 404. This previously rendered the home page, which meant a
-                broken link looked like it had worked. */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              {/* A real 404. This previously rendered the home page, which meant a
+                  broken link looked like it had worked. */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
 
-          {/* Mounted once, above the routes, so the flow survives whichever surface
-              opened it. */}
-          <RequestFlowHost />
-        </RequestFlowProvider>
-      </AuthProvider>
-    </BrowserRouter>
+            {/* Mounted once, above the routes, so the flow survives whichever surface
+                opened it. */}
+            <RequestFlowHost />
+          </RequestFlowProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </GoogleOAuthProvider>
   </ErrorBoundary>
 );
 

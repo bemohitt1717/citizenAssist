@@ -1,10 +1,14 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
 
 import User, { normalizePhone } from "../model/user.js";
 
 const JWT_EXPIRES_IN = "7d";
 const BCRYPT_ROUNDS = 12;
+
+// Initialize Google OAuth client
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const createToken = (user) => {
   return jwt.sign(
@@ -523,6 +527,7 @@ return res.json({
       name:req.user.name ?? "",
       phone:req.user.phone,
       email:req.user.email ?? "",
+      googleId:req.user.googleId ?? "",
       role:req.user.role,
       status:req.user.status,
 
@@ -533,3 +538,263 @@ return res.json({
 next(error);
 }
 }
+
+/**
+ * POST /api/auth/google
+ * Handle Google OAuth login/signup
+ */
+export const googleAuth = async (req, res, next) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        status: "error",
+        message: "Google credential is required.",
+      });
+    }
+
+    console.log('🔐 [GOOGLE-AUTH] Verifying Google token...');
+
+    // Verify Google token
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    console.log('✅ [GOOGLE-AUTH] Token verified:', { email, name, googleId });
+
+    // Check if user exists with this Google ID
+    let user = await User.findOne({ googleId });
+
+    if (user) {
+      console.log('👤 [GOOGLE-AUTH] Existing user found:', user._id);
+
+      // User exists, log them in
+      const token = createToken(user);
+
+      return res.json({
+        status: "success",
+        message: "Signed in successfully with Google.",
+        data: {
+          token,
+          user: {
+            id: user._id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            googleId: user.googleId,
+            role: user.role,
+            status: user.status,
+          },
+        },
+      });
+    }
+
+    // Check if user exists with this email
+    user = await User.findOne({ email });
+
+    if (user) {
+      console.log('📧 [GOOGLE-AUTH] User with email exists, linking Google account:', user._id);
+
+      // Link Google account to existing user
+      user.googleId = googleId;
+      if (!user.name) user.name = name;
+      await user.save();
+
+      const token = createToken(user);
+
+      return res.json({
+        status: "success",
+        message: "Google account linked successfully.",
+        data: {
+          token,
+          user: {
+            id: user._id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            googleId: user.googleId,
+            role: user.role,
+            status: user.status,
+          },
+        },
+      });
+    }
+
+    // New user, create account with Google
+    console.log('🆕 [GOOGLE-AUTH] Creating new user with Google:', email);
+
+    user = await User.create({
+      googleId,
+      email,
+      name,
+      // Don't set phone for Google-only accounts, will be added when they link mobile
+      role: "citizen",
+      status: "active",
+    });
+
+    const token = createToken(user);
+
+    return res.status(201).json({
+      status: "success",
+      message: "Account created successfully with Google.",
+      data: {
+        token,
+        needsPhone: true, // Flag to indicate user needs to add mobile number
+        user: {
+          id: user._id,
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+          googleId: user.googleId,
+          role: user.role,
+          status: user.status,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('❌ [GOOGLE-AUTH] Failed:', error);
+    next(error);
+  }
+};
+
+/**
+ * POST /api/auth/link-mobile
+ * Link mobile number and PIN to Google account
+ */
+export const linkMobile = async (req, res, next) => {
+  try {
+    const { phone: rawPhone, pin } = req.body;
+    const phone = normalizePhone(rawPhone);
+
+    console.log('📱 [LINK-MOBILE] Request:', { userId: req.user._id, phone });
+
+    if (!phone || !/^\+91[6-9]\d{9}$/.test(phone)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Enter a valid Indian mobile number.",
+      });
+    }
+
+    if (!isValidPin(pin)) {
+      return res.status(400).json({
+        status: "error",
+        message: "PIN must contain exactly 4 digits.",
+      });
+    }
+
+    if (isWeakPin(pin)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Choose a stronger PIN.",
+      });
+    }
+
+    // Check if phone is already used by another user
+    const existingUser = await User.findOne({ phone, _id: { $ne: req.user._id } });
+
+    if (existingUser) {
+      return res.status(409).json({
+        status: "error",
+        message: "This mobile number is already registered to another account.",
+      });
+    }
+
+    // Update current user
+    const user = await User.findById(req.user._id);
+    user.phone = phone;
+    user.pinHash = await bcrypt.hash(pin, BCRYPT_ROUNDS);
+    await user.save();
+
+    console.log('✅ [LINK-MOBILE] Mobile number linked successfully:', user._id);
+
+    return res.json({
+      status: "success",
+      message: "Mobile number and PIN added successfully.",
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+          googleId: user.googleId,
+          role: user.role,
+          status: user.status,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('❌ [LINK-MOBILE] Failed:', error);
+    next(error);
+  }
+};
+
+/**
+ * POST /api/auth/link-google
+ * Link Google account to mobile-based account
+ */
+export const linkGoogle = async (req, res, next) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        status: "error",
+        message: "Google credential is required.",
+      });
+    }
+
+    console.log('🔗 [LINK-GOOGLE] Verifying token for user:', req.user._id);
+
+    // Verify Google token
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name } = payload;
+
+    // Check if Google ID is already used by another user
+    const existingUser = await User.findOne({ googleId, _id: { $ne: req.user._id } });
+
+    if (existingUser) {
+      return res.status(409).json({
+        status: "error",
+        message: "This Google account is already linked to another user.",
+      });
+    }
+
+    // Update current user
+    const user = await User.findById(req.user._id);
+    user.googleId = googleId;
+    if (!user.email) user.email = email;
+    if (!user.name) user.name = name;
+    await user.save();
+
+    console.log('✅ [LINK-GOOGLE] Google account linked successfully:', user._id);
+
+    return res.json({
+      status: "success",
+      message: "Google account linked successfully.",
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+          googleId: user.googleId,
+          role: user.role,
+          status: user.status,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('❌ [LINK-GOOGLE] Failed:', error);
+    next(error);
+  }
+};

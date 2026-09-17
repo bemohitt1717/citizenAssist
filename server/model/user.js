@@ -32,11 +32,19 @@ const userSchema = new mongoose.Schema(
 
     phone: {
       type: String,
-      required: true,
       unique: true,
+      sparse: true, // Allow null/undefined for Google-only accounts
       trim: true,
       set: normalizePhone,
-      match: [/^\+91[6-9]\d{9}$/, "Enter a valid Indian mobile number"],
+      validate: {
+        validator: function(value) {
+          // Skip validation if no phone provided (Google-only account)
+          if (!value) return true;
+          // Validate format for actual phone numbers
+          return /^\+91[6-9]\d{9}$/.test(value);
+        },
+        message: "Enter a valid Indian mobile number"
+      }
     },
 
     pinHash: {

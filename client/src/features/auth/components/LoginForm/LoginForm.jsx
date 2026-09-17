@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import Icon from "../../../../components/ui/Icon/Icon";
 import GoogleMark from "../../../../components/ui/GoogleMark/GoogleMark";
 import PinInput from "../PinInput/PinInput";
-import { forgotPin, startAuth, signIn, signUp } from "../../authApi";
+import { forgotPin, googleLogin, startAuth, signIn, signUp } from "../../authApi";
 import { useAuth } from "../../../../context/useAuth";
 import { getApiErrorMessage } from "../../../../utils/apiError";
 import "./LoginForm.css";
@@ -109,6 +110,7 @@ const Note = ({ note, id }) => (
 const LoginForm = ({ role, onChangeRole }) => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const googleButtonRef = useRef(null);
 
   const [mode, setMode] = useState("signin");
   const [step, setStep] = useState("phone");
@@ -322,8 +324,41 @@ const LoginForm = ({ role, onChangeRole }) => {
   };
 
   const signInWithGoogle = () => {
-    // TODO(api): redirect to your Google OAuth start route, e.g.
-    // window.location.href = `/api/auth/google?role=${role.id}`;
+    // Trigger hidden Google button click
+    const googleButton = googleButtonRef.current?.querySelector('div[role="button"]');
+    if (googleButton) {
+      googleButton.click();
+    } else {
+      console.warn('[GOOGLE-LOGIN] Google button not found, retrying...');
+      // Retry after a short delay if button not found
+      setTimeout(() => {
+        const retryButton = googleButtonRef.current?.querySelector('div[role="button"]');
+        if (retryButton) retryButton.click();
+      }, 100);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setIsBusy(true);
+      setError("");
+      console.log('✅ [GOOGLE-LOGIN] Received credential');
+
+      const response = await googleLogin(credentialResponse.credential);
+      console.log('✅ [GOOGLE-LOGIN] Backend authentication successful');
+
+      finish(response.data.token, response.data.user);
+    } catch (requestError) {
+      console.error('❌ [GOOGLE-LOGIN] Failed:', requestError);
+      setError(getApiErrorMessage(requestError));
+      setIsBusy(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    console.error('❌ [GOOGLE-LOGIN] Google authentication failed');
+    setError('Google sign-in failed. Please try again.');
+    setIsBusy(false);
   };
 
   const heading = {
@@ -660,13 +695,26 @@ const LoginForm = ({ role, onChangeRole }) => {
               <span>or</span>
             </div>
 
+            {/* Hidden Google Login button - only mount on phone step to avoid re-initialization */}
+            <div ref={googleButtonRef} style={{ position: 'absolute', left: '-9999px', visibility: 'hidden' }}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap={false}
+                auto_select={false}
+                context={mode === 'signup' ? 'signup' : 'signin'}
+              />
+            </div>
+
+            {/* Custom Google button that triggers the hidden one */}
             <button
               type="button"
               className="ca-login__google"
               onClick={signInWithGoogle}
+              disabled={isBusy}
             >
               <GoogleMark size={20} />
-              Continue with Google
+              {mode === 'signup' ? 'Sign up with Google' : 'Sign in with Google'}
             </button>
           </>
         )}

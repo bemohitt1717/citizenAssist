@@ -76,3 +76,33 @@ export const getMe = async () => {
   });
   return response.data;
 };
+
+export const googleLogin = async (credential) => {
+  const response = await api.post("/auth/google", { credential });
+  console.info("[auth debug] POST /auth/google", response.status, {
+    role: response.data.data?.user?.role,
+  });
+  return response.data;
+};
+
+export const linkMobile = async (phone, pin) => {
+  const token = getToken();
+  const response = await api.post("/auth/link-mobile", { phone, pin }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  console.info("[auth debug] POST /auth/link-mobile", response.status);
+  return response.data;
+};
+
+export const linkGoogle = async (credential) => {
+  const token = getToken();
+  const response = await api.post("/auth/link-google", { credential }, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  console.info("[auth debug] POST /auth/link-google", response.status);
+  return response.data;
+};

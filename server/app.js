@@ -11,19 +11,33 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or Postman)
     if (!origin) return callback(null, true);
     
-    // Allow all localhost ports in development
-    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+    // Allowed origins list
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174',
+      process.env.CLIENT_ORIGIN, // From .env file
+    ].filter(Boolean); // Remove undefined values
+    
+    // Allow any localhost port in development
+    if (process.env.NODE_ENV === 'development' && 
+        (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:'))) {
       return callback(null, true);
     }
     
-    // In production, only allow specific origin
-    if (process.env.NODE_ENV === 'production' && origin === process.env.CLIENT_ORIGIN) {
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
     
+    // Log rejected origins for debugging
+    console.warn(`⚠️ CORS: Origin not allowed: ${origin}`);
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.use(cors(corsOptions));
