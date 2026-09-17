@@ -16,8 +16,9 @@ import './Login.css';
  * sign-in, so the only ways out are the mark and the back link.
  *
  * Asks for the role first. That choice only changes the wording and which
- * dashboard the session lands on: all three roles use the same one-time code or
- * Google account, against the same endpoints.
+ * dashboard the session lands on: all three roles use the same mobile-and-PIN or
+ * Google account, against the same endpoints. Signing in or signing up is chosen
+ * inside the form, not here — the role is the same either way.
  */
 const Login = () => {
   // null until a role is picked, which is what shows the chooser.

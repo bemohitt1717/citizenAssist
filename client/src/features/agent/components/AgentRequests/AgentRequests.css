@@ -68,3 +68,138 @@
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+
+.ca-areq-modal__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(20 21 14 / 0.45);
+  backdrop-filter: blur(5px);
+}
+
+.ca-areq-modal {
+  width: min(100%, 42rem);
+  max-height: calc(100svh - 2rem);
+  overflow: auto;
+  background: var(--color-shell);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 1.25rem;
+  box-shadow: 0 2rem 5rem rgb(22 23 15 / 0.28);
+}
+
+.ca-areq-modal__head,
+.ca-areq-modal__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.375rem;
+  background: var(--color-paper);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.ca-areq-modal__head h2 {
+  margin-top: 0.35rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.ca-areq-modal__reference,
+.ca-areq-modal__muted {
+  color: var(--color-ink-muted);
+  font-size: 0.875rem;
+}
+
+.ca-areq-modal__body {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.375rem;
+}
+
+.ca-areq-modal__body section {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.ca-areq-modal__message {
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-line);
+}
+
+.ca-areq-modal__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.ca-areq-modal__facts div {
+  padding: 0.75rem;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+}
+
+.ca-areq-modal__facts dt {
+  color: var(--color-ink-subtle);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.ca-areq-modal__facts dd {
+  margin: 0.3rem 0 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.ca-areq-modal__docs,
+.ca-areq-modal__timeline {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ca-areq-modal__docs li,
+.ca-areq-modal__timeline li {
+  padding: 0.75rem 0.875rem;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 0.65rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.ca-areq-modal__timeline li {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.ca-areq-modal__timeline span {
+  color: var(--color-ink-muted);
+}
+
+.ca-areq-modal__actions {
+  justify-content: flex-end;
+  border-top: 1px solid var(--color-line);
+  border-bottom: 0;
+}
+
+.ca-usermenu__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--color-ink-muted);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 999px;
+}

@@ -268,15 +268,18 @@
   box-shadow: 0 0 0 3px rgb(35 42 92 / 0.14);
 }
 
+/* Red, not clay — see the note in RequestFlow.css. One colour, one meaning. */
 .ca-agent__input[aria-invalid='true'],
 .ca-agent__select[aria-invalid='true'] {
-  border-color: var(--color-clay);
+  color: var(--color-error);
+  background-color: var(--color-error-tint);
+  border-color: var(--color-error);
 }
 
 .ca-agent__error {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--color-clay);
+  color: var(--color-error);
 }
 
 .ca-agent__hint {

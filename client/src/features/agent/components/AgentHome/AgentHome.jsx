@@ -1,8 +1,14 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { Panel, Panels, Readiness, Stat, Stats } from '../../../../components/ui/DataKit/DataKit';
 import { getServiceById } from '../../../../constants/services';
-import { AGENT_COUNTS, AGENT_EARNINGS, AGENT_REQUESTS } from '../../agentData';
+import {
+  decideAgentRequest,
+  getAgentDashboard,
+  getAgentEarnings,
+  getAgentRequests,
+} from '../../agentApi';
 
 /**
  * Agent dashboard landing.
@@ -12,13 +18,75 @@ import { AGENT_COUNTS, AGENT_EARNINGS, AGENT_REQUESTS } from '../../agentData';
  * since nothing about them is urgent.
  */
 const AgentHome = () => {
-  const offered = AGENT_REQUESTS.filter((request) => request.status === 'offered');
+  const [counts, setCounts] = useState(null);
+  const [offered, setOffered] = useState([]);
+  const [earnings, setEarnings] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const decide = () => {
-    // TODO(api): PATCH /api/agent/requests/:id  body: { decision: 'accept' | 'reject' }
-    // Accept -> status becomes 'review' and it moves into Active.
-    // Reject -> it returns to the admin pool for reassignment.
+  const fetchDashboard = async () => {
+    try {
+      const [dashboardResponse, requestsResponse, earningsResponse] = await Promise.all([
+        getAgentDashboard(),
+        getAgentRequests('offered'),
+        getAgentEarnings(),
+      ]);
+      setCounts(dashboardResponse.data.counts);
+      setOffered(requestsResponse.data.requests);
+      setEarnings(earningsResponse.data);
+      console.info('[agent] dashboard loaded', dashboardResponse.data.counts);
+    } catch (requestError) {
+      console.error('[agent] dashboard load failed', requestError);
+      setError(requestError.response?.data?.message || 'Could not load agent dashboard.');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    const loadDashboard = async () => {
+      try {
+        const [dashboardResponse, requestsResponse, earningsResponse] = await Promise.all([
+          getAgentDashboard(),
+          getAgentRequests('offered'),
+          getAgentEarnings(),
+        ]);
+        if (!isCurrent) return;
+        setCounts(dashboardResponse.data.counts);
+        setOffered(requestsResponse.data.requests);
+        setEarnings(earningsResponse.data);
+        console.info('[agent] dashboard loaded', dashboardResponse.data.counts);
+      } catch (requestError) {
+        if (!isCurrent) return;
+        console.error('[agent] dashboard load failed', requestError);
+        setError(requestError.response?.data?.message || 'Could not load agent dashboard.');
+      } finally {
+        if (isCurrent) setIsLoading(false);
+      }
+    };
+
+    loadDashboard();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
+
+  const decide = async (requestId, decision) => {
+    try {
+      await decideAgentRequest(requestId, decision);
+      console.info('[agent] dashboard decision saved', { requestId, decision });
+      await fetchDashboard();
+    } catch (requestError) {
+      console.error('[agent] dashboard decision failed', requestError);
+      setError(requestError.response?.data?.message || 'Could not update this request.');
+    }
+  };
+
+  if (isLoading) return <p>Loading dashboard...</p>;
+  if (!counts || !earnings) return <p role="alert">{error || 'Dashboard unavailable.'}</p>;
 
   return (
     <>
@@ -26,18 +94,18 @@ const AgentHome = () => {
         <Stat
           icon="document"
           label="Awaiting your decision"
-          value={AGENT_COUNTS.pending}
+          value={counts.pending}
           note="Accept or decline"
-          attention={AGENT_COUNTS.pending > 0}
+          attention={counts.pending > 0}
         />
-        <Stat icon="clock" label="In progress" value={AGENT_COUNTS.active} note="Accepted by you" />
+        <Stat icon="clock" label="In progress" value={counts.active} note="Accepted by you" />
         <Stat
           icon="phone"
           label="Waiting on citizen"
-          value={AGENT_COUNTS.action}
+          value={counts.action}
           note="You asked for something"
         />
-        <Stat icon="check" label="Completed" value={AGENT_COUNTS.completed} note="All time" />
+        <Stat icon="check" label="Completed" value={counts.completed} note="All time" />
       </Stats>
 
       <Panels split>
@@ -68,11 +136,11 @@ const AgentHome = () => {
                 </span>
 
                 <span className="ca-row__actions">
-                  <button type="button" className="ca-row__yes" onClick={decide}>
+                  <button type="button" className="ca-row__yes" onClick={() => decide(request.id, 'accept')}>
                     <Icon name="check" size={13} />
                     Accept
                   </button>
-                  <button type="button" className="ca-row__no" onClick={decide}>
+                  <button type="button" className="ca-row__no" onClick={() => decide(request.id, 'reject')}>
                     Decline
                   </button>
                 </span>
@@ -91,10 +159,9 @@ const AgentHome = () => {
           }
         >
           <Stats>
-            <Stat label="This month" value={AGENT_EARNINGS.thisMonth} />
-            <Stat label="Not yet settled" value={AGENT_EARNINGS.unsettled} />
-            <Stat label="All time" value={AGENT_EARNINGS.allTime} />
-            <Stat label="Done this month" value={AGENT_EARNINGS.completedThisMonth} />
+            <Stat label="This month" value={earnings.thisMonth} />
+            <Stat label="All time" value={earnings.allTime} />
+            <Stat label="Done this month" value={earnings.completedThisMonth} />
           </Stats>
         </Panel>
       </Panels>

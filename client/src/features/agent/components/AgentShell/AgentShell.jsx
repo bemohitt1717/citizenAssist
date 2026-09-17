@@ -3,6 +3,7 @@ import Logo from '../../../../components/common/Logo/Logo';
 import UserMenu from '../../../../components/common/UserMenu/UserMenu';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { AGENT_COUNTS, AGENT_PROFILE, AGENT_SECTIONS } from '../../agentData';
+import { useAuth } from '../../../../context/authContext';
 import './AgentShell.css';
 
 /**
@@ -16,13 +17,15 @@ import './AgentShell.css';
  * status lapses needs to see that without hunting for it.
  */
 const AgentShell = ({ activeId, children }) => {
+  const { user } = useAuth();
   const section = AGENT_SECTIONS.find((item) => item.id === activeId) ?? AGENT_SECTIONS[0];
 
   /* The landing section greets by name; every other section is titled after
      itself. Repeating a greeting on Requests or Earnings would just push the
      content down for nothing. */
   const isHome = section.id === 'dashboard';
-  const title = isHome ? `Welcome back, ${AGENT_PROFILE.name}` : section.label;
+  const displayName = user?.name || 'Agent';
+  const title = isHome ? `Welcome back, ${displayName}` : section.label;
 
   return (
     <div className="ca-agentdash">
@@ -40,9 +43,9 @@ const AgentShell = ({ activeId, children }) => {
               takes over. */}
           <div className="ca-agentdash__rail-menu">
             <UserMenu
-              name={AGENT_PROFILE.name}
+              name={displayName}
               roleLabel="Service agent"
-              profileTo="/agent/profile"
+              profileTo="/agent"
             />
           </div>
         </div>
@@ -88,9 +91,9 @@ const AgentShell = ({ activeId, children }) => {
               rail takes over. */}
           <div className="ca-agentdash__bar-menu">
             <UserMenu
-              name={AGENT_PROFILE.name}
+              name={displayName}
               roleLabel="Service agent"
-              profileTo="/agent/profile"
+              profileTo="/agent"
             />
           </div>
         </div>

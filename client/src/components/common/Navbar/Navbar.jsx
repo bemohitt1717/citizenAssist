@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Logo from '../Logo/Logo';
 import Icon from '../../ui/Icon/Icon';
+import { useAuth } from '../../../context/authContext';
 import './Navbar.css';
 
 /* Two links, because the citizen-facing product is two pages deep. A third
@@ -41,8 +42,10 @@ const SectionLink = ({ isHome, href, className, children, onClick }) => {
 const Navbar = () => {
   const [isCondensed, setIsCondensed] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const isHome = useLocation().pathname === '/';
-
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   /* Observed rather than listened for: a scroll handler reflows on every
      frame, an IntersectionObserver fires twice for the whole page. */
   useEffect(() => {
@@ -75,7 +78,38 @@ const Navbar = () => {
     };
   }, [isMenuOpen]);
 
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    if (!isProfileOpen) return undefined;
+
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.ca-nav__profile-wrapper')) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isProfileOpen]);
+
   const closeMenu = () => setIsMenuOpen(false);
+
+  const handleLogout = () => {
+    logout();
+    setIsProfileOpen(false);
+    navigate('/');
+  };
+
+  // Get display name for profile button (name or default "User")
+  const displayName = user?.name ? user.name.split(' ')[0] : 'User';
+
+  // Get dashboard route based on role
+  const getDashboardRoute = () => {
+    if (user?.role === 'citizen') return '/citizen';
+    if (user?.role === 'agent') return '/agent';
+    if (user?.role === 'admin') return '/admin';
+    return '/';
+  };
 
   return (
     <header className={`ca-nav ${isCondensed ? 'is-condensed' : ''}`.trim()}>
@@ -98,16 +132,56 @@ const Navbar = () => {
         </nav>
 
         <div className="ca-nav__actions">
-          {/* Status is the thing a citizen returns for, so it sits in the bar
-              rather than behind a login wall. */}
-          <Link className="ca-pill ca-pill--outline ca-nav__track" to="/track">
-            <Icon name="track" size={19} />
-            <span className="ca-nav__track-text">Track request</span>
-          </Link>
+          {/* Show profile button if logged in, else show login button */}
+          {user ? (
+            <div className="ca-nav__profile-wrapper">
+              <button
+                type="button"
+                className="ca-pill ca-pill--solid ca-nav__profile-btn"
+                onClick={() => setIsProfileOpen((open) => !open)}
+                aria-expanded={isProfileOpen}
+              >
+                <Icon name="shieldCheck" size={16} />
+                {displayName}
+              </button>
 
-          <Link className="ca-pill ca-pill--solid ca-nav__login" to="/login">
-            Log in
-          </Link>
+              {isProfileOpen && (
+                <div className="ca-nav__profile-dropdown">
+                  <div className="ca-nav__profile-header">
+                    <span className="ca-nav__profile-name">
+                      {user.name || 'User'}
+                    </span>
+                    <span className="ca-nav__profile-phone">{user.phone}</span>
+                    <span className="ca-nav__profile-role">{user.role}</span>
+                  </div>
+
+                  <div className="ca-nav__profile-links">
+                    <Link
+                      to={getDashboardRoute()}
+                      className="ca-nav__profile-link"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <Icon name="track" size={16} />
+                      Dashboard
+                    </Link>
+
+                    <button
+                      type="button"
+                      className="ca-nav__profile-link"
+                      onClick={handleLogout}
+                    >
+                      <Icon name="arrowRight" size={16} />
+                      Log out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link className="ca-pill ca-pill--solid ca-nav__login" to="/login">
+              Log in
+            </Link>
+          )}
 
           <button
             type="button"
@@ -148,26 +222,46 @@ const Navbar = () => {
               </SectionLink>
             </span>
           ))}
-
-          <span
-            className="ca-nav__panel-item"
-            style={{ '--ca-stagger': `${0.06 + NAV_LINKS.length * 0.055}s` }}
-          >
-            <Link className="ca-nav__panel-link" to="/track" onClick={closeMenu}>
-              Track request
-              <Icon name="track" size={19} />
-            </Link>
-          </span>
         </nav>
 
         <div className="ca-nav__panel-foot">
-          <Link
-            className="ca-pill ca-pill--solid ca-nav__panel-cta"
-            to="/login"
-            onClick={closeMenu}
-          >
-            Log in
-          </Link>
+          {user ? (
+            <div className="ca-nav__panel-user">
+              <div className="ca-nav__panel-user-info">
+                <span className="ca-nav__panel-user-name">
+                  {user.name || 'User'}
+                </span>
+                <span className="ca-nav__panel-user-phone">{user.phone}</span>
+              </div>
+
+              <Link
+                className="ca-pill ca-pill--outline"
+                to={getDashboardRoute()}
+                onClick={closeMenu}
+              >
+                Dashboard
+              </Link>
+
+              <button
+                type="button"
+                className="ca-pill ca-pill--solid"
+                onClick={() => {
+                  handleLogout();
+                  closeMenu();
+                }}
+              >
+                Log out
+              </button>
+            </div>
+          ) : (
+            <Link
+              className="ca-pill ca-pill--solid ca-nav__panel-cta"
+              to="/login"
+              onClick={closeMenu}
+            >
+              Log in
+            </Link>
+          )}
         </div>
       </div>
     </header>

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { AGENT_TERMS, EXPERIENCE_BANDS } from '../../../../constants/agent';
 import { SERVICES } from '../../../../constants/services';
+import { applyAsAgent } from '../../agentApi';
+import { useAuth } from '../../../../context/authContext';
 import './AgentForm.css';
 
 const STEPS = ['terms', 'details', 'review'];
@@ -39,29 +41,57 @@ const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
 /**
  * The agent application.
  *
+ * Auto-fills name, mobile, and email from logged-in citizen's profile.
+ * Validates that the mobile number is different from citizen account.
+ *
  * ── NO BACKEND HERE ─────────────────────────────────────────────────────────
  * Nothing in this file talks to a server. The single place an API call belongs is
  * marked `TODO(api)` in `submit`, and the finished record is already assembled
  * there. Replace that one function body and nothing else has to change.
  *
  * Both mobile and email are required, because sign-in accepts either — the
- * mobile for a one-time code, the email for Google. Collecting both here means
- * an agent can use whichever they have to hand later.
+ * mobile with a PIN, the email for Google. Collecting both here means an agent
+ * can use whichever they have to hand later.
  */
 const AgentForm = () => {
+  const { user } = useAuth();
   const [stepIndex, setStepIndex] = useState(0);
   const [direction, setDirection] = useState('forward');
   const [form, setForm] = useState(EMPTY);
   const [touched, setTouched] = useState({});
   const [consent, setConsent] = useState(false);
   const [isSent, setIsSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+
+  // Auto-fill form with citizen profile data
+  useEffect(() => {
+    if (user) {
+      console.log('👤 [AGENT-FORM] Auto-filling form with user data:', { 
+        name: user.name, 
+        phone: user.phone?.replace('+91', ''), 
+        email: user.email 
+      });
+      
+      setForm((current) => ({
+        ...current,
+        fullName: user.name || current.fullName,
+        mobile: user.phone ? user.phone.replace('+91', '') : current.mobile,
+        email: user.email || current.email,
+      }));
+    }
+  }, [user]);
 
   const step = STEPS[stepIndex];
   const copy = STEP_COPY[step];
 
   const errors = {
     fullName: form.fullName.trim().length < 2 ? 'Please enter your full name.' : null,
-    mobile: isValidMobile(form.mobile) ? null : 'Enter a 10-digit mobile number.',
+    mobile: isValidMobile(form.mobile) 
+      ? (user?.phone && `+91${form.mobile}` === user.phone 
+        ? 'You must use a different mobile number than your citizen account.' 
+        : null)
+      : 'Enter a 10-digit mobile number.',
     email: isValidEmail(form.email) ? null : 'Enter the email on your Google account.',
     district: form.district.trim() === '' ? 'Which district do you work in?' : null,
     experience: form.experience === '' ? 'Pick one.' : null,
@@ -88,11 +118,37 @@ const AgentForm = () => {
     setTouched((current) => ({ ...current, services: true }));
   };
 
-  const submit = () => {
-    // TODO(api): POST /api/agents/apply  body: form
-    // On success -> setIsSent(true)
-    // On failure -> show the server's message
-    setIsSent(true);
+  const submit = async () => {
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    // Final validation: prevent same mobile as citizen account
+    if (user?.phone && `+91${form.mobile}` === user.phone) {
+      console.log('❌ [AGENT-FORM] Validation failed: same mobile as citizen account');
+      setSubmitError('You cannot apply as an agent with the same mobile number as your citizen account. Please use a different number.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      console.log('📝 [AGENT-FORM] Submitting agent application:', {
+        name: form.fullName,
+        mobile: form.mobile,
+        email: form.email,
+        district: form.district,
+      });
+      
+      await applyAsAgent(form);
+      console.log('✅ [AGENT-FORM] Application submitted successfully');
+      setIsSent(true);
+    } catch (error) {
+      console.error('❌ [AGENT-FORM] Application submission failed:', error);
+      setSubmitError(
+        error.response?.data?.message || 'Failed to submit application. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const goNext = () => {
@@ -176,6 +232,21 @@ const AgentForm = () => {
       </div>
 
       <div className="ca-agent__card">
+        {submitError && (
+          <div style={{ 
+            padding: '1rem 1.25rem', 
+            marginBottom: '1.25rem',
+            backgroundColor: '#fef2f2', 
+            border: '1px solid #fecaca', 
+            borderRadius: '0.75rem',
+            color: '#991b1b',
+            fontSize: '0.9375rem',
+            lineHeight: '1.6'
+          }}>
+            {submitError}
+          </div>
+        )}
+
         <div className="ca-agent__step" data-dir={direction} key={step}>
           <h2 className="ca-agent__step-title">{copy.title}</h2>
           <p className="ca-agent__step-lede">{copy.lede}</p>

@@ -1,27 +1,77 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Field, Panel, Panels, SaveRow } from '../../../../components/ui/DataKit/DataKit';
-import { ADMIN_COUNTS, ADMIN_PROFILE } from '../../adminData';
+import { getAdminProfile, updateAdminProfile, getAdminDashboard } from '../../adminApi';
+import { useAuth } from '../../../../context/authContext';
 
 /**
- * Administrator profile.
- *
- * Only the display name is editable. The mobile and email are the two sign-in
- * identities, and an admin who could change either from inside a session could
- * hand the whole platform to someone else without re-verifying — so those are
- * changed by another administrator, out of band.
- *
- * There is deliberately no "create admin" control here. New admins are created by
- * an existing one through a route that is not part of this dashboard, which keeps
- * the most privileged action in the product out of a settings page.
+ * Administrator profile with real data.
  */
 const AdminProfile = () => {
-  const [name, setName] = useState(ADMIN_PROFILE.name);
+  const [name, setName] = useState('');
+  const [profile, setProfile] = useState(null);
+  const [counts, setCounts] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user, setUser } = useAuth(); // Get auth context to update navbar
 
-  const save = () => {
-    // TODO(api): PATCH /api/admin/profile  body: { name }
-    setIsSaved(true);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      console.log('👤 [ADMIN-PROFILE] Fetching profile...');
+      const [profileData, dashboardData] = await Promise.all([
+        getAdminProfile(),
+        getAdminDashboard(),
+      ]);
+
+      setProfile(profileData.data.profile);
+      setName(profileData.data.profile.name);
+      setCounts(dashboardData.data.counts);
+      console.log('✅ [ADMIN-PROFILE] Profile loaded');
+    } catch (error) {
+      console.error('❌ [ADMIN-PROFILE] Failed to fetch:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const save = async () => {
+    if (!name || name.trim() === '') {
+      alert('Name cannot be empty');
+      return;
+    }
+
+    try {
+      console.log('💾 [ADMIN-PROFILE] Updating name:', name);
+      await updateAdminProfile(name.trim());
+      setIsSaved(true);
+
+      // Update auth context so navbar reflects new name immediately
+      if (user) {
+        setUser({ ...user, name: name.trim() });
+      }
+
+      // Update local profile state so UI reflects change
+      setProfile((prev) => ({ ...prev, name: name.trim() }));
+
+      console.log('✅ [ADMIN-PROFILE] Profile updated, UI synced');
+
+      setTimeout(() => setIsSaved(false), 2000);
+    } catch (error) {
+      console.error('❌ [ADMIN-PROFILE] Update failed:', error);
+      alert('Failed to update profile. Please try again.');
+    }
+  };
+
+  if (isLoading) {
+    return <div style={{ padding: '2rem' }}>Loading profile...</div>;
+  }
+
+  if (!profile) {
+    return <div style={{ padding: '2rem' }}>Failed to load profile.</div>;
+  }
 
   return (
     <Panels split>
@@ -42,7 +92,7 @@ const AdminProfile = () => {
             <Field
               id="admin-mobile"
               label="Mobile"
-              value={ADMIN_PROFILE.mobile}
+              value={profile.phone}
               disabled
               hint="A sign-in identity. Changed by another administrator."
               data-numeric
@@ -51,7 +101,7 @@ const AdminProfile = () => {
             <Field
               id="admin-email"
               label="Google account"
-              value={ADMIN_PROFILE.email}
+              value={profile.email || 'Not set'}
               disabled
               hint="A sign-in identity. Changed by another administrator."
             />
@@ -80,7 +130,7 @@ const AdminProfile = () => {
             <span className="ca-row__body">
               <span className="ca-row__title">Administrator since</span>
               <span className="ca-row__meta" data-numeric>
-                {ADMIN_PROFILE.since}
+                {profile.since}
               </span>
             </span>
           </li>
@@ -89,7 +139,7 @@ const AdminProfile = () => {
             <span className="ca-row__body">
               <span className="ca-row__title">Agents you have verified</span>
               <span className="ca-row__meta" data-numeric>
-                {ADMIN_COUNTS.agents}
+                {counts?.agents || 0}
               </span>
             </span>
           </li>

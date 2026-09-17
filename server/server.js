@@ -1,13 +1,24 @@
-import app from './app.js';
+import "dotenv/config";
 
-/**
- * Starts the server. The app itself is built in app.js.
- *
- * The port comes from the environment so a host can choose it, falling back to
- * 5000 for local work.
- */
+import app from './app.js';
+import connectDB from './config/db.js';
+
 const PORT = process.env.PORT ?? 5000;
 
-app.listen(PORT, () => {
-  console.log(`Citizen Assist API running on http://localhost:${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`✅ Citizen Assist API running on port ${PORT}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
+

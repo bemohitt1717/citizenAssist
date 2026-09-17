@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { Empty, Panel, Tabs } from '../../../../components/ui/DataKit/DataKit';
-import { ADMIN_COMPLAINTS } from '../../adminData';
+import { getComplaints, resolveComplaint } from '../../adminApi';
 
 const FILTERS = [
   { id: 'open', label: 'Open' },
@@ -9,28 +9,65 @@ const FILTERS = [
 ];
 
 /**
- * Complaints.
- *
- * Resolving requires typing what was done about it, not just clicking a button.
- * A complaint closed with no record is indistinguishable from one ignored, and the
- * resolution text is the only thing that makes the outcome auditable later.
+ * Complaints management with real data.
  */
 const AdminComplaints = () => {
   const [filterId, setFilterId] = useState('open');
   const [drafts, setDrafts] = useState({});
+  const [complaints, setComplaints] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const rows = ADMIN_COMPLAINTS.filter((complaint) => complaint.status === filterId);
+  useEffect(() => {
+    fetchComplaints();
+  }, []);
+
+  const fetchComplaints = async () => {
+    try {
+      console.log('📞 [ADMIN-COMPLAINTS] Fetching complaints...');
+      const response = await getComplaints();
+      setComplaints(response.data.complaints);
+      console.log(`✅ [ADMIN-COMPLAINTS] Loaded ${response.data.complaints.length} complaints`);
+    } catch (error) {
+      console.error('❌ [ADMIN-COMPLAINTS] Failed to fetch:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const rows = complaints.filter((complaint) => complaint.status === filterId);
 
   const tabs = FILTERS.map((filter) => ({
     ...filter,
-    count: ADMIN_COMPLAINTS.filter((complaint) => complaint.status === filter.id).length,
+    count: complaints.filter((complaint) => complaint.status === filter.id).length,
   }));
 
-  const resolve = (id) => {
-    // TODO(api): PATCH /api/admin/complaints/:id
-    //   body: { status: 'resolved', resolution: drafts[id] }
-    setDrafts((current) => ({ ...current, [id]: '' }));
+  const handleResolve = async (id) => {
+    const resolution = drafts[id];
+
+    if (!resolution || resolution.trim() === '') {
+      alert('Please enter what was done about this complaint.');
+      return;
+    }
+
+    try {
+      console.log('✅ [ADMIN-COMPLAINTS] Resolving complaint:', id);
+      await resolveComplaint(id, resolution.trim());
+      console.log('✅ [ADMIN-COMPLAINTS] Complaint marked as resolved');
+
+      // Clear draft
+      setDrafts((current) => ({ ...current, [id]: '' }));
+
+      // Refresh list
+      await fetchComplaints();
+    } catch (error) {
+      console.error('❌ [ADMIN-COMPLAINTS] Failed to resolve:', error);
+      alert('Failed to resolve complaint. Please try again.');
+    }
   };
+
+  if (isLoading) {
+    return <div style={{ padding: '2rem' }}>Loading complaints...</div>;
+  }
 
   return (
     <>
@@ -103,8 +140,9 @@ const AdminComplaints = () => {
                     <button
                       type="button"
                       className="ca-row__yes"
-                      onClick={() => resolve(complaint.id)}
+                      onClick={() => handleResolve(complaint.id)}
                       aria-disabled={!drafts[complaint.id]}
+                      disabled={!drafts[complaint.id]}
                     >
                       <Icon name="check" size={13} />
                       Mark resolved

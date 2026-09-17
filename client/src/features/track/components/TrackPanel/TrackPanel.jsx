@@ -1,13 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { getServiceById } from '../../../../constants/services';
 import {
-  DEMO_REQUESTS,
   STATUS_ASIDE,
   TOTAL_STAGES,
   getStatus,
 } from '../../../../constants/requests';
+import {
+  createComplaint,
+  getMyRequests,
+  updateMyRequest,
+  uploadRequestDocument,
+} from '../../../request/requestApi';
 import './TrackPanel.css';
 
 /**
@@ -80,19 +85,121 @@ const EmptyState = () => (
 /**
  * Track a request.
  *
- * ── WIRING THIS UP ──────────────────────────────────────────────────────────
- * Replace `DEMO_REQUESTS` with whatever the API returns. The shape it needs is
- * documented at the top of constants/requests.js, and it is one flat document
- * per request with an append-only `timeline` array — no joins.
- *
- * The empty state is not a placeholder for later: it is the state a real account
- * opens in, so it is built now and renders whenever the list is empty.
+ * Shows all requests submitted by logged-in citizen, fetched from backend.
  */
 const TrackPanel = () => {
-  const requests = DEMO_REQUESTS;
-  const [activeId, setActiveId] = useState(requests[0]?.id ?? null);
+  const [requests, setRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeId, setActiveId] = useState(null);
+  const [complaintSubject, setComplaintSubject] = useState('');
+  const [complaintDescription, setComplaintDescription] = useState('');
+  const [complaintMessage, setComplaintMessage] = useState('');
+  const [isSubmittingComplaint, setIsSubmittingComplaint] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editDetails, setEditDetails] = useState({ fullName: '', phone: '', email: '', district: '', address: '' });
+  const [editFiles, setEditFiles] = useState([]);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editMessage, setEditMessage] = useState('');
+  const fileInputRef = useRef(null);
+
+  // Fetch requests on mount
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        const response = await getMyRequests();
+        setRequests(response.data.requests);
+        setActiveId(response.data.requests[0]?._id || null);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load requests.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRequests();
+  }, []);
 
   const active = requests.find((request) => request.id === activeId) ?? requests[0];
+
+  useEffect(() => {
+    if (!active) return;
+    setEditDetails(active.applicantDetails || { fullName: '', phone: '', email: '', district: '', address: '' });
+    setIsEditing(false);
+    setEditFiles([]);
+    setEditMessage('');
+  }, [active?.id]);
+
+  const refreshRequests = async () => {
+    const response = await getMyRequests();
+    setRequests(response.data.requests);
+  };
+
+  const saveRequestEdit = async (event) => {
+    event.preventDefault();
+    if (!active || !editDetails.fullName?.trim() || !editDetails.phone?.trim() || !editDetails.district?.trim()) return;
+
+    try {
+      setIsSavingEdit(true);
+      setEditMessage('');
+      await updateMyRequest(active.id, editDetails);
+      for (const file of editFiles) await uploadRequestDocument(active.id, file);
+      await refreshRequests();
+      setIsEditing(false);
+      setEditFiles([]);
+      setEditMessage('Request updated and sent to your agent.');
+    } catch (requestError) {
+      setEditMessage(requestError.response?.data?.message || 'Could not update this request.');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const submitComplaint = async (event) => {
+    event.preventDefault();
+    if (!complaintSubject.trim() || !complaintDescription.trim()) return;
+
+    try {
+      setIsSubmittingComplaint(true);
+      setComplaintMessage('');
+      await createComplaint(active.id, complaintSubject, complaintDescription);
+      setComplaintSubject('');
+      setComplaintDescription('');
+      setComplaintMessage('Complaint submitted. An admin will review it.');
+      console.info('[citizen] complaint submitted', active.reference);
+    } catch (requestError) {
+      console.error('[citizen] complaint submission failed', requestError);
+      setComplaintMessage(
+        requestError.response?.data?.message || 'Could not submit complaint.',
+      );
+    } finally {
+      setIsSubmittingComplaint(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="ca-track">
+        <div className="ca-track__head">
+          <h1 className="ca-track__title">Track a request</h1>
+          <p className="ca-track__lede">Loading your requests...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="ca-track">
+        <div className="ca-track__head">
+          <h1 className="ca-track__title">Track a request</h1>
+          <p className="ca-track__lede" style={{ color: 'var(--color-error)' }}>
+            {error}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="ca-track">
@@ -103,13 +210,6 @@ const TrackPanel = () => {
           Every request you have placed, with where it has got to and what your agent has said about
           it.
         </p>
-
-        {requests.length > 0 && (
-          <p className="ca-track__demo">
-            <Icon name="shieldCheck" size={13} />
-            Sample data
-          </p>
-        )}
       </div>
 
       {requests.length === 0 ? (
@@ -201,6 +301,108 @@ const TrackPanel = () => {
                 </li>
               ))}
             </ol>
+
+            {!['completed', 'cancelled', 'rejected'].includes(active.status) && (
+              <section className="ca-track__edit">
+                <div className="ca-track__edit-head">
+                  <div>
+                    <h3 className="ca-track__complaint-title">Need to correct something?</h3>
+                    <p className="ca-track__edit-note">Update your information or send the missing documents requested by your agent.</p>
+                  </div>
+                  <button type="button" className="ca-pill" onClick={() => setIsEditing((current) => !current)}>
+                    {isEditing ? 'Close' : 'Edit request'}
+                  </button>
+                </div>
+
+                {isEditing && (
+                  <form className="ca-track__edit-form" onSubmit={saveRequestEdit}>
+                    {['fullName', 'phone', 'email', 'district', 'address'].map((field) => (
+                      <label className="ca-field" key={field}>
+                        <span className="ca-field__label">{field === 'fullName' ? 'Full name' : field[0].toUpperCase() + field.slice(1)}</span>
+                        {field === 'address' ? (
+                          <textarea className="ca-field__area" value={editDetails[field] || ''} onChange={(event) => setEditDetails((current) => ({ ...current, [field]: event.target.value }))} />
+                        ) : (
+                          <input className="ca-field__input" value={editDetails[field] || ''} onChange={(event) => setEditDetails((current) => ({ ...current, [field]: event.target.value }))} required={['fullName', 'phone', 'district'].includes(field)} />
+                        )}
+                      </label>
+                    ))}
+                    
+                    <div className="ca-track__file-section">
+                      <span className="ca-field__label">Add missing documents</span>
+                      <button
+                        type="button"
+                        className={`ca-track__file-slot ${editFiles.length > 0 ? 'is-filled' : ''}`.trim()}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <span className="ca-track__file-mark">
+                          <Icon name={editFiles.length > 0 ? 'check' : 'document'} size={17} />
+                        </span>
+                        
+                        <span className="ca-track__file-body">
+                          <span className="ca-track__file-name">
+                            {editFiles.length > 0 
+                              ? `${editFiles.length} document${editFiles.length > 1 ? 's' : ''} selected`
+                              : 'Choose documents to upload'
+                            }
+                          </span>
+                          <span className="ca-track__file-hint">
+                            {editFiles.length > 0 
+                              ? editFiles.map(f => f.name).join(', ')
+                              : 'PDF, JPG, PNG · Multiple files allowed'
+                            }
+                          </span>
+                        </span>
+                        
+                        <span className="ca-track__file-action">
+                          {editFiles.length > 0 ? 'Change' : 'Attach'}
+                        </span>
+                      </button>
+                      
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        multiple
+                        hidden
+                        onChange={(event) => setEditFiles(Array.from(event.target.files || []))}
+                      />
+                    </div>
+                    
+                    <button type="submit" className="ca-pill ca-pill--solid" disabled={isSavingEdit}>
+                      {isSavingEdit ? 'Sending...' : 'Save and send to agent'}
+                    </button>
+                  </form>
+                )}
+                {editMessage && <p role="status">{editMessage}</p>}
+              </section>
+            )}
+
+            <form className="ca-track__complaint" onSubmit={submitComplaint}>
+              <h3 className="ca-track__complaint-title">Need help with this request?</h3>
+              <input
+                className="ca-field__input"
+                value={complaintSubject}
+                onChange={(event) => setComplaintSubject(event.target.value)}
+                placeholder="Complaint subject"
+                aria-label="Complaint subject"
+              />
+              <textarea
+                className="ca-field__area"
+                value={complaintDescription}
+                onChange={(event) => setComplaintDescription(event.target.value)}
+                placeholder="Tell us what went wrong"
+                aria-label="Complaint details"
+                required
+              />
+              <button
+                type="submit"
+                className="ca-pill ca-pill--solid"
+                disabled={isSubmittingComplaint || !complaintSubject.trim() || !complaintDescription.trim()}
+              >
+                {isSubmittingComplaint ? 'Sending...' : 'Raise complaint'}
+              </button>
+              {complaintMessage && <p role="status">{complaintMessage}</p>}
+            </form>
           </div>
         </div>
       )}

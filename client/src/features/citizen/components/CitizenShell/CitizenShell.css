@@ -1,0 +1,206 @@
+/* ==========================================================================
+   Citizen dashboard shell
+
+   Matching admin/agent layout. Simple, consistent structure.
+   ========================================================================== */
+
+.ca-citizendash {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  background-color: var(--color-shell);
+}
+
+@media (min-width: 62rem) {
+  .ca-citizendash {
+    display: grid;
+    grid-template-columns: 15.5rem minmax(0, 1fr);
+  }
+}
+
+/* ==========================================================================
+   Rail
+   ========================================================================== */
+
+.ca-citizendash__rail {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  background-color: var(--color-paper);
+  border-bottom: 1px solid var(--color-line);
+  box-shadow: 0 1px 2px rgb(22 23 15 / 0.03), 0 12px 24px -20px rgb(22 23 15 / 0.3);
+}
+
+@media (min-width: 62rem) {
+  .ca-citizendash__rail {
+    height: 100svh;
+    gap: 1.25rem;
+    padding: 1.125rem 1rem;
+    border-bottom: 0;
+    border-right: 1px solid var(--color-line);
+    box-shadow: none;
+  }
+}
+
+.ca-citizendash__rail-top {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+@media (min-width: 62rem) {
+  .ca-citizendash__rail-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+}
+
+.ca-citizendash__brand {
+  display: inline-flex;
+  flex: none;
+  padding: 0.25rem;
+  border-radius: 999px;
+}
+
+.ca-citizendash__rail-menu {
+  margin-left: auto;
+  flex: none;
+}
+
+@media (max-width: 24rem) {
+  .ca-citizendash__rail-top .ca-logo__wordmark {
+    display: none;
+  }
+}
+
+@media (min-width: 62rem) {
+  .ca-citizendash__rail-menu {
+    display: none;
+  }
+}
+
+.ca-citizendash__bar-menu {
+  display: none;
+}
+
+@media (min-width: 62rem) {
+  .ca-citizendash__bar-menu {
+    display: block;
+  }
+}
+
+.ca-citizendash__nav {
+  display: grid;
+  gap: 0.1875rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 61.99rem) {
+  .ca-citizendash__nav {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    gap: 0.375rem;
+    min-width: 0;
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .ca-citizendash__nav::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.ca-citizendash__link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.014em;
+  white-space: nowrap;
+  color: var(--color-ink-muted);
+  border-radius: 0.75rem;
+  transition:
+    color 0.3s var(--ease-out-expo),
+    background-color 0.3s var(--ease-out-expo);
+}
+
+.ca-citizendash__link:hover {
+  color: var(--color-ink);
+  background-color: rgb(22 23 15 / 0.04);
+}
+
+.ca-citizendash__link.is-active {
+  color: var(--color-paper);
+  background-color: var(--color-indigo);
+}
+
+.ca-citizendash__link svg {
+  flex: none;
+  opacity: 0.85;
+}
+
+/* ==========================================================================
+   Main
+   ========================================================================== */
+
+.ca-citizendash__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ca-citizendash__bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 2rem) clamp(1.125rem, 3vw, 2.25rem) 0;
+}
+
+.ca-citizendash__heading {
+  display: grid;
+  gap: 0.375rem;
+}
+
+.ca-citizendash__title {
+  font-size: clamp(1.5rem, 3.2vw, 2.125rem);
+  line-height: 1.05;
+  letter-spacing: -0.036em;
+  font-weight: 900;
+}
+
+.ca-citizendash__blurb {
+  max-width: 56ch;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+}
+
+.ca-citizendash__panel {
+  flex: 1;
+  padding: clamp(1.25rem, 3vw, 2rem) clamp(1.125rem, 3vw, 2.25rem) clamp(2rem, 4vw, 3rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-citizendash__link {
+    transition: none;
+  }
+}

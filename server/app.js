@@ -1,59 +1,72 @@
-import express from 'express';
+import express from "express";
+import cors from "cors";
+import apiRoute from "./routes/index.route.js";
+import { authorize, protect } from "./middleware/auth.midleware.js";
 
-/**
- * The Express application.
- *
- * This file only builds and exports the app — it does not listen. Starting the
- * server is server.js's job. Keeping those apart means tests can import the app
- * without a port being opened.
- *
- * Nothing here is wired to the frontend yet. Every route the client expects is
- * marked `TODO(api)` in the client source, with its method, path and body already
- * written next to it.
- */
 const app = express();
 
-app.use(express.json());
+// CORS configuration - allow all localhost ports in development
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+    
+    // Allow all localhost ports in development
+    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      return callback(null, true);
+    }
+    
+    // In production, only allow specific origin
+    if (process.env.NODE_ENV === 'production' && origin === process.env.CLIENT_ORIGIN) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+};
 
-/** Health check. Useful for confirming the process is up. */
-app.get('/api/health', (req, res) => {
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use("/uploads", express.static("uploads"));
+
+app.get("/api/health", (req, res) => {
   res.json({
-    status: 'ok',
-    service: 'Citizen Assist API',
+    status: "ok",
+    service: "Citizen Assist API",
     time: new Date().toISOString(),
   });
 });
 
-/* Routes to come:
- *   /api/auth       send-otp, verify-otp, google, sign-out
- *   /api/services   the six services
- *   /api/requests   create, list, status updates, notes
- *   /api/agents     apply, list, verify
- *   /api/admin      overview counts, complaints
- */
+app.get("/api/test/admin-only", protect, authorize("citizen"), (req, res) => {
+  return res.json({
+    status: "success",
+    message: "citizen access granted",
+    user: {
+      id: req.user._id,
+      role: req.user.role,
+    },
+  });
+});
 
-/** Anything unmatched. JSON, not HTML, since every client of this is code. */
+app.use(apiRoute);
+
 app.use((req, res) => {
   res.status(404).json({
-    status: 'error',
+    status: "error",
     message: `No route for ${req.method} ${req.originalUrl}`,
   });
 });
 
-/**
- * Error handler. Must take four arguments for Express to recognise it as one,
- * and must be registered last.
- */
 app.use((error, req, res, next) => {
   console.error(error);
 
   res.status(error.status ?? 500).json({
-    status: 'error',
-    // The real message only in development — in production it can leak internals.
+    status: "error",
     message:
-      process.env.NODE_ENV === 'production'
-        ? 'Something went wrong on our side.'
-        : (error.message ?? 'Unknown error'),
+      process.env.NODE_ENV === "production"
+        ? "Something went wrong on our side."
+        : (error.message ?? "Unknown error"),
   });
 });
 

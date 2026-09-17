@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import Logo from '../Logo/Logo';
 import Icon from '../../ui/Icon/Icon';
 import { SERVICES } from '../../../constants/services';
+import { useAuth } from '../../../context/authContext';
 import './Footer.css';
 
 /* PLACEHOLDERS — replace before any real deployment. No live helpline or
@@ -18,12 +19,15 @@ const PLATFORM_LINKS = [
   { label: 'About Citizen Assist', href: '#about' },
   { label: 'Track a request', to: '/track' },
   { label: 'Log in', to: '/login' },
-  { label: 'Become an agent', to: '/become-an-agent' },
+  { label: 'Become an agent', to: '/become-an-agent', hideForAgent: true },
 ];
 
 /* No social row. There are no accounts to link to yet, and a row of icons
    pointing at "#" is decoration pretending to be a footer. */
-const Footer = () => (
+const Footer = () => {
+  const { user } = useAuth();
+  
+  return (
   <footer className="ca-footer">
     <div className="ca-footer__inner">
       <div className="ca-footer__brand">
@@ -51,19 +55,26 @@ const Footer = () => (
       <nav className="ca-footer__col ca-footer__col--platform" aria-label="Platform">
         <h2 className="ca-label ca-footer__col-title">Platform</h2>
         <ul className="ca-footer__list">
-          {PLATFORM_LINKS.map((link) => (
-            <li key={link.to ?? link.href}>
-              {link.to ? (
-                <Link className="ca-footer__link" to={link.to}>
-                  {link.label}
-                </Link>
-              ) : (
-                <a className="ca-footer__link" href={link.href}>
-                  {link.label}
-                </a>
-              )}
-            </li>
-          ))}
+          {PLATFORM_LINKS.map((link) => {
+            // Hide "Become an agent" if user is already an agent
+            if (link.hideForAgent && user?.role === 'agent') {
+              return null;
+            }
+            
+            return (
+              <li key={link.to ?? link.href}>
+                {link.to ? (
+                  <Link className="ca-footer__link" to={link.to}>
+                    {link.label}
+                  </Link>
+                ) : (
+                  <a className="ca-footer__link" href={link.href}>
+                    {link.label}
+                  </a>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </nav>
 
@@ -105,5 +116,6 @@ const Footer = () => (
     </div>
   </footer>
 );
+};
 
 export default Footer;

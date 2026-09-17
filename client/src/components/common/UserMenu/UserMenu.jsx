@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import Icon from '../../ui/Icon/Icon';
-import ConfirmDialog from '../../ui/ConfirmDialog/ConfirmDialog';
-import './UserMenu.css';
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import Icon from "../../ui/Icon/Icon";
+import ConfirmDialog from "../../ui/ConfirmDialog/ConfirmDialog";
+import { useAuth } from "../../../context/useAuth";
+import "./UserMenu.css";
 
 /**
  * The identity chip and its menu.
@@ -22,6 +23,7 @@ import './UserMenu.css';
  */
 const UserMenu = ({ name, roleLabel, profileTo }) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -38,36 +40,38 @@ const UserMenu = ({ name, roleLabel, profileTo }) => {
     };
 
     const onKeyDown = (event) => {
-      if (event.key !== 'Escape') return;
+      if (event.key !== "Escape") return;
       setIsOpen(false);
       setIsPinned(false);
     };
 
-    document.addEventListener('mousedown', onDocumentDown);
-    window.addEventListener('keydown', onKeyDown);
+    document.addEventListener("mousedown", onDocumentDown);
+    window.addEventListener("keydown", onKeyDown);
 
     return () => {
-      document.removeEventListener('mousedown', onDocumentDown);
-      window.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener("mousedown", onDocumentDown);
+      window.removeEventListener("keydown", onKeyDown);
     };
   }, [isOpen]);
 
-  const initials = name
-    .split(' ')
+  const safeName = typeof name === "string" && name.trim() ? name.trim() : "User";
+  const initials = safeName
+    .split(" ")
     .map((part) => part[0])
+    .filter(Boolean)
     .slice(0, 2)
-    .join('');
+    .join("") || "U";
 
   const signOut = () => {
-    // TODO(api): POST /api/auth/sign-out, then clear the stored session.
+    logout();
     setIsConfirming(false);
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
     <>
       <div
-        className={`ca-usermenu ${isOpen ? 'is-open' : ''}`.trim()}
+        className={`ca-usermenu ${isOpen ? "is-open" : ""}`.trim()}
         ref={wrapRef}
         onMouseEnter={() => setIsOpen(true)}
         onMouseLeave={() => {
@@ -87,14 +91,14 @@ const UserMenu = ({ name, roleLabel, profileTo }) => {
           <span className="ca-usermenu__avatar" aria-hidden="true">
             {initials}
           </span>
-          <span className="ca-usermenu__name">{name}</span>
+          <span className="ca-usermenu__name">{safeName}</span>
           <Icon name="arrowDown" size={15} className="ca-usermenu__caret" />
         </button>
 
         {isOpen && (
           <div className="ca-usermenu__panel" role="menu">
             <div className="ca-usermenu__who">
-              <span className="ca-usermenu__who-name">{name}</span>
+              <span className="ca-usermenu__who-name">{safeName}</span>
               <span className="ca-usermenu__who-role">{roleLabel}</span>
             </div>
 
@@ -108,7 +112,7 @@ const UserMenu = ({ name, roleLabel, profileTo }) => {
               }}
             >
               <Icon name="shieldCheck" size={16} />
-              Profile
+              Dashboard
             </Link>
 
             <button

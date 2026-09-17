@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import Icon from '../../../../components/ui/Icon/Icon';
 import capsuleImage from '../../../../assets/images/customer-care.jpg';
+import { useAuth } from '../../../../context/authContext';
 import './Hero.css';
 
 /**
@@ -11,7 +12,10 @@ import './Hero.css';
  * government marks and a non-affiliation line to cover them. Dropping the row
  * removed both the clutter and the implied-endorsement risk at once.
  */
-const Hero = () => (
+const Hero = () => {
+  const { user } = useAuth();
+  
+  return (
   <section className="ca-hero" id="top">
     <div className="ca-hero__inner">
       <h1 className="ca-hero__headline">
@@ -48,15 +52,19 @@ const Hero = () => (
           </span>
         </a>
 
-        <Link className="ca-pill ca-pill--outline ca-hero__action" to="/become-an-agent">
-          Become an agent
-          <span className="ca-pill__disc">
-            <Icon name="arrowUpRight" size={16} />
-          </span>
-        </Link>
+        {/* Only show "Become an agent" button if user is NOT an agent */}
+        {user?.role !== 'agent' && (
+          <Link className="ca-pill ca-pill--outline ca-hero__action" to="/become-an-agent">
+            Become an agent
+            <span className="ca-pill__disc">
+              <Icon name="arrowUpRight" size={16} />
+            </span>
+          </Link>
+        )}
       </div>
     </div>
   </section>
 );
+};
 
 export default Hero;

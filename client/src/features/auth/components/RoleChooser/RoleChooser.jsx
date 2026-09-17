@@ -6,9 +6,9 @@ import './RoleChooser.css';
 /**
  * Asks which role is signing in, before showing the form.
  *
- * The role does not change how sign-in works — every role uses the same one-time
- * code or Google account. It only selects the wording, and tells the backend
- * which dashboard to send the session to.
+ * The role does not change how sign-in works — every role uses the same mobile
+ * number and PIN, or the same Google account. It only selects the wording, and
+ * tells the backend which dashboard to send the session to.
  */
 const RoleChooser = ({ onPick }) => (
   <div className="ca-roles">
@@ -16,8 +16,7 @@ const RoleChooser = ({ onPick }) => (
       <h1 className="ca-roles__title">Who is signing in?</h1>
 
       <p className="ca-roles__lede">
-        The way you sign in is the same for everyone — a code to your mobile, or your Google account.
-        This just tells us where to take you.
+        Choose your role. Sign in with your mobile number and PIN, or Google account.
       </p>
 
       <ul className="ca-roles__list">

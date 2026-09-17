@@ -1,118 +1,324 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import Icon from '../../../../components/ui/Icon/Icon';
-import GoogleMark from '../../../../components/ui/GoogleMark/GoogleMark';
-import { HOME_FOR_ROLE, IS_DEMO_AUTH } from '../../../../constants/demoAuth';
-import './LoginForm.css';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import Icon from "../../../../components/ui/Icon/Icon";
+import GoogleMark from "../../../../components/ui/GoogleMark/GoogleMark";
+import PinInput from "../PinInput/PinInput";
+import { forgotPin, startAuth, signIn, signUp } from "../../authApi";
+import { useAuth } from "../../../../context/useAuth";
+import { getApiErrorMessage } from "../../../../utils/apiError";
+import "./LoginForm.css";
 
-/** Seconds a citizen must wait before asking for another OTP. */
-const RESEND_WAIT = 30;
+/** Digits in a PIN. Declared once so the copy and the checks cannot drift. */
+const PIN_LENGTH = 4;
 
 /**
- * Sign in, in two steps: a mobile number, then the code sent to it.
+ * The steps each mode walks, in order. Drives the progress rail as well as the
+ * flow, so a mode can never show a rail that disagrees with the screens it has.
+ *
+ * Signing in checks a PIN, so it asks once. Signing up sets one, so it asks
+ * twice — a PIN typed wrong the first time and never re-read would lock someone
+ * out of an account they just made.
+ */
+const STEPS = {
+  signin: ["phone", "enter"],
+  signup: ["phone", "create", "confirm"],
+};
+
+const HOME_BY_ROLE = {
+  citizen: "/citizen/dashboard",
+  agent: "/agent/dashboard",
+  admin: "/admin/dashboard",
+};
+
+/**
+ * Turns away the PINs people reach for first: one digit four times over (1111,
+ * 0000) and straight runs either way (1234, 4321).
+ *
+ * Only applied while choosing a PIN. Someone signing in with a weak PIN they
+ * already have needs to get into their account, not a lecture.
+ *
+ * This is a courtesy, not a security control — the real check belongs on the
+ * server, where it cannot be skipped. It is here because the moment to say so is
+ * while someone is choosing, not after.
+ */
+const isPinTooObvious = (pin) => {
+  const digits = [...pin].map(Number);
+
+  const allSame = digits.every((digit) => digit === digits[0]);
+  const climbing = digits.every(
+    (digit, i) => i === 0 || digit === digits[i - 1] + 1,
+  );
+  const falling = digits.every(
+    (digit, i) => i === 0 || digit === digits[i - 1] - 1,
+  );
+
+  return allSame || climbing || falling;
+};
+
+/**
+ * The one line under a field: what is wrong, that nothing is, or what to expect.
+ *
+ * Always returns something, so the slot is never empty and the layout does not
+ * jump when a verdict arrives. `tone` names both the colour and whether a screen
+ * reader should be interrupted.
+ */
+const noteFor = ({ problem, isSettled, settled, waiting }) => {
+  if (problem) return { tone: "error", text: problem };
+  if (isSettled) return { tone: "ok", text: settled };
+  return { tone: "hint", text: waiting };
+};
+
+/** Draws one of those lines. Only a problem interrupts a screen reader. */
+const Note = ({ note, id }) => (
+  <p
+    className={`ca-login__note ca-login__note--${note.tone}`}
+    id={id}
+    role={note.tone === "error" ? "alert" : undefined}
+  >
+    {note.text}
+  </p>
+);
+
+/**
+ * Sign in, or sign up, against a mobile number and a 4-digit PIN.
+ *
+ * Signing in is the default, because most arrivals already have an account. It
+ * asks for the number, then the PIN, and that is all. Signing up adds one screen:
+ * the PIN is asked for twice, since nobody should be locked out of an account
+ * they created a minute ago by a digit they mistyped once.
+ *
+ * Each step answers while it is being typed into. Nobody should have to press a
+ * button to find out that their four digits did not match — the row goes green
+ * when it will be accepted and red when it will not, with a line of copy either
+ * way, so the colour confirms a message rather than replacing one.
  *
  * ── NO BACKEND HERE ─────────────────────────────────────────────────────────
- * Nothing in this file talks to a server. The three places an API call belongs
- * are marked `TODO(api)` below, and each one already has the value it needs in
- * scope. To wire it up you replace the body of that one function — no other
- * part of the component has to change.
+ * Nothing in this file talks to a server. The places an API call belongs are
+ * marked `TODO(api)` below and each already has the values it needs in scope, so
+ * wiring it up means replacing the body of one function — no other part of the
+ * component has to change. The PIN never leaves this component today, and when it
+ * does it should be sent once and hashed server-side, never stored here.
  *
- * The `role` prop only supplies wording, and is passed to the API so the server
- * knows which dashboard to return. Citizen, agent and admin all authenticate the
- * same two ways, against the same endpoints and the same users collection — the
- * role is a field on the user, not a separate system.
+ * The `role` prop only supplies wording and the dashboard to land on. Citizen,
+ * agent and admin all authenticate the same way, against the same endpoints and
+ * the same users collection — the role is a field on the user, not a separate
+ * system.
  *
  * Kept to plain useState on purpose so it stays easy to read and extend.
  */
 const LoginForm = ({ role, onChangeRole }) => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  // 'phone' asks for the number. 'otp' asks for the code.
-  const [step, setStep] = useState('phone');
-
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [error, setError] = useState('');
+  const [mode, setMode] = useState("signin");
+  const [step, setStep] = useState("phone");
+  const [phone, setPhone] = useState("");
+  const [pin, setPin] = useState("");
+  const [confirmPin, setConfirmPin] = useState("");
+  const [isRevealed, setIsRevealed] = useState(false);
+  const [error, setError] = useState("");
   const [isBusy, setIsBusy] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(0);
+  const [isForgotPin, setIsForgotPin] = useState(false);
+  const canSignUp = role.id === "citizen";
 
-  // Counts the resend cooldown down to zero, one second at a time.
-  useEffect(() => {
-    if (secondsLeft <= 0) return undefined;
+  const copy = role[mode];
+  const steps = STEPS[mode];
+  const stepIndex = steps.indexOf(step);
 
-    const timer = setTimeout(() => setSecondsLeft(secondsLeft - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [secondsLeft]);
+  /* ── What each step currently thinks of its input ─────────────────────────
+     Derived every render rather than stored, so a verdict can never fall out of
+     step with the digits it is describing. */
 
   // Indian mobile numbers: ten digits, starting 6 to 9.
   const isPhoneValid = /^[6-9]\d{9}$/.test(phone);
-  const isOtpValid = /^\d{6}$/.test(otp);
+
+  const isPinComplete = pin.length === PIN_LENGTH;
+  const isPinWeak = isPinComplete && isPinTooObvious(pin);
+  const isPinReady = isPinComplete && !isPinWeak;
+
+  const isConfirmComplete = confirmPin.length === PIN_LENGTH;
+  const isConfirmMatched = isConfirmComplete && confirmPin === pin;
+
+  const goToStep = (next) => {
+    setStep(next);
+    setError("");
+  };
 
   // Keeps anything that is not a digit out of the number field entirely.
   const onPhoneChange = (event) => {
-    setPhone(event.target.value.replace(/\D/g, '').slice(0, 10));
-    setError('');
+    setPhone(event.target.value.replace(/\D/g, "").slice(0, 10));
+    setError("");
   };
 
-  const onOtpChange = (event) => {
-    setOtp(event.target.value.replace(/\D/g, '').slice(0, 6));
-    setError('');
+  const onPinChange = (next) => {
+    setPin(next);
+    setError("");
   };
 
-  const sendOtp = (event) => {
+  const onConfirmChange = (next) => {
+    setConfirmPin(next);
+    setError("");
+  };
+
+  /** Store the backend session and use its role for navigation. */
+  const finish = (token, loggedInUser) => {
+    setIsBusy(false);
+    login(token, loggedInUser);
+    navigate(HOME_BY_ROLE[loggedInUser.role] ?? "/");
+  };
+
+  const submitPhone = (event) => {
     event.preventDefault();
 
     if (!isPhoneValid) {
-      setError('Enter a 10-digit mobile number starting with 6, 7, 8 or 9.');
+      setError("Enter a 10-digit mobile number starting with 6, 7, 8 or 9.");
       return;
     }
 
-    setIsBusy(true);
+    const checkPhone = async () => {
+      try {
+        const response = await startAuth(phone, role.id);
+        const { exists, hasPin } = response.data;
+        console.info("[auth debug] phone step", { mode, exists, hasPin });
 
-    // TODO(api): POST /api/auth/send-otp  body: { phone, role: role.id }
-    // On success  -> setStep('otp')
-    // On failure  -> setError(message from the server)
-    setTimeout(() => {
-      setIsBusy(false);
-      setStep('otp');
-      setSecondsLeft(RESEND_WAIT);
-    }, 400);
-  };
+        if (mode === "signin") {
+          if (!exists) {
+            setError("No account found. Switch to sign up to create one.");
+            return;
+          }
 
-  const verifyOtp = (event) => {
-    event.preventDefault();
+          if (!hasPin) {
+            setError(
+              "This account does not have a PIN yet. Switch to sign up.",
+            );
+            return;
+          }
 
-    if (!isOtpValid) {
-      setError('Enter the 6-digit code we sent you.');
-      return;
-    }
+          goToStep("enter");
+          return;
+        }
 
-    setIsBusy(true);
+        if (exists) {
+          setError("An account already exists. Switch to sign in instead.");
+          return;
+        }
 
-    // TODO(api): POST /api/auth/verify-otp  body: { phone, otp, role: role.id }
-    // On success  -> store the session, then send them to their dashboard
-    // On failure  -> setError('That code did not match. Try again.')
-    setTimeout(() => {
-      setIsBusy(false);
-
-      /* No verification until there is a server to verify against. Any
-         well-formed number and code gets through, which is why the panel that
-         used to publish a fixed credential is gone — there is nothing to publish.
-         Delete constants/demoAuth.js once the API lands and this branch, along
-         with every other use of the flag, becomes a build error. */
-      if (IS_DEMO_AUTH) {
-        navigate(HOME_FOR_ROLE[role.id] ?? '/');
+        goToStep("create");
+      } catch (requestError) {
+        console.info(
+          "[auth debug] phone step failed",
+          requestError.response?.status,
+        );
+        setError(getApiErrorMessage(requestError));
+      } finally {
+        setIsBusy(false);
       }
-    }, 400);
+    };
+
+    checkPhone();
   };
 
-  const resendOtp = () => {
-    if (secondsLeft > 0) return;
-    setOtp('');
-    setError('');
-    setSecondsLeft(RESEND_WAIT);
+  const submitEnter = (event) => {
+    event.preventDefault();
+    if (!isPinComplete) return;
 
-    // TODO(api): POST /api/auth/send-otp  body: { phone }
+    const authenticate = async () => {
+      try {
+        const response = await signIn(phone, pin, role.id);
+        console.info("[auth debug] sign-in flow succeeded");
+        finish(response.data.token, response.data.user);
+      } catch (requestError) {
+        console.info(
+          "[auth debug] sign-in flow failed",
+          requestError.response?.status,
+        );
+        setError(getApiErrorMessage(requestError));
+        setIsBusy(false);
+      }
+    };
+
+    authenticate();
+  };
+
+  const submitPin = (event) => {
+    event.preventDefault();
+    if (!isPinReady) return;
+
+    setConfirmPin("");
+    goToStep("confirm");
+  };
+
+  const handleForgotPin = () => {
+    if (!isPhoneValid) {
+      setError("Enter a valid mobile number first.");
+      return;
+    }
+
+    setIsForgotPin(true);
+    setPin("");
+    setConfirmPin("");
+    setError("");
+    setIsRevealed(false);
+    goToStep("create");
+  };
+
+  const submitConfirm = (event) => {
+    event.preventDefault();
+    if (!isConfirmMatched) return;
+
+    const completeAuth = async () => {
+      try {
+        const response = isForgotPin
+          ? await forgotPin(phone, pin, role.id)
+          : await signUp(phone, pin);
+
+        console.info(
+          isForgotPin ? "[auth debug] forgot-pin flow succeeded" : "[auth debug] sign-up flow succeeded",
+        );
+        finish(response.data.token, response.data.user);
+      } catch (requestError) {
+        console.info(
+          isForgotPin ? "[auth debug] forgot-pin flow failed" : "[auth debug] sign-up flow failed",
+          requestError.response?.status,
+        );
+        setError(getApiErrorMessage(requestError));
+        setIsBusy(false);
+      }
+    };
+
+    completeAuth();
+  };
+
+  /* Swapping between signing in and signing up.
+     The number survives — it is the same number either way, and making someone
+     retype it to correct a mode they picked by mistake is a punishment. The PINs
+     do not: they mean different things in the two modes. */
+  const switchMode = () => {
+    if (!canSignUp) return;
+    const next = mode === "signin" ? "signup" : "signin";
+
+    setMode(next);
+    setIsForgotPin(false);
+    setPin("");
+    setConfirmPin("");
+    setError("");
+    setIsRevealed(false);
+    setStep(step === "phone" ? "phone" : STEPS[next][1]);
+  };
+
+  const changeNumber = () => {
+    setIsForgotPin(false);
+    setPin("");
+    setConfirmPin("");
+    setIsRevealed(false);
+    goToStep("phone");
+  };
+
+  const redoPin = () => {
+    setIsForgotPin(false);
+    setPin("");
+    setConfirmPin("");
+    goToStep("create");
   };
 
   const signInWithGoogle = () => {
@@ -120,165 +326,376 @@ const LoginForm = ({ role, onChangeRole }) => {
     // window.location.href = `/api/auth/google?role=${role.id}`;
   };
 
-  const backToPhone = () => {
-    setStep('phone');
-    setOtp('');
-    setError('');
-  };
+  const heading = {
+    phone: copy.title,
+    enter: isForgotPin ? "Reset your PIN" : "Enter your PIN",
+    create: isForgotPin ? "Set a new PIN" : "Set your PIN",
+    confirm: isForgotPin ? "Confirm your new PIN" : "Confirm your PIN",
+  }[step];
+
+  const lede = {
+    phone: copy.lede,
+    enter: isForgotPin
+      ? `Choose a new 4-digit PIN for +91 ${phone}.`
+      : `The 4-digit PIN you set for +91 ${phone}.`,
+    create: isForgotPin
+      ? `Pick a fresh 4-digit PIN for +91 ${phone}.`
+      : `Four digits, entered every time you sign in with +91 ${phone}.`,
+    confirm: isForgotPin
+      ? "Type the same new digits again so you can sign in without trouble."
+      : "Type the same four digits again so a slip cannot lock you out.",
+  }[step];
+
+  /* The number is only marked wrong once it has been submitted — going red on the
+     second digit of ten would be nagging, not helping. A PIN is judged as soon as
+     all four are in, which is the first moment there is anything to judge. */
+  const phoneNote = noteFor({
+    problem: error,
+    isSettled: false,
+    waiting: "We use this to sign you in, nothing else.",
+  });
+
+  /* Signing in, the only thing this side can tell is whether four digits are
+     there. Whether they are the right four is the server's answer, and the copy
+     stays careful not to promise otherwise. */
+  const enterNote = noteFor({
+    problem: error,
+    isSettled: isPinComplete,
+    settled: "All four in.",
+    waiting: "The four digits you chose for this number.",
+  });
+
+  const pinNote = noteFor({
+    problem:
+      error ||
+      (isPinWeak
+        ? "Too easy to guess. No repeats like 1111, no runs like 1234."
+        : ""),
+    isSettled: isPinReady,
+    settled: "That works. Confirm it next.",
+    waiting: "Skip birth years and anything printed on a card you carry.",
+  });
+
+  const confirmNote = noteFor({
+    problem:
+      error ||
+      (isConfirmComplete && !isConfirmMatched
+        ? "Not the same as the PIN you chose."
+        : ""),
+    isSettled: isConfirmMatched,
+    settled: "Both entries match.",
+    waiting: "It has to match the PIN you just chose.",
+  });
+
+  const phoneStatus = error ? "invalid" : isPhoneValid ? "valid" : "idle";
+  const enterStatus = error ? "invalid" : isPinComplete ? "valid" : "idle";
+  const pinStatus =
+    pinNote.tone === "error" ? "invalid" : isPinReady ? "valid" : "idle";
+  const confirmStatus =
+    confirmNote.tone === "error"
+      ? "invalid"
+      : isConfirmMatched
+        ? "valid"
+        : "idle";
+
+  /* One control, two positions. An icon rather than the words "Show" and "Hide",
+     because the label had to change with the state and a control whose name moves
+     is a control you read twice. */
+  const revealToggle = (
+    <button
+      type="button"
+      className="ca-login__reveal"
+      onClick={() => setIsRevealed(!isRevealed)}
+      aria-pressed={isRevealed}
+      aria-label={isRevealed ? "Hide PIN" : "Show PIN"}
+      title={isRevealed ? "Hide PIN" : "Show PIN"}
+    >
+      <Icon name={isRevealed ? "eyeOff" : "eye"} size={17} />
+    </button>
+  );
+
+  const changeNumberButton = (
+    <button
+      type="button"
+      className="ca-login__secondary"
+      onClick={changeNumber}
+    >
+      <Icon name="phoneDevice" size={15} />
+      Change number
+    </button>
+  );
 
   return (
     <div className="ca-login__form">
       {/* Takes the slack in the column, so the heading and controls sit at its
-          optical centre while the footnote below holds the floor. Mirrors how
-          the showcase panel divides its own height. */}
+          optical centre while the footnote below holds the floor. Mirrors how the
+          showcase panel divides its own height. */}
       <div className="ca-login__main">
-      <button type="button" className="ca-login__role" onClick={onChangeRole}>
-        <Icon name="arrowRight" size={13} />
-        Signing in as {role.label.toLowerCase()}
-      </button>
-
-      <h1 className="ca-login__title">{step === 'phone' ? role.title : 'Enter the code'}</h1>
-
-      <p className="ca-login__lede">
-        {step === 'phone' ? role.lede : `We sent a 6-digit code to +91 ${phone}.`}
-      </p>
-
-
-
-      {/* ── Step 1: mobile number ───────────────────────────────────────── */}
-      {step === 'phone' && (
-        <form className="ca-login__body" onSubmit={sendOtp} noValidate>
-          <div className="ca-login__field">
-            <label className="ca-login__label" htmlFor="ca-phone">
-              Mobile number
-            </label>
-
-            <div className="ca-login__inputwrap">
-              <span className="ca-login__prefix" data-numeric>
-                +91
-              </span>
-              <input
-                id="ca-phone"
-                className="ca-login__input"
-                type="tel"
-                inputMode="numeric"
-                autoComplete="tel-national"
-                placeholder="98765 43210"
-                value={phone}
-                onChange={onPhoneChange}
-                aria-invalid={Boolean(error)}
-                aria-describedby={error ? 'ca-login-error' : undefined}
-                data-numeric
-              />
-            </div>
-          </div>
-
-          {error && (
-            <p className="ca-login__error" id="ca-login-error" role="alert">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            className="ca-pill ca-pill--solid ca-login__submit"
-            disabled={isBusy}
-          >
-            {isBusy ? 'Sending…' : 'Send code'}
-            <span className="ca-pill__disc">
-              <Icon name="arrowRight" size={15} />
-            </span>
-          </button>
-        </form>
-      )}
-
-      {/* ── Step 2: the code ────────────────────────────────────────────── */}
-      {step === 'otp' && (
-        <form className="ca-login__body" onSubmit={verifyOtp} noValidate>
-          <div className="ca-login__field">
-            <div className="ca-login__labelrow">
-              <label className="ca-login__label" htmlFor="ca-otp">
-                6-digit code
-              </label>
-
-              <button type="button" className="ca-login__textlink" onClick={backToPhone}>
-                Change number
-              </button>
-            </div>
-
-            <input
-              id="ca-otp"
-              className="ca-login__input ca-login__input--otp"
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              placeholder="······"
-              maxLength={6}
-              value={otp}
-              onChange={onOtpChange}
-              aria-invalid={Boolean(error)}
-              aria-describedby={error ? 'ca-login-error' : undefined}
-              data-numeric
-            />
-          </div>
-
-          {error && (
-            <p className="ca-login__error" id="ca-login-error" role="alert">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            className="ca-pill ca-pill--solid ca-login__submit"
-            disabled={isBusy}
-          >
-            {isBusy ? 'Checking…' : 'Verify and continue'}
-            <span className="ca-pill__disc">
-              <Icon name="arrowRight" size={15} />
-            </span>
-          </button>
-
+        <div className="ca-login__topline">
           <button
             type="button"
-            className="ca-login__resend"
-            onClick={resendOtp}
-            disabled={secondsLeft > 0}
+            className="ca-login__role"
+            onClick={onChangeRole}
           >
-            <Icon name="refresh" size={15} />
-            {secondsLeft > 0 ? (
-              <>
-                Resend in <span data-numeric>{secondsLeft}s</span>
-              </>
-            ) : (
-              'Send a new code'
-            )}
+            <Icon name="arrowRight" size={13} />
+            {mode === "signin" ? "Signing in" : "Signing up"} as{" "}
+            {role.label.toLowerCase()}
           </button>
-        </form>
-      )}
 
-      <div className="ca-login__divider">
-        <span>or</span>
-      </div>
+          {/* Where you are in the steps this mode has. Decorative for a screen
+              reader, which gets the same fact as words just below. */}
+          <div className="ca-login__rail" aria-hidden="true">
+            {steps.map((name, index) => (
+              <span
+                key={name}
+                className="ca-login__rail-seg"
+                data-state={
+                  index < stepIndex
+                    ? "done"
+                    : index === stepIndex
+                      ? "now"
+                      : "next"
+                }
+              />
+            ))}
+          </div>
+        </div>
 
-      <button type="button" className="ca-login__google" onClick={signInWithGoogle}>
-        <GoogleMark size={20} />
-        Continue with Google
-      </button>
-      </div>
+        <p className="ca-sr-only" aria-live="polite">
+          Step {stepIndex + 1} of {steps.length}
+        </p>
 
-      <p className="ca-login__foot">
-        {role.foot}
-        {role.id === 'agent' && (
+        <h1 className="ca-login__title">{heading}</h1>
+
+        <p className="ca-login__lede">{lede}</p>
+
+        {/* ── Mobile number, both modes ──────────────────────────────────── */}
+        {step === "phone" && (
+          <form className="ca-login__body" onSubmit={submitPhone} noValidate>
+            <div className="ca-login__field">
+              <label className="ca-login__label" htmlFor="ca-phone">
+                Mobile number
+              </label>
+
+              <div className="ca-login__inputwrap" data-status={phoneStatus}>
+                <span className="ca-login__prefix" data-numeric>
+                  +91
+                </span>
+                <input
+                  id="ca-phone"
+                  className="ca-login__input"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  placeholder="98765 43210"
+                  value={phone}
+                  onChange={onPhoneChange}
+                  aria-invalid={Boolean(error)}
+                  aria-describedby="ca-phone-note"
+                  data-numeric
+                />
+              </div>
+            </div>
+
+            <Note note={phoneNote} id="ca-phone-note" />
+
+            <button
+              type="submit"
+              className="ca-pill ca-pill--solid ca-login__submit"
+              disabled={isBusy}
+            >
+              {isBusy ? "Checking…" : "Continue"}
+              <span className="ca-pill__disc">
+                <Icon name="arrowRight" size={15} />
+              </span>
+            </button>
+          </form>
+        )}
+
+        {/* ── Signing in: the PIN, once ──────────────────────────────────── */}
+        {step === "enter" && (
+          <form className="ca-login__body" onSubmit={submitEnter} noValidate>
+            <div className="ca-login__field">
+              <div className="ca-login__labelrow">
+                <span className="ca-login__label" id="ca-enter-label">
+                  Your {PIN_LENGTH}-digit PIN
+                </span>
+
+                {revealToggle}
+              </div>
+
+              <PinInput
+                id="ca-enter"
+                value={pin}
+                onChange={onPinChange}
+                length={PIN_LENGTH}
+                masked={!isRevealed}
+                status={enterStatus}
+                labelledBy="ca-enter-label"
+                describedBy="ca-enter-note"
+              />
+            </div>
+
+            <Note note={enterNote} id="ca-enter-note" />
+
+            <button
+              type="submit"
+              className="ca-pill ca-pill--solid ca-login__submit"
+              disabled={isBusy || !isPinComplete}
+            >
+              {isBusy ? "Signing in…" : "Sign in"}
+              <span className="ca-pill__disc">
+                <Icon name="arrowRight" size={15} />
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="ca-login__secondary"
+              onClick={handleForgotPin}
+            >
+              <Icon name="refresh" size={15} />
+              Forgot PIN?
+            </button>
+
+            {changeNumberButton}
+          </form>
+        )}
+
+        {/* ── Signing up: choose the PIN ─────────────────────────────────── */}
+        {step === "create" && (
+          <form className="ca-login__body" onSubmit={submitPin} noValidate>
+            <div className="ca-login__field">
+              <div className="ca-login__labelrow">
+                <span className="ca-login__label" id="ca-pin-label">
+                  New {PIN_LENGTH}-digit PIN
+                </span>
+
+                {revealToggle}
+              </div>
+
+              <PinInput
+                id="ca-pin"
+                value={pin}
+                onChange={onPinChange}
+                length={PIN_LENGTH}
+                masked={!isRevealed}
+                status={pinStatus}
+                labelledBy="ca-pin-label"
+                describedBy="ca-pin-note"
+              />
+            </div>
+
+            <Note note={pinNote} id="ca-pin-note" />
+
+            <button
+              type="submit"
+              className="ca-pill ca-pill--solid ca-login__submit"
+              disabled={!isPinReady}
+            >
+              Continue
+              <span className="ca-pill__disc">
+                <Icon name="arrowRight" size={15} />
+              </span>
+            </button>
+
+            {changeNumberButton}
+          </form>
+        )}
+
+        {/* ── Signing up: confirm it ─────────────────────────────────────── */}
+        {step === "confirm" && (
+          <form className="ca-login__body" onSubmit={submitConfirm} noValidate>
+            <div className="ca-login__field">
+              <div className="ca-login__labelrow">
+                <span className="ca-login__label" id="ca-confirm-label">
+                  Re-enter PIN
+                </span>
+
+                {revealToggle}
+              </div>
+
+              <PinInput
+                id="ca-confirm"
+                value={confirmPin}
+                onChange={onConfirmChange}
+                length={PIN_LENGTH}
+                masked={!isRevealed}
+                status={confirmStatus}
+                labelledBy="ca-confirm-label"
+                describedBy="ca-confirm-note"
+              />
+            </div>
+
+            <Note note={confirmNote} id="ca-confirm-note" />
+
+            <button
+              type="submit"
+              className="ca-pill ca-pill--solid ca-login__submit"
+              disabled={isBusy || !isConfirmMatched}
+            >
+              {isBusy ? "Setting up…" : "Confirm and continue"}
+              <span className="ca-pill__disc">
+                <Icon name="arrowRight" size={15} />
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="ca-login__secondary"
+              onClick={redoPin}
+            >
+              <Icon name="refresh" size={15} />
+              Pick a different PIN
+            </button>
+          </form>
+        )}
+
+        {/* Offered only while choosing how to get in. Once a PIN is being typed it
+            is not an alternative any more, and leaving it on screen invites
+            abandoning the flow halfway through. */}
+        {step === "phone" && (
           <>
-            {' '}
-            <Link className="ca-login__link" to="/become-an-agent">
-              Apply here
-            </Link>
-            .
+            <div className="ca-login__divider">
+              <span>or</span>
+            </div>
+
+            <button
+              type="button"
+              className="ca-login__google"
+              onClick={signInWithGoogle}
+            >
+              <GoogleMark size={20} />
+              Continue with Google
+            </button>
           </>
         )}
-      </p>
+      </div>
+
+      <div className="ca-login__foot">
+        {canSignUp && (
+          <p>
+            {copy.ask}{" "}
+            <button type="button" className="ca-login__link" onClick={switchMode}>
+              {copy.act}
+            </button>
+          </p>
+        )}
+
+        {role.foot && (
+          <p>
+            {role.foot.text}
+            {role.foot.to && (
+              <>
+                {" "}
+                <Link className="ca-login__link" to={role.foot.to}>
+                  {role.foot.linkText}
+                </Link>
+              </>
+            )}
+          </p>
+        )}
+      </div>
     </div>
   );
 };

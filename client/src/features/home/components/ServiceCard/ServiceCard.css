@@ -1,10 +1,8 @@
 /* ==========================================================================
-   Service tile
+   Service tile - Unified light indigo tint (like Caste Certificate)
 
-   One composition, four surfaces. The tone families are the two primaries and
-   their tints — indigo for the institutional register, clay for the warm one.
-   Secondary text on every surface is tinted from that surface rather than
-   dropped to grey, and each pairing is verified above 5:1.
+   All cards use the same soft indigo-tinted background for consistency.
+   Clean, professional appearance with subtle color.
    ========================================================================== */
 
 .ca-svc {
@@ -15,12 +13,10 @@
   cursor: pointer;
   padding: clamp(1.375rem, 2vw, 1.75rem);
   border-radius: 1.625rem;
-  border: 1px solid var(--color-line);
-  background-color: var(--color-paper);
+  background-color: var(--color-indigo-tint);
+  border: 1px solid rgb(35 42 92 / 0.16);
   box-shadow: 0 1px 2px rgb(22 23 15 / 0.04), 0 14px 30px -22px rgb(22 23 15 / 0.4);
   isolation: isolate;
-  /* Fallback centre for the pointer highlight, used before the first move and
-     on any device where tracking is skipped. */
   --ca-mx: 50%;
   --ca-my: 0%;
   transition:
@@ -29,9 +25,7 @@
     box-shadow 0.55s var(--ease-out-expo);
 }
 
-/* A highlight that follows the cursor across the surface. Its own layer, so
-   the browser composites it instead of repainting the card, and it fades
-   rather than snapping on. */
+/* Pointer glow on hover */
 .ca-svc::before {
   content: '';
   position: absolute;
@@ -52,15 +46,13 @@
   opacity: 1;
 }
 
-/* The tile lifts, its edge firms, the mark turns over. */
+/* Card lift and shadow on hover */
 .ca-svc:hover {
   transform: translateY(-6px);
   border-color: rgb(22 23 15 / 0.2);
   box-shadow: 0 2px 4px rgb(22 23 15 / 0.05), 0 36px 58px -28px rgb(22 23 15 / 0.45);
 }
 
-/* Pressing anywhere on the tile settles it back down, so the whole surface
-   acknowledges the touch even though only the controls are hit targets. */
 .ca-svc:active {
   transform: translateY(-2px) scale(0.994);
   transition-duration: 0.12s;
@@ -79,7 +71,7 @@
 }
 
 /* ==========================================================================
-   Top line — mark left, duration right
+   Top line — icon and duration
    ========================================================================== */
 
 .ca-svc__top {
@@ -97,7 +89,7 @@
   width: 2.75rem;
   height: 2.75rem;
   color: var(--color-indigo);
-  background-color: var(--color-indigo-tint);
+  background-color: rgb(255 255 255 / 0.75);
   border-radius: 0.9375rem;
   transition:
     background-color 0.55s var(--ease-out-expo),
@@ -109,8 +101,6 @@
 .ca-svc:hover .ca-svc__icon {
   color: #f4f3ee;
   background-color: var(--color-indigo);
-  /* The chip rounds toward a disc and settles a degree off square — enough to
-     register as alive without becoming a spin. */
   transform: rotate(-4deg) scale(1.06);
   border-radius: 1.25rem;
 }
@@ -125,8 +115,6 @@
   }
 }
 
-/* The duration sits where a decorative index number would go, because it is
-   the thing a citizen scans a row of services for. */
 .ca-svc__clock {
   display: inline-flex;
   align-items: center;
@@ -137,7 +125,7 @@
   letter-spacing: -0.005em;
   white-space: nowrap;
   color: var(--color-ink-muted);
-  background-color: var(--color-cream);
+  background-color: rgb(255 255 255 / 0.7);
   border-radius: 999px;
 }
 
@@ -163,11 +151,11 @@
   font-size: 0.9375rem;
   line-height: 1.6;
   font-weight: 500;
-  color: var(--color-ink-muted);
+  color: #545369; /* 5.5:1 on indigo tint */
 }
 
 /* ==========================================================================
-   Figures — pushed to the bottom so controls line up across a row
+   Figures — charge and documents
    ========================================================================== */
 
 .ca-svc__meta {
@@ -176,7 +164,7 @@
   gap: 0.75rem 1.75rem;
   margin: auto 0 0;
   padding-top: 1.125rem;
-  border-top: 1px solid var(--color-line);
+  border-top: 1px solid rgb(35 42 92 / 0.16);
 }
 
 .ca-svc__stat {
@@ -215,9 +203,6 @@
   font-size: 0.875rem;
 }
 
-/* The secondary route is a text link, not a second button. Two matching pills
-   would make a citizen choose between things that look equally important when
-   only one of them starts anything. */
 .ca-svc__details {
   display: inline-flex;
   align-items: center;
@@ -249,171 +234,7 @@
 }
 
 /* ==========================================================================
-   Tone: primary — the indigo field
-   ========================================================================== */
-
-.ca-svc--primary {
-  background-color: var(--color-indigo);
-  border-color: rgb(255 255 255 / 0.16);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.12),
-    0 2px 4px rgb(20 24 56 / 0.22),
-    0 28px 56px -28px rgb(20 24 56 / 0.6);
-}
-
-.ca-svc--primary:hover {
-  border-color: rgb(255 255 255 / 0.3);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.14),
-    0 3px 6px rgb(20 24 56 / 0.24),
-    0 44px 72px -32px rgb(20 24 56 / 0.66);
-}
-
-.ca-svc--primary .ca-svc__name,
-.ca-svc--primary .ca-svc__stat-value {
-  color: #f4f3ee;
-}
-
-/* 7.2:1 on the indigo ground. */
-.ca-svc--primary .ca-svc__summary {
-  color: #b9bcd4;
-}
-
-/* 5.2:1 on the indigo ground. */
-.ca-svc--primary .ca-svc__stat-key {
-  color: #9a9fbe;
-}
-
-.ca-svc--primary .ca-svc__icon {
-  color: var(--color-indigo);
-  background-color: #e5e4ef;
-}
-
-/* Both properties, always. The generic hover rule above sets the mark to
-   near-white and carries identical specificity (0,3,0) to this one, so
-   omitting `color` here let source order win and produced a white mark on a
-   white chip — an invisible icon. Every tone override must restate both. */
-.ca-svc--primary:hover .ca-svc__icon {
-  color: var(--color-indigo-deep);
-  background-color: #ffffff;
-}
-
-.ca-svc--primary .ca-svc__clock {
-  color: #cfd1e2;
-  background-color: rgb(255 255 255 / 0.11);
-}
-
-.ca-svc--primary .ca-svc__meta {
-  border-top-color: rgb(255 255 255 / 0.18);
-}
-
-/* Inverted, because an indigo pill on an indigo field is not a button. */
-.ca-svc--primary .ca-svc__go {
-  color: var(--color-indigo-deep);
-  background-color: #f4f3ee;
-  box-shadow: 0 1px 2px rgb(12 15 40 / 0.3), 0 14px 26px -14px rgb(12 15 40 / 0.55);
-}
-
-.ca-svc--primary .ca-svc__go:hover {
-  background-color: #ffffff;
-}
-
-.ca-svc--primary .ca-svc__go .ca-pill__disc {
-  background-color: rgb(35 42 92 / 0.12);
-}
-
-.ca-svc--primary .ca-svc__go:hover .ca-pill__disc {
-  background-color: rgb(35 42 92 / 0.2);
-}
-
-.ca-svc--primary .ca-svc__details {
-  color: #b9bcd4;
-  text-decoration-color: rgb(255 255 255 / 0.32);
-}
-
-.ca-svc--primary .ca-svc__details:hover {
-  color: #f4f3ee;
-  text-decoration-color: #f4f3ee;
-}
-
-/* ==========================================================================
-   Tone: warm — clay tint
-   ========================================================================== */
-
-.ca-svc--warm {
-  background-color: var(--color-clay-tint);
-  border-color: rgb(158 78 18 / 0.18);
-}
-
-.ca-svc--warm:hover {
-  border-color: rgb(158 78 18 / 0.34);
-}
-
-/* 5.6:1 on the clay tint. */
-.ca-svc--warm .ca-svc__summary {
-  color: #5c5346;
-}
-
-.ca-svc--warm .ca-svc__icon {
-  color: var(--color-clay);
-  background-color: rgb(255 255 255 / 0.62);
-}
-
-.ca-svc--warm:hover .ca-svc__icon {
-  color: #f4f3ee;
-  background-color: var(--color-clay);
-}
-
-.ca-svc--warm .ca-svc__clock {
-  background-color: rgb(255 255 255 / 0.62);
-}
-
-.ca-svc--warm .ca-svc__meta {
-  border-top-color: rgb(158 78 18 / 0.18);
-}
-
-.ca-svc--warm .ca-svc__details:hover {
-  text-decoration-color: var(--color-clay);
-}
-
-/* ==========================================================================
-   Tone: cool — indigo tint
-   ========================================================================== */
-
-.ca-svc--cool {
-  background-color: var(--color-indigo-tint);
-  border-color: rgb(35 42 92 / 0.16);
-}
-
-.ca-svc--cool:hover {
-  border-color: rgb(35 42 92 / 0.32);
-}
-
-/* 5.5:1 on the indigo tint. */
-.ca-svc--cool .ca-svc__summary {
-  color: #545369;
-}
-
-.ca-svc--cool .ca-svc__icon {
-  color: var(--color-indigo);
-  background-color: rgb(255 255 255 / 0.75);
-}
-
-.ca-svc--cool:hover .ca-svc__icon {
-  color: #f4f3ee;
-  background-color: var(--color-indigo);
-}
-
-.ca-svc--cool .ca-svc__clock {
-  background-color: rgb(255 255 255 / 0.7);
-}
-
-.ca-svc--cool .ca-svc__meta {
-  border-top-color: rgb(35 42 92 / 0.16);
-}
-
-/* ==========================================================================
-   Entrance — staggered off the grid's own reveal
+   Entrance animation - staggered reveal
    ========================================================================== */
 
 @media (prefers-reduced-motion: no-preference) {
@@ -437,7 +258,7 @@
 }
 
 /* ==========================================================================
-   Narrow screens
+   Mobile responsive
    ========================================================================== */
 
 @media (max-width: 30rem) {
@@ -445,8 +266,6 @@
     max-width: none;
   }
 
-  /* Full-width control at thumb reach, with the label and disc pinned to
-     opposite edges rather than bunched. */
   .ca-svc__go {
     flex: 1 1 100%;
     justify-content: space-between;

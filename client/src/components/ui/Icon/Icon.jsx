@@ -63,6 +63,21 @@ const PATHS = {
       <path d="M19.6 4.6v3.9h-3.9" />
     </>
   ),
+  /* Reveal and conceal. One almond, drawn once — the off state is the same
+     lens struck through, so the pair reads as one control in two positions
+     rather than two unrelated glyphs. */
+  eye: (
+    <>
+      <path d="M2.8 12C5.1 8.2 8.4 6.3 12 6.3s6.9 1.9 9.2 5.7c-2.3 3.8-5.6 5.7-9.2 5.7S5.1 15.8 2.8 12Z" />
+      <circle cx="12" cy="12" r="3.05" />
+    </>
+  ),
+  eyeOff: (
+    <>
+      <path d="M2.8 12C5.1 8.2 8.4 6.3 12 6.3s6.9 1.9 9.2 5.7c-2.3 3.8-5.6 5.7-9.2 5.7S5.1 15.8 2.8 12Z" />
+      <path d="M4.9 4.9 19.1 19.1" />
+    </>
+  ),
   /* Application tracking: a three-stop progress rail, two stops cleared and
      the last one still open. Citizen-facing status, not an admin glyph. */
   track: (

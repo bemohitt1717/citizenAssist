@@ -6,9 +6,10 @@
    the floor. That is what stops the column reading as a small form floating in
    a large empty space.
 
-   One field is visible at a time, and everything below it holds position across
-   both steps, so switching from number to code does not reflow the column under
-   the reader.
+   One step is visible at a time. The lede reserves the height of its tallest
+   copy so moving from the number to the PIN does not shunt the fields under the
+   reader's hands, and the progress rail above tells them how far along they are
+   without a band of its own.
    ========================================================================== */
 
 .ca-login__form {
@@ -31,14 +32,23 @@
    Heading
    ========================================================================== */
 
+/* The role on one side, the progress rail on the other. Both are orientation
+   rather than content, so they share a line above the heading instead of each
+   taking a band of their own. */
+.ca-login__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
 /* The chosen role, and the way back to change it. Reads as a breadcrumb rather
    than a button, because going back is a correction, not a step. */
 .ca-login__role {
   display: inline-flex;
   align-items: center;
-  align-self: flex-start;
   gap: 0.4375rem;
-  margin-bottom: 1rem;
   padding: 0.3125rem 0.6875rem 0.3125rem 0.5rem;
   font-size: 0.6875rem;
   font-weight: 700;
@@ -74,6 +84,46 @@
   }
 }
 
+/* ==========================================================================
+   Progress rail
+
+   Two or three steps depending on the mode — few enough that a bar with numbers
+   on it would be heavier than the thing it describes. The current segment is both
+   longer and darker, so position survives without colour vision and at a glance.
+   ========================================================================== */
+
+.ca-login__rail {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.3125rem;
+}
+
+.ca-login__rail-seg {
+  width: 1.25rem;
+  height: 3px;
+  border-radius: 999px;
+  background-color: var(--color-line);
+  transition:
+    width 0.45s var(--ease-out-expo),
+    background-color 0.45s var(--ease-out-expo);
+}
+
+.ca-login__rail-seg[data-state='done'] {
+  background-color: rgb(35 42 92 / 0.42);
+}
+
+.ca-login__rail-seg[data-state='now'] {
+  width: 2.25rem;
+  background-color: var(--color-indigo);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-login__rail-seg {
+    transition: none;
+  }
+}
+
 .ca-login__title {
   font-size: clamp(2rem, 3.9vw, 3rem);
   line-height: 1.02;
@@ -84,8 +134,8 @@
 
 .ca-login__lede {
   margin-top: 0.875rem;
-  /* Reserved so the taller two-line copy on the code step does not shunt the
-     fields down when the step changes. */
+  /* Two lines held open, so a one-line PIN step does not pull the fields up
+     under the reader's hands after a two-line first step. */
   min-height: 3.4em;
   max-width: 38ch;
   font-size: 1rem;
@@ -98,10 +148,31 @@
    Body — takes the slack in the column
    ========================================================================== */
 
+/* Each step is its own form, so moving between them unmounts one and mounts the
+   next — which is what replays this entrance. Short and small: the reader is
+   mid-task, and a step change is a continuation, not an arrival. */
 .ca-login__body {
   display: grid;
   gap: 1.125rem;
   margin-top: clamp(1.75rem, 4vh, 2.75rem);
+  animation: ca-login-step 0.5s var(--ease-out-expo) both;
+}
+
+@keyframes ca-login-step {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-login__body {
+    animation: none;
+  }
 }
 
 .ca-login__field {
@@ -109,9 +180,11 @@
   gap: 0.5625rem;
 }
 
+/* Centred rather than baseline-aligned: the control on the right is an icon in a
+   round target with no text of its own to sit a baseline on. */
 .ca-login__labelrow {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
@@ -141,8 +214,26 @@
   box-shadow: 0 0 0 3px rgb(35 42 92 / 0.14);
 }
 
-.ca-login__inputwrap:has(.ca-login__input[aria-invalid='true']) {
-  border-color: var(--color-clay);
+/* Same two verdicts the PIN row gives, so a field behaves the same way on every
+   step. The number turns green once it is a number we can use; it only turns red
+   after it has been submitted, since going red on the second digit of ten would
+   be nagging rather than helping. */
+.ca-login__inputwrap[data-status='valid'] {
+  border-color: var(--color-success);
+  background-color: var(--color-success-tint);
+}
+
+.ca-login__inputwrap[data-status='valid']:focus-within {
+  box-shadow: 0 0 0 3px rgb(23 105 59 / 0.18);
+}
+
+.ca-login__inputwrap[data-status='invalid'] {
+  border-color: var(--color-error);
+  background-color: var(--color-error-tint);
+}
+
+.ca-login__inputwrap[data-status='invalid']:focus-within {
+  box-shadow: 0 0 0 3px rgb(179 38 30 / 0.16);
 }
 
 .ca-login__prefix {
@@ -176,43 +267,37 @@
   letter-spacing: 0;
 }
 
-/* Standalone version of the field, for the code step. */
-.ca-login__input--otp {
-  padding-block: 0.9375rem;
-  background-color: var(--color-paper);
-  border: 1px solid var(--color-line-strong);
-  border-radius: 1rem;
-  font-size: 1.625rem;
-  font-weight: 900;
-  /* Wide tracking makes six digits countable at a glance. */
-  letter-spacing: 0.48em;
-  /* Offsets the trailing letter-space so the run of digits sits optically
-     centred rather than pushed left. */
-  text-indent: 0.48em;
-  text-align: center;
-  transition:
-    border-color 0.3s var(--ease-out-expo),
-    box-shadow 0.3s var(--ease-out-expo);
-}
+/* ==========================================================================
+   The line under a field
 
-.ca-login__input--otp:focus {
-  border-color: var(--color-indigo);
-  box-shadow: 0 0 0 3px rgb(35 42 92 / 0.14);
-}
+   One slot, three things it can say, so a verdict arriving never moves anything
+   below it. Weight carries the difference as much as colour does: advice sits
+   back at 500, a verdict leans in at 700.
+   ========================================================================== */
 
-.ca-login__input--otp[aria-invalid='true'] {
-  border-color: var(--color-clay);
-}
-
-.ca-login__input--otp::placeholder {
-  letter-spacing: 0.48em;
-}
-
-.ca-login__error {
+.ca-login__note {
+  /* Held to a measure the longest message wraps at, so it takes two lines on a
+     wide column as well as a narrow one — and to two lines of reserved height,
+     so swapping advice for a verdict never shifts the button below. */
+  max-width: 44ch;
+  min-height: 3em;
   font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.ca-login__note--hint {
+  font-weight: 500;
+  color: var(--color-ink-subtle);
+}
+
+.ca-login__note--error {
   font-weight: 700;
-  line-height: 1.45;
-  color: var(--color-clay);
+  color: var(--color-error);
+}
+
+.ca-login__note--ok {
+  font-weight: 700;
+  color: var(--color-success);
 }
 
 /* ==========================================================================
@@ -228,7 +313,9 @@
   font-size: 1rem;
 }
 
-.ca-login__resend {
+/* The way back out of a step. Deliberately quiet — it is a correction, and it
+   should never compete with the button that finishes the job. */
+.ca-login__secondary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -241,27 +328,55 @@
   transition: color 0.3s var(--ease-out-expo);
 }
 
-.ca-login__resend:hover:not(:disabled) {
+.ca-login__secondary:hover {
   color: var(--color-indigo);
 }
 
-.ca-login__resend:disabled {
+@media (prefers-reduced-motion: reduce) {
+  .ca-login__secondary {
+    transition: none;
+  }
+}
+
+/* Reveal and conceal the PIN. Icon-only, because the words had to swap with the
+   state and a control whose name moves is a control you read twice. Sized as a
+   proper target rather than a glyph dropped next to the label. */
+.ca-login__reveal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  /* Pulls the round target back into line with the label's text edge, so the
+     row reads as label-and-control rather than label-and-floating-circle. */
+  margin: -0.375rem -0.3125rem -0.375rem 0;
   color: var(--color-ink-subtle);
-  cursor: default;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  transition:
+    color 0.3s var(--ease-out-expo),
+    border-color 0.3s var(--ease-out-expo),
+    background-color 0.3s var(--ease-out-expo);
 }
 
-.ca-login__textlink {
-  font-size: 0.8125rem;
-  font-weight: 700;
+.ca-login__reveal:hover {
   color: var(--color-indigo);
-  text-decoration: underline;
-  text-decoration-color: rgb(35 42 92 / 0.35);
-  text-underline-offset: 0.22em;
-  transition: text-decoration-color 0.3s var(--ease-out-expo);
+  border-color: var(--color-line-strong);
+  background-color: var(--color-paper);
 }
 
-.ca-login__textlink:hover {
-  text-decoration-color: var(--color-indigo);
+/* Pressed means the PIN is on screen — worth saying in the control itself, not
+   only in its label, since that is the state with a consequence. */
+.ca-login__reveal[aria-pressed='true'] {
+  color: var(--color-indigo);
+  border-color: rgb(35 42 92 / 0.28);
+  background-color: var(--color-indigo-tint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-login__reveal {
+    transition: none;
+  }
 }
 
 /* ==========================================================================
@@ -332,7 +447,12 @@
    Footnote — pushed to the floor of the column
    ========================================================================== */
 
+/* Up to two lines: the way over to the other mode, and whatever else the role
+   needs said. Stacked rather than run together, because they are two different
+   offers and a reader scanning for one should not have to parse the other. */
 .ca-login__foot {
+  display: grid;
+  gap: 0.3125rem;
   flex: none;
   padding-top: clamp(1.75rem, 4vh, 2.5rem);
   max-width: 42ch;
@@ -342,14 +462,24 @@
   color: var(--color-ink-subtle);
 }
 
+/* Sign in and sign up are the same weight of decision, so the way across is a
+   link and not a button — pressing it does not commit anything. Carries an
+   underline for the same reason: it has to be findable without hovering. */
 .ca-login__link {
   font-weight: 700;
   color: var(--color-indigo);
   text-decoration: underline;
   text-decoration-color: rgb(35 42 92 / 0.35);
   text-underline-offset: 0.2em;
+  transition: text-decoration-color 0.3s var(--ease-out-expo);
 }
 
 .ca-login__link:hover {
   text-decoration-color: var(--color-indigo);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-login__link {
+    transition: none;
+  }
 }

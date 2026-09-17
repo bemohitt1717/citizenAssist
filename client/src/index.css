@@ -43,6 +43,17 @@
   --color-clay-hi: #b85c17;
   --color-clay-tint: #f4e4d2;
 
+  /* -- Validation: pass and fail -----------------------------------------
+     Clay is the product's warm accent and carries "someone is waiting" all
+     over the surface, so it cannot also mean "you got this wrong" — a colour
+     that means two things means neither. These two are for form validation
+     only. Both warm-shifted to sit in the same light as the ground, and both
+     verified against cream: red 5.8:1, green 6.0:1. --------------------- */
+  --color-error: #b3261e;
+  --color-error-tint: #fbe4e1;
+  --color-success: #17693b;
+  --color-success-tint: #e3f0e6;
+
   /* -- Hairlines --------------------------------------------------------- */
   --color-line: rgb(22 23 15 / 0.12);
   --color-line-strong: rgb(22 23 15 / 0.22);

@@ -1,23 +1,101 @@
-import { SERVICES } from '../../../../constants/services';
+import { useEffect, useState } from 'react';
 import ServiceCard from '../ServiceCard/ServiceCard';
 import useReveal from '../../../../hooks/useReveal';
 import usePointerGlow from '../../../../hooks/usePointerGlow';
+import { getAllServices } from '../../../services/servicesApi';
 import './Services.css';
 
+// Icon mapping for each service (matches database serviceId)
+const SERVICE_ICONS = {
+  'income-certificate': 'income',
+  'caste-certificate': 'caste',
+  'domicile-certificate': 'domicile',
+  'birth-certificate': 'birth',
+  'pan-services': 'pan',
+  'aadhaar-services': 'aadhaar',
+};
+
+// Tone pattern for visual variety (matches position in grid)
+const SERVICE_TONES = ['primary', 'paper', 'warm', 'paper', 'cool', 'paper'];
+
 /**
- * Services.
+ * Services with real-time data from database.
  *
- * Six cards and nothing else. The "what we do, and what we do not" band that used
- * to close this grid is gone; the boundary it stated now lives where it is
- * actually needed — the hero lede says the certificate is issued by the government
- * office, and the request dialog spells out that the charge is our fee only, on
- * the step before a citizen commits to anything.
+ * Six cards showing services managed by admin. When admin updates service info
+ * (charge, timeline, summary), changes reflect here immediately.
  */
 const Services = () => {
-  const [gridRef, isRevealed] = useReveal();
-  /* Attached one level above the grid so it does not collide with the grid's
-     own reveal ref. */
+  const [services, setServices] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [gridRef, isRevealed] = useReveal({ trigger: services.length });
   const glowRef = usePointerGlow();
+
+  const fetchServices = async () => {
+    try {
+      console.log('🏠 [HOME-SERVICES] Fetching services from API...');
+      const response = await getAllServices();
+      
+      console.log('📦 [HOME-SERVICES] API Response:', response);
+      
+      // Backend returns { status: "success", count: X, data: [...] }
+      const servicesData = response.data || [];
+      
+      console.log(`✅ [HOME-SERVICES] Found ${servicesData.length} services`);
+      
+      // Convert backend data to match frontend format
+      const formattedServices = servicesData.map((service, index) => ({
+        id: service.serviceId,
+        name: service.name,
+        description: service.description,
+        charge: service.charge,
+        timeline: service.timeline,
+        summary: service.summary,
+        documents: service.requiredDocuments,
+        documentCount: service.requiredDocuments.length,
+        icon: SERVICE_ICONS[service.serviceId] || 'document',
+        tone: SERVICE_TONES[index] || 'paper',
+      }));
+      
+      console.log('🎨 [HOME-SERVICES] Formatted services:', formattedServices);
+      setServices(formattedServices);
+    } catch (error) {
+      console.error('❌ [HOME-SERVICES] Failed to load services:', error);
+      console.error('Error details:', error.response?.data || error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <section className="ca-services" id="services">
+        <div className="ca-services__inner">
+          <div style={{ padding: '4rem 0', textAlign: 'center', color: 'var(--color-ink-muted)' }}>
+            Loading services...
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (services.length === 0) {
+    return (
+      <section className="ca-services" id="services">
+        <div className="ca-services__inner">
+          <div style={{ padding: '4rem 0', textAlign: 'center', color: 'var(--color-ink-muted)' }}>
+            <p>No services available at the moment.</p>
+            <p style={{ marginTop: '1rem', fontSize: '0.875rem' }}>
+              Please check the browser console for errors or contact support.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="ca-services" id="services">
@@ -35,7 +113,7 @@ const Services = () => {
         </header>
 
         <div ref={gridRef} className={`ca-grid ${isRevealed ? 'is-revealed' : ''}`.trim()}>
-          {SERVICES.map((service, index) => (
+          {services.map((service, index) => (
             <ServiceCard key={service.id} service={service} index={index} />
           ))}
         </div>

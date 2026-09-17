@@ -434,18 +434,23 @@
   box-shadow: 0 0 0 3px rgb(35 42 92 / 0.14);
 }
 
+/* Red, not clay. Clay is the accent that means "someone is waiting" all over
+   this surface, and a colour that also means "you got this wrong" means
+   neither. */
 .ca-rf__input[aria-invalid='true'] {
-  border-color: var(--color-clay);
+  color: var(--color-error);
+  background-color: var(--color-error-tint);
+  border-color: var(--color-error);
 }
 
 .ca-rf__input[aria-invalid='true']:focus {
-  box-shadow: 0 0 0 3px rgb(158 78 18 / 0.16);
+  box-shadow: 0 0 0 3px rgb(179 38 30 / 0.16);
 }
 
 .ca-rf__error {
   font-size: 0.6875rem;
   font-weight: 700;
-  color: var(--color-clay);
+  color: var(--color-error);
 }
 
 /* ==========================================================================

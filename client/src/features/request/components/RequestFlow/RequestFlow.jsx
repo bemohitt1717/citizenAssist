@@ -3,6 +3,8 @@ import Icon from '../../../../components/ui/Icon/Icon';
 import DocumentSchematic from '../../../../components/ui/DocumentSchematic/DocumentSchematic';
 import { DOCUMENTS, UPLOAD_RULES } from '../../../../constants/documents';
 import useAutoHeight from '../../../../hooks/useAutoHeight';
+import { submitRequest } from '../../requestApi';
+import { useAuth } from '../../../../context/authContext';
 import './RequestFlow.css';
 
 const STEPS = ['confirm', 'details', 'documents', 'review'];
@@ -50,11 +52,10 @@ const isValidEmail = (value) => value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.
  * the frame never jumps, and the direction of travel is reflected in the slide,
  * so going back reads as going back.
  *
- * Nothing here talks to a server — there is no backend for requests yet. The
- * final step is explicit that the reference number is a local placeholder, so
- * this can never be mistaken for a lodged application.
+ * Auto-fills user details (name, phone, email) from logged-in user profile.
  */
 const RequestFlow = ({ service, onClose }) => {
+  const { user } = useAuth();
   const [stepIndex, setStepIndex] = useState(0);
   const [direction, setDirection] = useState('forward');
   const [form, setForm] = useState(EMPTY_FORM);
@@ -62,11 +63,32 @@ const RequestFlow = ({ service, onClose }) => {
   const [uploads, setUploads] = useState({});
   const [consent, setConsent] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [submittedReference, setSubmittedReference] = useState(null);
 
   const dialogRef = useRef(null);
   const closeRef = useRef(null);
   const fileInputsRef = useRef({});
   const headingId = useId();
+
+  // Auto-fill form with user data when component mounts
+  useEffect(() => {
+    if (user) {
+      console.log('👤 [REQUEST-FLOW] Auto-filling form with user data:', {
+        name: user.name,
+        phone: user.phone?.replace('+91', ''),
+        email: user.email,
+      });
+
+      setForm((current) => ({
+        ...current,
+        fullName: user.name || current.fullName,
+        phone: user.phone ? user.phone.replace('+91', '') : current.phone,
+        email: user.email || current.email,
+      }));
+    }
+  }, [user]);
 
   const step = STEPS[stepIndex];
   const copy = STEP_COPY[step];
@@ -138,14 +160,36 @@ const RequestFlow = ({ service, onClose }) => {
     return true;
   };
 
-  const goNext = () => {
+  const goNext = async () => {
     if (step === 'details' && !detailsValid) {
       setTouched({ fullName: true, phone: true, email: true, district: true });
       return;
     }
 
     if (step === 'review') {
-      setIsDone(true);
+      // Submit request to backend
+      setIsSubmitting(true);
+      setSubmitError(null);
+
+      try {
+        const response = await submitRequest(
+          service.id, // serviceId like 'income-certificate'
+          form, // applicantDetails object
+          Object.keys(uploads) // document names array
+        );
+
+        // Success: show confirmation with reference number
+        setSubmittedReference(response.data.request.reference);
+        setIsDone(true);
+      } catch (error) {
+        // Show error message
+        setSubmitError(
+          error.response?.data?.message || 'Failed to submit request. Please try again.'
+        );
+      } finally {
+        setIsSubmitting(false);
+      }
+
       return;
     }
 
@@ -252,13 +296,8 @@ const RequestFlow = ({ service, onClose }) => {
                 </p>
 
                 <span className="ca-rf__ref" data-numeric>
-                  Draft · not yet submitted
+                  {submittedReference || 'Submitting...'}
                 </span>
-
-                <p className="ca-rf__note">
-                  This is a prototype. Nothing has been sent to a government office and no agent has
-                  been notified.
-                </p>
               </div>
             ) : (
               <div className="ca-rf__step" data-dir={direction} key={step}>
@@ -525,19 +564,26 @@ const RequestFlow = ({ service, onClose }) => {
         {!isDone && (
           <footer className="ca-rf__foot">
             {stepIndex > 0 && (
-              <button type="button" className="ca-rf__back" onClick={goBack}>
+              <button type="button" className="ca-rf__back" onClick={goBack} disabled={isSubmitting}>
                 <Icon name="arrowRight" size={15} />
                 Back
               </button>
+            )}
+
+            {submitError && (
+              <p className="ca-rf__error" style={{ marginBottom: '1rem', textAlign: 'center' }}>
+                {submitError}
+              </p>
             )}
 
             <button
               type="button"
               className="ca-pill ca-pill--solid ca-rf__next"
               onClick={goNext}
-              aria-disabled={!canAdvance()}
+              aria-disabled={!canAdvance() || isSubmitting}
+              disabled={isSubmitting}
             >
-              {copy.next}
+              {isSubmitting ? 'Submitting...' : copy.next}
               <span className="ca-pill__disc">
                 <Icon name="arrowRight" size={15} />
               </span>

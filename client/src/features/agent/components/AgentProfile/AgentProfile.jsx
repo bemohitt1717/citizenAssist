@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { Field, Panel, Panels, SaveRow } from '../../../../components/ui/DataKit/DataKit';
 import { EXPERIENCE_BANDS } from '../../../../constants/agent';
 import { SERVICES } from '../../../../constants/services';
-import { AGENT_PROFILE } from '../../agentData';
+import { getAgentProfile, updateAgentProfile } from '../../agentApi';
+import { useAuth } from '../../../../context/authContext';
 
 /**
  * Agent profile.
@@ -16,13 +17,42 @@ import { AGENT_PROFILE } from '../../agentData';
  * Verification status is shown, never edited. Only an admin can move it.
  */
 const AgentProfile = () => {
-  const [form, setForm] = useState({
-    name: AGENT_PROFILE.name,
-    district: AGENT_PROFILE.district,
-    experience: AGENT_PROFILE.experience,
-    services: AGENT_PROFILE.services,
-  });
+  const { user, setUser } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [form, setForm] = useState({ name: '', district: '', experience: '', services: [] });
   const [isSaved, setIsSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    const loadProfile = async () => {
+      try {
+        const response = await getAgentProfile();
+        if (!isCurrent) return;
+        const loadedProfile = response.data.profile;
+        setProfile(loadedProfile);
+        setForm({
+          name: loadedProfile.name,
+          district: loadedProfile.district,
+          experience: loadedProfile.experience,
+          services: loadedProfile.services,
+        });
+        console.info('[agent] profile loaded', loadedProfile.id);
+      } catch (requestError) {
+        if (isCurrent) setError(requestError.response?.data?.message || 'Could not load profile.');
+      } finally {
+        if (isCurrent) setIsLoading(false);
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
 
   const setField = (key) => (event) => {
     setForm((current) => ({ ...current, [key]: event.target.value }));
@@ -39,10 +69,25 @@ const AgentProfile = () => {
     setIsSaved(false);
   };
 
-  const save = () => {
-    // TODO(api): PATCH /api/agent/profile  body: form
-    setIsSaved(true);
+  const save = async () => {
+    try {
+      setError('');
+      await updateAgentProfile(form);
+      setProfile((current) => ({ ...current, ...form }));
+
+      if (user) {
+        setUser({ ...user, name: form.name.trim() });
+      }
+
+      setIsSaved(true);
+      console.info('[agent] profile saved');
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'Could not save profile.');
+    }
   };
+
+  if (isLoading) return <p>Loading profile...</p>;
+  if (!profile) return <p role="alert">{error || 'Profile unavailable.'}</p>;
 
   return (
     <Panels split>
@@ -78,7 +123,7 @@ const AgentProfile = () => {
             <Field
               id="agent-mobile"
               label="Mobile"
-              value={AGENT_PROFILE.mobile}
+              value={profile.phone}
               disabled
               hint="Used to sign in. Contact an admin to change it."
               data-numeric
@@ -87,7 +132,7 @@ const AgentProfile = () => {
             <Field
               id="agent-email"
               label="Google account"
-              value={AGENT_PROFILE.email}
+              value={profile.email}
               disabled
               hint="Used to sign in. Contact an admin to change it."
             />
@@ -130,15 +175,15 @@ const AgentProfile = () => {
             <span className="ca-row__body">
               <span className="ca-row__title">Status</span>
               <span className="ca-row__meta">
-                {AGENT_PROFILE.verified
+                {profile.verificationStatus === 'active'
                   ? 'Checked by an admin. You can receive requests.'
                   : 'Under review. You cannot receive requests yet.'}
               </span>
             </span>
             <span className="ca-row__actions">
-              <span className={`ca-status ca-status--${AGENT_PROFILE.verified ? 'done' : 'warn'}`}>
+              <span className={`ca-status ca-status--${profile.verificationStatus === 'active' ? 'done' : 'warn'}`}>
                 <span className="ca-status__dot" />
-                {AGENT_PROFILE.verified ? 'Verified' : 'Pending'}
+                {profile.verificationStatus === 'active' ? 'Verified' : 'Pending'}
               </span>
             </span>
           </li>
@@ -147,7 +192,7 @@ const AgentProfile = () => {
             <span className="ca-row__body">
               <span className="ca-row__title">Verified on</span>
               <span className="ca-row__meta" data-numeric>
-                {AGENT_PROFILE.verifiedOn}
+                {profile.verifiedOn || 'Not verified yet'}
               </span>
             </span>
           </li>
@@ -156,7 +201,7 @@ const AgentProfile = () => {
             <span className="ca-row__body">
               <span className="ca-row__title">Applied on</span>
               <span className="ca-row__meta" data-numeric>
-                {AGENT_PROFILE.joinedOn}
+                {profile.joinedOn}
               </span>
             </span>
           </li>

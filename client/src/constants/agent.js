@@ -7,7 +7,7 @@
  *   agentApplications {
  *     _id
  *     fullName        string
- *     mobile          string   // 10 digits — also the OTP login identity
+ *     mobile          string   // 10 digits — also the PIN login identity
  *     email           string   // the Google account — also a login identity
  *     district        string
  *     experience      string   // one of EXPERIENCE_BANDS ids
@@ -22,7 +22,7 @@
  * these fields plus a phone call, which is how it would happen anyway.
  *
  * Both `mobile` and `email` are collected because sign-in accepts either: the
- * mobile for OTP, the email for Google. Same two routes for every role.
+ * mobile with a PIN, the email for Google. Same two routes for every role.
  */
 
 export const EXPERIENCE_BANDS = [

@@ -24,9 +24,11 @@ const supportsObserver = () => typeof IntersectionObserver !== 'undefined';
  * @param {number}  [options.threshold]  Fraction visible before revealing.
  * @param {string}  [options.rootMargin] Fires early so the motion is already
  *                                       settling by the time it is read.
+ * @param {unknown} [options.trigger] Reattaches observation when the target is
+ *                                    mounted after the first render.
  * @returns {[React.RefObject<HTMLElement>, boolean]}
  */
-const useReveal = ({ threshold = 0.12, rootMargin = '0px 0px -8% 0px' } = {}) => {
+const useReveal = ({ threshold = 0.12, rootMargin = '0px 0px -8% 0px', trigger } = {}) => {
   const ref = useRef(null);
   const [isRevealed, setIsRevealed] = useState(() => prefersReducedMotion() || !supportsObserver());
 
@@ -47,7 +49,7 @@ const useReveal = ({ threshold = 0.12, rootMargin = '0px 0px -8% 0px' } = {}) =>
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [isRevealed, threshold, rootMargin]);
+  }, [isRevealed, threshold, rootMargin, trigger]);
 
   return [ref, isRevealed];
 };

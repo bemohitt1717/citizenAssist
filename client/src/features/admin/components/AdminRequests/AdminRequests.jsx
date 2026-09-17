@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { Empty, Panel, Tabs } from '../../../../components/ui/DataKit/DataKit';
 import { getServiceById } from '../../../../constants/services';
 import { getStatus } from '../../../../constants/requests';
-import { ADMIN_AGENTS, ADMIN_REQUESTS } from '../../adminData';
+import { getAdminRequests, getAgents, assignAgent } from '../../adminApi';
 
 const FILTERS = [
   { id: 'unassigned', label: 'Unassigned' },
@@ -26,31 +26,60 @@ const toneFor = (status) => {
 };
 
 /**
- * Request management.
- *
- * Unassigned comes first, because a request with nobody on it is the only state
- * where the platform itself is the thing holding a citizen up.
- *
- * Assignment is a dropdown of agents, not an auto-match. With one district and a
- * handful of agents, a human picking is both simpler to build and better than a
- * rule nobody can inspect — the select is narrowed to agents who are active and
- * handle that service, which is the part worth automating.
+ * Request management with real data.
  */
 const AdminRequests = () => {
   const [filterId, setFilterId] = useState('unassigned');
+  const [requests, setRequests] = useState([]);
+  const [agents, setAgents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const rows = ADMIN_REQUESTS.filter((request) => matches(request, filterId));
-  const activeAgents = ADMIN_AGENTS.filter((agent) => agent.status === 'active');
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      console.log('📋 [ADMIN-REQUESTS] Fetching requests and agents...');
+      const [requestsData, agentsData] = await Promise.all([
+        getAdminRequests(),
+        getAgents('active'), // Only active agents can be assigned
+      ]);
+
+      setRequests(requestsData.data.requests);
+      setAgents(agentsData.data.agents);
+      console.log(`✅ [ADMIN-REQUESTS] Loaded ${requestsData.data.requests.length} requests, ${agentsData.data.agents.length} active agents`);
+    } catch (error) {
+      console.error('❌ [ADMIN-REQUESTS] Failed to fetch data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAssign = async (requestId, agentId) => {
+    if (!agentId) return; // "Not assigned" selected
+
+    try {
+      console.log('🔗 [ADMIN-REQUESTS] Assigning agent:', { requestId, agentId });
+      await assignAgent(requestId, agentId);
+      console.log('✅ [ADMIN-REQUESTS] Agent assigned successfully');
+      // Refresh requests
+      await fetchData();
+    } catch (error) {
+      console.error('❌ [ADMIN-REQUESTS] Assignment failed:', error);
+    }
+  };
+
+  const rows = requests.filter((request) => matches(request, filterId));
 
   const tabs = FILTERS.map((filter) => ({
     ...filter,
-    count: ADMIN_REQUESTS.filter((request) => matches(request, filter.id)).length,
+    count: requests.filter((request) => matches(request, filter.id)).length,
   }));
 
-  const assign = () => {
-    // TODO(api): PATCH /api/admin/requests/:id  body: { agentId }
-    // Sets status to 'assigned' and appends a timeline entry.
-  };
+  if (isLoading) {
+    return <div style={{ padding: '2rem' }}>Loading requests...</div>;
+  }
 
   return (
     <>
@@ -85,27 +114,30 @@ const AdminRequests = () => {
                 </span>
 
                 <span className="ca-row__actions">
-                  <label className="ca-sr-only" htmlFor={`assign-${request.id}`}>
-                    Agent for {request.reference}
-                  </label>
-                  <select
-                    id={`assign-${request.id}`}
-                    className="ca-field__select"
-                    defaultValue={request.agentName ?? ''}
-                    onChange={assign}
-                  >
-                    <option value="">Not assigned</option>
-                    {activeAgents.map((agent) => (
-                      <option key={agent.id} value={agent.name}>
-                        {agent.name} · {agent.district}
-                      </option>
-                    ))}
-                  </select>
+                  {request.status === 'pending' && (
+                    <>
+                      <label className="ca-sr-only" htmlFor={`assign-${request.id}`}>
+                        Agent for {request.reference}
+                      </label>
+                      <select
+                        id={`assign-${request.id}`}
+                        className="ca-field__select"
+                        defaultValue=""
+                        onChange={(e) => handleAssign(request.id, e.target.value)}
+                      >
+                        <option value="">Assign agent...</option>
+                        {agents.map((agent) => (
+                          <option key={agent.id} value={agent.id}>
+                            {agent.name} · {agent.district}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  )}
 
-                  {!request.agentName && (
-                    <span className="ca-row__yes" role="presentation">
-                      <Icon name="phone" size={13} />
-                      Needs an agent
+                  {request.agentName && (
+                    <span style={{ fontSize: '0.875rem', color: 'var(--color-ink-muted)' }}>
+                      Agent: {request.agentName}
                     </span>
                   )}
                 </span>

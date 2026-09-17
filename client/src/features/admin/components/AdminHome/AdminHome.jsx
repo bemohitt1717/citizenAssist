@@ -1,69 +1,106 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { Distribution, Panel, Panels, Stat, Stats } from '../../../../components/ui/DataKit/DataKit';
 import { getServiceById } from '../../../../constants/services';
-import {
-  ADMIN_AGENTS,
-  ADMIN_COUNTS,
-  ADMIN_PERFORMANCE,
-  ADMIN_SERVICE_VOLUME,
-} from '../../adminData';
+import { getAdminDashboard, getAgents, updateAgentStatus } from '../../adminApi';
 
 /**
  * Admin dashboard landing.
  *
- * Leads with the verification queue rather than the platform totals, because an
- * unverified agent is the one thing here that blocks other people's work. Totals
- * sit beside it as context, not as the point.
+ * Shows platform stats and pending agent verification queue.
  */
 const AdminHome = () => {
-  const pending = ADMIN_AGENTS.filter((agent) => agent.status === 'pending');
+  const [counts, setCounts] = useState(null);
+  const [pendingAgents, setPendingAgents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [issuedPin, setIssuedPin] = useState(null);
 
-  const decide = () => {
-    // TODO(api): PATCH /api/admin/agents/:id  body: { status: 'active' | 'rejected' }
-    // Setting 'active' is what lets requests reach them.
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [dashboardData, agentsData] = await Promise.all([
+          getAdminDashboard(),
+          getAgents('pending'),
+        ]);
+
+        setCounts(dashboardData.data.counts);
+        setPendingAgents(agentsData.data.agents);
+      } catch (error) {
+        console.error('Failed to load dashboard:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const decide = async (agentId, decision) => {
+    try {
+      const response = await updateAgentStatus(agentId, decision);
+      if (decision === 'active' && response.data?.pin) {
+        setIssuedPin({ pin: response.data.pin, mobile: response.data.mobile });
+      }
+      // Refresh pending agents list
+      const agentsData = await getAgents('pending');
+      setPendingAgents(agentsData.data.agents);
+    } catch (error) {
+      console.error('Failed to update agent status:', error);
+    }
   };
 
-  const distribution = ADMIN_SERVICE_VOLUME.map((entry) => ({
-    name: getServiceById(entry.serviceId)?.name ?? entry.serviceId,
-    count: entry.requests,
-    share: entry.share,
-  }));
+  if (isLoading) {
+    return <div style={{ padding: '2rem' }}>Loading dashboard...</div>;
+  }
+
+  if (!counts) {
+    return <div style={{ padding: '2rem' }}>Failed to load dashboard data.</div>;
+  }
 
   return (
     <>
+      {issuedPin && (
+        <Panel title="Agent verified">
+          <p style={{ padding: '1rem' }}>
+            Share this login PIN with <strong data-numeric>+91 {issuedPin.mobile}</strong>:{' '}
+            <strong data-numeric>{issuedPin.pin}</strong>
+          </p>
+        </Panel>
+      )}
       <Stats>
         <Stat
           icon="shieldCheck"
           label="Agents to verify"
-          value={ADMIN_COUNTS.pendingAgents}
+          value={counts.pendingAgents}
           note="Blocking their first file"
-          attention={ADMIN_COUNTS.pendingAgents > 0}
+          attention={counts.pendingAgents > 0}
         />
         <Stat
           icon="phone"
           label="Open complaints"
-          value={ADMIN_COUNTS.openComplaints}
+          value={counts.openComplaints}
           note="Awaiting resolution"
-          attention={ADMIN_COUNTS.openComplaints > 0}
+          attention={counts.openComplaints > 0}
         />
         <Stat
           icon="document"
           label="Active requests"
-          value={ADMIN_COUNTS.activeRequests}
+          value={counts.activeRequests}
           note="In progress now"
         />
         <Stat
           icon="check"
           label="Completed"
-          value={ADMIN_COUNTS.completedRequests}
+          value={counts.completedRequests}
           note="All time"
         />
       </Stats>
 
       <Panels split>
         <Panel
-          title={`Waiting for verification · ${pending.length}`}
+          title={`Waiting for verification · ${pendingAgents.length}`}
           action={
             <Link className="ca-panel__more" to="/admin/agents">
               All agents
@@ -71,13 +108,18 @@ const AdminHome = () => {
             </Link>
           }
         >
-          <ul className="ca-rows">
-            {pending.map((agent) => (
-              <li className="ca-row" key={agent.id}>
-                <span className="ca-row__body">
-                  <span className="ca-row__title">{agent.name}</span>
-                  <span className="ca-row__meta">
-                    <span>{agent.district}</span>
+          {pendingAgents.length === 0 ? (
+            <p style={{ padding: '1rem', color: 'var(--color-ink-muted)' }}>
+              No pending agents at the moment.
+            </p>
+          ) : (
+            <ul className="ca-rows">
+              {pendingAgents.map((agent) => (
+                <li className="ca-row" key={agent.id}>
+                  <span className="ca-row__body">
+                    <span className="ca-row__title">{agent.name}</span>
+                    <span className="ca-row__meta">
+                      <span>{agent.district}</span>
                     <span data-numeric>{agent.mobile}</span>
                     <span>{agent.experience}</span>
                     <span data-numeric>{agent.services} services</span>
@@ -86,39 +128,36 @@ const AdminHome = () => {
                 </span>
 
                 <span className="ca-row__actions">
-                  <button type="button" className="ca-row__yes" onClick={decide}>
+                  <button
+                    type="button"
+                    className="ca-row__yes"
+                    onClick={() => decide(agent.id, 'active')}
+                  >
                     <Icon name="check" size={13} />
                     Verify
                   </button>
-                  <button type="button" className="ca-row__no" onClick={decide}>
+                  <button
+                    type="button"
+                    className="ca-row__no"
+                    onClick={() => decide(agent.id, 'rejected')}
+                  >
                     Reject
                   </button>
                 </span>
               </li>
             ))}
           </ul>
+          )}
         </Panel>
 
         <div className="ca-panels">
           <Panel title="Platform">
             <Stats>
-              <Stat label="Citizens" value={ADMIN_COUNTS.citizens} />
-              <Stat label="Agents" value={ADMIN_COUNTS.agents} />
-              <Stat label="Completion rate" value={ADMIN_PERFORMANCE.completionRate} />
-              <Stat label="Avg. days" value={ADMIN_PERFORMANCE.averageDays} />
+              <Stat label="Citizens" value={counts.citizens} />
+              <Stat label="Agents" value={counts.agents} />
+              <Stat label="Active requests" value={counts.activeRequests} />
+              <Stat label="Completed" value={counts.completedRequests} />
             </Stats>
-          </Panel>
-
-          <Panel
-            title="Most requested"
-            action={
-              <Link className="ca-panel__more" to="/admin/services">
-                Services
-                <Icon name="arrowRight" size={14} />
-              </Link>
-            }
-          >
-            <Distribution items={distribution} />
           </Panel>
         </div>
       </Panels>
