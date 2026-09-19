@@ -20,15 +20,18 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import { ProtectedRoute, RoleRoute } from "./routes/ProtectedRoute";
 import { useRequestFlow } from "./features/request/requestFlowContext";
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+const GOOGLE_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
   "214641340065-r8ohdaaalk4e347qucfip6crcicjma6s.apps.googleusercontent.com";
 
 // Suppress Google OAuth warnings in production
 if (import.meta.env.PROD) {
   const originalWarn = console.warn;
   console.warn = (...args) => {
-    if (args[0]?.includes?.('GSI_LOGGER') || 
-        args[0]?.includes?.('google.accounts.id')) {
+    if (
+      args[0]?.includes?.("GSI_LOGGER") ||
+      args[0]?.includes?.("google.accounts.id")
+    ) {
       return; // Suppress Google OAuth warnings
     }
     originalWarn.apply(console, args);
@@ -39,10 +42,11 @@ if (import.meta.env.PROD) {
  * Login prompt wrapper component - only shows when user tries to request without login
  */
 const LoginPromptWrapper = () => {
-  const { showLoginPrompt, handleLoginRedirect, closeLoginPrompt } = useRequestFlow();
+  const { showLoginPrompt, handleLoginRedirect, closeLoginPrompt } =
+    useRequestFlow();
 
   return (
-    <LoginPrompt 
+    <LoginPrompt
       isOpen={showLoginPrompt}
       onClose={closeLoginPrompt}
       onLogin={handleLoginRedirect}
@@ -73,10 +77,14 @@ const HomeLayout = () => (
 
 const App = () => (
   <ErrorBoundary>
-    <GoogleOAuthProvider 
+    <GoogleOAuthProvider
       clientId={GOOGLE_CLIENT_ID}
-      onScriptLoadError={() => console.error('Failed to load Google OAuth script')}
-      onScriptLoadSuccess={() => console.log('Google OAuth script loaded successfully')}
+      onScriptLoadError={() =>
+        console.error("Failed to load Google OAuth script")
+      }
+      onScriptLoadSuccess={() =>
+        console.log("Google OAuth script loaded successfully")
+      }
     >
       <BrowserRouter>
         <AuthProvider>
