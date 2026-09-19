@@ -17,8 +17,9 @@ const corsOptions = {
       'http://localhost:5174',
       'http://127.0.0.1:5173',
       'http://127.0.0.1:5174',
-      process.env.CLIENT_ORIGIN, // From .env file
-    ].filter(Boolean); // Remove undefined values
+      'https://citizen-assist-teal.vercel.app',
+      ...(process.env.CLIENT_ORIGIN ?? '').split(',').map((value) => value.trim()),
+    ].filter(Boolean);
     
     // Allow any localhost port in development
     if (process.env.NODE_ENV === 'development' && 
@@ -27,7 +28,10 @@ const corsOptions = {
     }
     
     // Check if origin is in allowed list
-    if (allowedOrigins.includes(origin)) {
+    const isCitizenAssistPreview =
+      origin.includes('citizen-assist') && origin.endsWith('.vercel.app');
+
+    if (allowedOrigins.includes(origin) || isCitizenAssistPreview) {
       return callback(null, true);
     }
     

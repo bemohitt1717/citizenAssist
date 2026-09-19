@@ -20,7 +20,8 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import { ProtectedRoute, RoleRoute } from "./routes/ProtectedRoute";
 import { useRequestFlow } from "./features/request/requestFlowContext";
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+  "214641340065-r8ohdaaalk4e347qucfip6crcicjma6s.apps.googleusercontent.com";
 
 // Suppress Google OAuth warnings in production
 if (import.meta.env.PROD) {
