@@ -8,12 +8,14 @@
 ## Option 1: Deploy on Vercel (Recommended)
 
 ### Step 1: Prepare for Deployment
+
 1. Ensure your backend is deployed and working
 2. Test backend health: `https://your-api.onrender.com/api/health`
 
 ### Step 2: Deploy to Vercel
 
 1. **Push to GitHub** (if not already)
+
    ```bash
    git add .
    git commit -m "Ready for Vercel deployment"
@@ -60,6 +62,7 @@
 ## Option 2: Deploy on Netlify
 
 ### Step 1: Push to GitHub
+
 ```bash
 git add .
 git commit -m "Ready for Netlify deployment"
@@ -106,19 +109,24 @@ git push origin main
 ## Testing Deployment
 
 ### 1. Test Frontend
+
 Visit your deployed URL and check:
+
 - [ ] Homepage loads correctly
 - [ ] Services section displays
 - [ ] Navigation works
 
 ### 2. Test Backend Connection
+
 Try to sign up or log in:
+
 - [ ] Sign up creates account
 - [ ] Login works correctly
 - [ ] Dashboard loads after login
 - [ ] No CORS errors in browser console
 
 ### 3. Test Full Flow
+
 - [ ] Browse services
 - [ ] Select a service and request it
 - [ ] Track request page works
@@ -133,6 +141,7 @@ Try to sign up or log in:
 **Cause**: Frontend can't reach backend
 
 **Solutions**:
+
 1. Check `VITE_API_URL` is set correctly in deployment platform
 2. Verify backend is running: `curl https://your-api.onrender.com/api/health`
 3. Check backend logs in Render dashboard
@@ -143,21 +152,24 @@ Try to sign up or log in:
 **Symptom**: Browser console shows CORS policy error
 
 **Solutions**:
+
 1. Update `CLIENT_URL` in Render to match your frontend URL exactly
 2. Ensure no trailing slash in URLs
 3. Check both URLs use `https://` (not `http://`)
 4. **Important**: Make sure you're using `CLIENT_URL`
-4. Wait 1-2 minutes after updating environment variables
+5. Wait 1-2 minutes after updating environment variables
 
 ### Issue: Build Fails
 
 **Common causes**:
+
 1. **Missing dependencies**: Run `npm install` locally to verify
 2. **Build command incorrect**: Should be `npm run build`
 3. **Environment variable not set**: Add `VITE_API_URL`
 4. **Node version mismatch**: Vercel/Netlify use Node 18+
 
 **Solutions**:
+
 - Check build logs for specific error
 - Verify `package.json` has all dependencies
 - Test build locally: `npm run build`
@@ -167,6 +179,7 @@ Try to sign up or log in:
 **Cause**: Frontend is not connecting to backend properly
 
 **Solutions**:
+
 1. Open browser console (F12) and check for errors
 2. Look for network errors or failed API calls
 3. Verify `VITE_API_URL` environment variable is set
@@ -178,12 +191,14 @@ Try to sign up or log in:
 ## Custom Domain (Optional)
 
 ### Vercel
+
 1. Go to project settings → "Domains"
 2. Add your custom domain
 3. Follow DNS configuration instructions
 4. Update `CLIENT_URL` in backend to the new domain
 
 ### Netlify
+
 1. Go to "Domain settings" → "Add custom domain"
 2. Follow DNS configuration instructions
 3. Update `CLIENT_URL` in backend to new domain
@@ -199,6 +214,7 @@ Both Vercel and Netlify support automatic deployments:
 - **Preview deployments**: Available for pull requests
 
 To deploy updates:
+
 ```bash
 git add .
 git commit -m "Update feature"
@@ -211,10 +227,10 @@ Your site will auto-deploy in 2-3 minutes.
 
 ## Environment Variables Summary
 
-| Platform | Variable | Value |
-|----------|----------|-------|
-| **Vercel/Netlify** | `VITE_API_URL` | `https://your-api.onrender.com/api` |
-| **Render (Backend)** | `CLIENT_URL` | `https://your-frontend.vercel.app` |
+| Platform             | Variable       | Value                               |
+| -------------------- | -------------- | ----------------------------------- |
+| **Vercel/Netlify**   | `VITE_API_URL` | `https://your-api.onrender.com/api` |
+| **Render (Backend)** | `CLIENT_URL`   | `https://your-frontend.vercel.app`  |
 
 **Important**: Update both when you change URLs!
 **Note**: The backend variable is `CLIENT_URL`
@@ -224,12 +240,15 @@ Your site will auto-deploy in 2-3 minutes.
 ## Performance Optimization
 
 ### Enable Compression
+
 Both platforms automatically enable gzip/brotli compression.
 
 ### Caching
+
 Static assets are cached automatically.
 
 ### CDN
+
 Both platforms use global CDN for fast content delivery.
 
 ---
@@ -237,11 +256,13 @@ Both platforms use global CDN for fast content delivery.
 ## Monitoring
 
 ### Vercel
+
 - Analytics: Built-in web analytics
 - Logs: Available in deployment details
 - Performance: Core Web Vitals tracked
 
 ### Netlify
+
 - Analytics: Available in paid plans
 - Logs: Deployment logs in dashboard
 - Performance: Build and deploy times tracked
@@ -261,11 +282,13 @@ Both platforms use global CDN for fast content delivery.
 ## Quick Reference
 
 ### Your URLs
+
 - **Frontend**: `https://your-project.vercel.app`
 - **Backend API**: `https://your-api.onrender.com`
 - **Health Check**: `https://your-api.onrender.com/api/health`
 
 ### Update Commands
+
 ```bash
 # Update and deploy
 git add .
@@ -274,6 +297,7 @@ git push origin main
 ```
 
 ### Environment Variables
+
 ```env
 VITE_API_URL=https://your-api.onrender.com/api
 ```

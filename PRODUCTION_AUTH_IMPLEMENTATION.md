@@ -1,14 +1,15 @@
 # Production-Ready Authentication Implementation Guide
 
 ## Overview
-This guide upgrades the current Citizen Assist authentication to production-grade standards with:
 
+This guide upgrades the current Citizen Assist authentication to production-grade standards with:
 
 ## Backend Changes
 
 ### 1. Environment Variables (Already Updated)
 
 **server/.env:**
+
 ```env
 PORT=5000
 NODE_ENV=development
@@ -24,6 +25,7 @@ COOKIE_DOMAIN=
 ### 2. User Model (Already Updated)
 
 Added refresh token fields:
+
 ```javascript
 refreshToken: { type: String, select: false },
 refreshTokenVersion: { type: Number, default: 0, select: false },
@@ -34,6 +36,7 @@ refreshTokenVersion: { type: Number, default: 0, select: false },
 **Key changes needed in `server/controllers/auth.controller.js`:**
 
 #### Update `signIn` function:
+
 ```javascript
 export const signIn = async (req, res, next) => {
   try {
@@ -43,7 +46,9 @@ export const signIn = async (req, res, next) => {
 
     // ... existing validation ...
 
-    const user = await User.findOne({ phone }).select("+pinHash +refreshTokenVersion");
+    const user = await User.findOne({ phone }).select(
+      "+pinHash +refreshTokenVersion",
+    );
 
     // ... existing PIN verification ...
 
@@ -72,6 +77,7 @@ export const signIn = async (req, res, next) => {
 ```
 
 #### Update `signUp` function similarly:
+
 ```javascript
 // After creating user, set cookies instead of returning token
 const accessToken = createAccessToken(user);
@@ -92,6 +98,7 @@ return res.status(201).json({
 ```
 
 #### Add refresh endpoint:
+
 ```javascript
 /**
  * POST /api/auth/refresh
@@ -113,7 +120,9 @@ export const refreshAccessToken = async (req, res, next) => {
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
 
     // Find user with token version
-    const user = await User.findById(decoded.sub).select("+refreshTokenVersion +refreshToken");
+    const user = await User.findById(decoded.sub).select(
+      "+refreshTokenVersion +refreshToken",
+    );
 
     if (!user) {
       clearAuthCookies(res);
@@ -182,6 +191,7 @@ export const refreshAccessToken = async (req, res, next) => {
 ```
 
 #### Add logout endpoint:
+
 ```javascript
 /**
  * POST /api/auth/logout
@@ -191,7 +201,9 @@ export const logout = async (req, res, next) => {
   try {
     // If user is authenticated, invalidate their refresh token
     if (req.user) {
-      const user = await User.findById(req.user._id).select("+refreshTokenVersion");
+      const user = await User.findById(req.user._id).select(
+        "+refreshTokenVersion",
+      );
       if (user) {
         user.refreshTokenVersion += 1; // Invalidate all existing refresh tokens
         user.refreshToken = null;
@@ -212,6 +224,7 @@ export const logout = async (req, res, next) => {
 ```
 
 #### Update Google OAuth function:
+
 ```javascript
 export const googleAuth = async (req, res, next) => {
   try {
@@ -295,6 +308,7 @@ export const googleAuth = async (req, res, next) => {
 ### 4. Add Routes
 
 **server/routes/auth.route.js:**
+
 ```javascript
 import express from "express";
 import {
@@ -326,6 +340,7 @@ export default router;
 ### 5. Update getMe endpoint
 
 **server/controllers/auth.controller.js:**
+
 ```javascript
 /**
  * GET /api/auth/profile
@@ -355,12 +370,12 @@ export const getMe = async (req, res, next) => {
 };
 ```
 
-
 ## Frontend Changes
 
 ### 1. Update Axios Configuration
 
 **client/src/api/axios.js** (create if doesn't exist):
+
 ```javascript
 import axios from "axios";
 
@@ -389,7 +404,7 @@ api.interceptors.response.use(
       try {
         // Attempt to refresh tokens
         await api.post("/auth/refresh");
-        
+
         // Retry original request
         return api(originalRequest);
       } catch (refreshError) {
@@ -400,7 +415,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
@@ -409,6 +424,7 @@ export default api;
 ### 2. Update Auth API Calls
 
 **client/src/features/auth/authApi.js:**
+
 ```javascript
 import api from "../../api/axios";
 
@@ -446,6 +462,7 @@ export const refreshTokens = async () => {
 ### 3. Update AuthContext
 
 **client/src/context/AuthContext.jsx:**
+
 ```javascript
 import { useEffect, useState } from "react";
 import { getMe, logout as logoutApi } from "../features/auth/authApi";
@@ -469,7 +486,7 @@ export const AuthProvider = ({ children }) => {
         } else {
           console.info(
             "[auth debug] session restore failed",
-            error.response?.status
+            error.response?.status,
           );
         }
         setUser(null);
@@ -523,10 +540,10 @@ const onSignIn = async () => {
     setError("");
 
     const response = await signIn(phone, pin, role.id);
-    
+
     // No token to store - cookies are set automatically
     login(response.data.user);
-    
+
     navigate(HOME_BY_ROLE[response.data.user.role]);
   } catch (err) {
     setError(getApiErrorMessage(err));
@@ -539,9 +556,9 @@ const handleGoogleSuccess = async (credentialResponse) => {
   try {
     setIsBusy(true);
     const response = await googleLogin(credentialResponse.credential);
-    
+
     login(response.data.user);
-    
+
     navigate(HOME_BY_ROLE[response.data.user.role]);
   } catch (err) {
     setError(getApiErrorMessage(err));
@@ -551,12 +568,12 @@ const handleGoogleSuccess = async (credentialResponse) => {
 };
 ```
 
-
 ## Deployment Configuration
 
 ### Backend (Render)
 
 **Environment Variables:**
+
 ```
 PORT=5000
 NODE_ENV=production
@@ -572,18 +589,17 @@ COOKIE_DOMAIN=
 ### Frontend (Vercel)
 
 **Environment Variables:**
+
 ```
 VITE_API_URL=https://citizenassist.onrender.com/api
 VITE_GOOGLE_CLIENT_ID=214641340065-r8ohdaaalk4e347qucfip6crcicjma6s.apps.googleusercontent.com
 ```
-
 
 ## Testing Checklist
 
 ### Local Testing:
 
 ### Production Testing:
-
 
 ## Security Benefits
 
@@ -595,10 +611,10 @@ VITE_GOOGLE_CLIENT_ID=214641340065-r8ohdaaalk4e347qucfip6crcicjma6s.apps.googleu
 ✅ **SameSite protection** - CSRF mitigation  
 ✅ **No tokens in localStorage** - Safer than current implementation
 
-
 ## Migration Path
 
 ### Option 1: Gradual (Recommended)
+
 1. Keep existing Bearer token system working
 2. Add cookie support in parallel
 3. Update frontend to use cookies
@@ -606,29 +622,33 @@ VITE_GOOGLE_CLIENT_ID=214641340065-r8ohdaaalk4e347qucfip6crcicjma6s.apps.googleu
 5. Remove Bearer token support
 
 ### Option 2: Direct
+
 1. Implement all backend changes
 2. Update all frontend code
 3. Deploy both simultaneously
 4. Test thoroughly
 
-
 ## Common Issues & Solutions
 
 ### Issue: Cookies not being set
+
 **Solution:** Verify `withCredentials: true` in Axios and `credentials: true` in CORS
 
 ### Issue: CORS error in production
+
 **Solution:** Check CLIENT_URL exactly matches Vercel URL (no trailing slash)
 
 ### Issue: Google OAuth fails
+
 **Solution:** Add production URLs to Google Console Authorized Origins
 
 ### Issue: Session lost on refresh
+
 **Solution:** Check cookies are being sent (Network tab → Request Headers → Cookie)
 
 ### Issue: Token refresh loop
-**Solution:** Check refresh endpoint doesn't require valid access token
 
+**Solution:** Check refresh endpoint doesn't require valid access token
 
 ## Next Steps
 
