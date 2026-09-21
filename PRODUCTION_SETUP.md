@@ -51,15 +51,15 @@ After deployment, Vercel will give you a URL like:
 ## Step 2: Update Backend CORS (Render)
 
 ### 2.1: Get Your Vercel URL
-After Vercel deployment completes, copy your frontend URL (e.g., `https://citizenassist.vercel.app`)
+The production frontend URL is `https://citizen-assist-teal.vercel.app`.
 
 ### 2.2: Update Render Environment Variables
 1. Go to https://dashboard.render.com
 2. Select your backend service
 3. Go to **Environment** tab
-4. Update `CLIENT_ORIGIN` to your Vercel URL:
+4. Update `CLIENT_URL` to your Vercel URL:
    ```
-   CLIENT_ORIGIN=https://your-vercel-url.vercel.app
+   CLIENT_URL=https://citizen-assist-teal.vercel.app
    ```
 5. Click **"Save Changes"**
 6. Backend will automatically redeploy
@@ -73,14 +73,10 @@ After Vercel deployment completes, copy your frontend URL (e.g., `https://citize
 2. Select your OAuth 2.0 Client ID: `214641340065-r8ohdaaalk4e347qucfip6crcicjma6s`
 3. Under **Authorized JavaScript origins**, add:
    ```
-   https://citizenassist.onrender.com
-   https://your-vercel-url.vercel.app
+   http://localhost:5173
+   https://citizen-assist-teal.vercel.app
    ```
-4. Under **Authorized redirect URIs**, add:
-   ```
-   https://your-vercel-url.vercel.app
-   https://your-vercel-url.vercel.app/*
-   ```
+4. No redirect URI is required for this Google Identity Services credential flow.
 5. Click **"Save"**
 
 ---
@@ -102,7 +98,7 @@ Should return:
 ```
 
 ### 4.2: Test Frontend
-1. Open your Vercel URL: `https://your-vercel-url.vercel.app`
+1. Open your Vercel URL: `https://citizen-assist-teal.vercel.app`
 2. Check browser console for errors
 3. Try loading services on homepage
 4. Test Google login
@@ -117,9 +113,9 @@ Access to XMLHttpRequest at 'https://citizenassist.onrender.com/api/...'
 from origin 'https://your-vercel-url.vercel.app' has been blocked by CORS
 ```
 **Solution**: 
-- Check `CLIENT_URL` in Render matches your Vercel URL exactly (not `CLIENT_ORIGIN`)
+- Check `CLIENT_URL` in Render matches your Vercel URL exactly
 - No trailing slash: ✅ `https://app.vercel.app` ❌ `https://app.vercel.app/`
-- Make sure you're using `CLIENT_URL` variable name, not the old `CLIENT_ORIGIN`
+- Make sure the value has no trailing slash
 - Redeploy backend after changing
 
 **Issue 2: Google OAuth Error**

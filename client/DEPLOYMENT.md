@@ -52,7 +52,7 @@
 2. Click "Environment" tab
 3. Edit `CLIENT_URL` variable (or add if it doesn't exist)
 4. Set value to: `https://your-project.vercel.app`
-5. **Important**: If you have old `CLIENT_ORIGIN` variable, DELETE it
+5. **Important**: Remove any obsolete CORS environment variables
 6. Save (will trigger auto-redeploy)
 
 ---
@@ -98,7 +98,7 @@ git push origin main
 2. Click "Environment" tab
 3. Edit `CLIENT_URL` variable (or add if it doesn't exist)
 4. Set value to: `https://your-site.netlify.app`
-5. **Important**: If you have old `CLIENT_ORIGIN` variable, DELETE it
+5. **Important**: Remove any obsolete CORS environment variables
 6. Save
 
 ---
@@ -146,7 +146,7 @@ Try to sign up or log in:
 1. Update `CLIENT_URL` in Render to match your frontend URL exactly
 2. Ensure no trailing slash in URLs
 3. Check both URLs use `https://` (not `http://`)
-4. **Important**: Make sure you're using `CLIENT_URL` not the old `CLIENT_ORIGIN`
+4. **Important**: Make sure you're using `CLIENT_URL`
 4. Wait 1-2 minutes after updating environment variables
 
 ### Issue: Build Fails
@@ -181,7 +181,7 @@ Try to sign up or log in:
 1. Go to project settings → "Domains"
 2. Add your custom domain
 3. Follow DNS configuration instructions
-4. Update `CLIENT_ORIGIN` in backend to new domain
+4. Update `CLIENT_URL` in backend to the new domain
 
 ### Netlify
 1. Go to "Domain settings" → "Add custom domain"
@@ -217,7 +217,7 @@ Your site will auto-deploy in 2-3 minutes.
 | **Render (Backend)** | `CLIENT_URL` | `https://your-frontend.vercel.app` |
 
 **Important**: Update both when you change URLs!
-**Note**: The backend variable is `CLIENT_URL` (not `CLIENT_ORIGIN`)
+**Note**: The backend variable is `CLIENT_URL`
 
 ---
 

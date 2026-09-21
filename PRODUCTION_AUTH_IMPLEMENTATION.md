@@ -2,13 +2,7 @@
 
 ## Overview
 This guide upgrades the current Citizen Assist authentication to production-grade standards with:
-- HTTP-only cookies (CSRF-safe)
-- Refresh token rotation
-- Proper CORS configuration
-- Google OAuth integration
-- Deployment-ready for Vercel + Render
 
----
 
 ## Backend Changes
 
@@ -361,7 +355,6 @@ export const getMe = async (req, res, next) => {
 };
 ```
 
----
 
 ## Frontend Changes
 
@@ -516,8 +509,6 @@ export const AuthProvider = ({ children }) => {
 ### 4. Remove localStorage Token Management
 
 **Delete or update `client/src/utils/storage.js`:**
-- Remove `getToken`, `setToken`, `removeToken` functions
-- Cookies are now handled automatically
 
 ### 5. Update Login Forms
 
@@ -560,7 +551,6 @@ const handleGoogleSuccess = async (credentialResponse) => {
 };
 ```
 
----
 
 ## Deployment Configuration
 
@@ -587,29 +577,13 @@ VITE_API_URL=https://citizenassist.onrender.com/api
 VITE_GOOGLE_CLIENT_ID=214641340065-r8ohdaaalk4e347qucfip6crcicjma6s.apps.googleusercontent.com
 ```
 
----
 
 ## Testing Checklist
 
 ### Local Testing:
-- [ ] Sign up with mobile + PIN
-- [ ] Sign in with mobile + PIN
-- [ ] Sign in with Google
-- [ ] Page refresh preserves session
-- [ ] Logout clears session
-- [ ] Access token refresh works automatically
-- [ ] Protected routes redirect when not authenticated
 
 ### Production Testing:
-- [ ] All local tests pass on production URLs
-- [ ] CORS allows frontend requests
-- [ ] Cookies set correctly (check browser DevTools → Application → Cookies)
-- [ ] Google OAuth works with production domain
-- [ ] Session persists across page refreshes
-- [ ] No tokens in localStorage/sessionStorage
-- [ ] Network tab shows cookies sent with requests
 
----
 
 ## Security Benefits
 
@@ -621,7 +595,6 @@ VITE_GOOGLE_CLIENT_ID=214641340065-r8ohdaaalk4e347qucfip6crcicjma6s.apps.googleu
 ✅ **SameSite protection** - CSRF mitigation  
 ✅ **No tokens in localStorage** - Safer than current implementation
 
----
 
 ## Migration Path
 
@@ -638,7 +611,6 @@ VITE_GOOGLE_CLIENT_ID=214641340065-r8ohdaaalk4e347qucfip6crcicjma6s.apps.googleu
 3. Deploy both simultaneously
 4. Test thoroughly
 
----
 
 ## Common Issues & Solutions
 
@@ -657,7 +629,6 @@ VITE_GOOGLE_CLIENT_ID=214641340065-r8ohdaaalk4e347qucfip6crcicjma6s.apps.googleu
 ### Issue: Token refresh loop
 **Solution:** Check refresh endpoint doesn't require valid access token
 
----
 
 ## Next Steps
 
