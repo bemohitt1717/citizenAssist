@@ -90,6 +90,18 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    // Refresh token fields for production-grade auth
+    refreshToken: {
+      type: String,
+      select: false,
+    },
+
+    refreshTokenVersion: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
   },
   {
     timestamps: true,

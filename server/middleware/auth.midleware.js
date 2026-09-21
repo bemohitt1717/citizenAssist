@@ -2,18 +2,22 @@ import jwt from "jsonwebtoken";
 
 import User from "../model/user.js";
 
+/**
+ * Production-ready authentication middleware with cookie and Bearer token support
+ * Supports both HTTP-only cookies (preferred) and Authorization header (for API clients)
+ */
 export const protect = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    let token = null;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({
-        status: "error",
-        message: "Authentication required.",
-      });
+    // Priority 1: Check HTTP-only cookie (preferred for web apps)
+    if (req.cookies && req.cookies.accessToken) {
+      token = req.cookies.accessToken;
     }
-
-    const token = authHeader.split(" ")[1];
+    // Priority 2: Check Authorization header (for API clients/mobile apps)
+    else if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
 
     if (!token) {
       return res.status(401).json({
@@ -22,8 +26,10 @@ export const protect = async (req, res, next) => {
       });
     }
 
+    // Verify access token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    // Find user
     const user = await User.findById(decoded.sub);
 
     if (!user) {
@@ -40,6 +46,7 @@ export const protect = async (req, res, next) => {
       });
     }
 
+    // Attach user to request
     req.user = user;
 
     next();
@@ -48,6 +55,7 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({
         status: "error",
         message: "Session expired. Please sign in again.",
+        code: "TOKEN_EXPIRED",
       });
     }
 
@@ -55,6 +63,7 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({
         status: "error",
         message: "Invalid authentication token.",
+        code: "INVALID_TOKEN",
       });
     }
 

@@ -4,13 +4,37 @@ import { OAuth2Client } from "google-auth-library";
 
 import User, { normalizePhone } from "../model/user.js";
 
-const JWT_EXPIRES_IN = "7d";
+// Token expiration times
+const ACCESS_TOKEN_EXPIRES_IN = "15m"; // Short-lived access token
+const REFRESH_TOKEN_EXPIRES_IN = "7d"; // Longer-lived refresh token
 const BCRYPT_ROUNDS = 12;
+
+// Cookie options
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production", // HTTPS only in production
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Cross-site for production
+  domain: process.env.COOKIE_DOMAIN || undefined, // Undefined for localhost
+  path: "/",
+};
+
+const ACCESS_COOKIE_OPTIONS = {
+  ...COOKIE_OPTIONS,
+  maxAge: 15 * 60 * 1000, // 15 minutes
+};
+
+const REFRESH_COOKIE_OPTIONS = {
+  ...COOKIE_OPTIONS,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
 
 // Initialize Google OAuth client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-const createToken = (user) => {
+/**
+ * Create access token with user info
+ */
+const createAccessToken = (user) => {
   return jwt.sign(
     {
       sub: user._id.toString(),
@@ -19,9 +43,58 @@ const createToken = (user) => {
     },
     process.env.JWT_SECRET,
     {
-      expiresIn: JWT_EXPIRES_IN,
+      expiresIn: ACCESS_TOKEN_EXPIRES_IN,
     }
   );
+};
+
+/**
+ * Create refresh token with version for rotation
+ */
+const createRefreshToken = (user) => {
+  return jwt.sign(
+    {
+      sub: user._id.toString(),
+      version: user.refreshTokenVersion || 0,
+    },
+    process.env.JWT_REFRESH_SECRET,
+    {
+      expiresIn: REFRESH_TOKEN_EXPIRES_IN,
+    }
+  );
+};
+
+/**
+ * Set auth cookies with access and refresh tokens
+ */
+const setAuthCookies = (res, accessToken, refreshToken) => {
+  res.cookie("accessToken", accessToken, ACCESS_COOKIE_OPTIONS);
+  res.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
+};
+
+/**
+ * Clear auth cookies
+ */
+const clearAuthCookies = (res) => {
+  res.clearCookie("accessToken", COOKIE_OPTIONS);
+  res.clearCookie("refreshToken", COOKIE_OPTIONS);
+};
+
+/**
+ * Create safe user object (never include password/tokens)
+ */
+const getSafeUser = (user) => {
+  return {
+    id: user._id,
+    name: user.name,
+    phone: user.phone,
+    email: user.email,
+    googleId: user.googleId,
+    role: user.role,
+    status: user.status,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
 };
 
 const isWeakPin = (pin) => {

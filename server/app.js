@@ -1,31 +1,26 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import apiRoute from "./routes/index.route.js";
 import { authorize, protect } from "./middleware/auth.midleware.js";
 
 const app = express();
 
-// CORS configuration - allow all localhost ports in development
+// CORS configuration - production-ready with environment-based origins
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or Postman)
+    // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
     if (!origin) return callback(null, true);
 
-    // Allowed origins list
-    const allowedOrigins = [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://127.0.0.1:5173",
-      "http://127.0.0.1:5174",
-      "https://citizen-assist-teal.vercel.app",
-      ...(process.env.CLIENT_ORIGIN ?? "")
-        .split(",")
-        .map((value) => value.trim()),
-    ].filter(Boolean);
+    // Parse allowed origins from CLIENT_URL environment variable
+    const allowedOrigins = (process.env.CLIENT_URL || "")
+      .split(",")
+      .map((url) => url.trim())
+      .filter(Boolean);
 
-    // Allow any localhost port in development
+    // Development: Allow all localhost ports
     if (
-      process.env.NODE_ENV === "development" &&
+      process.env.NODE_ENV !== "production" &&
       (origin.startsWith("http://localhost:") ||
         origin.startsWith("http://127.0.0.1:"))
     ) {
@@ -33,15 +28,15 @@ const corsOptions = {
     }
 
     // Check if origin is in allowed list
-    const isCitizenAssistPreview =
-      origin.includes("citizen-assist") && origin.endsWith(".vercel.app");
-
-    if (allowedOrigins.includes(origin) || isCitizenAssistPreview) {
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 
-    // Log rejected origins for debugging
-    console.warn(`⚠️ CORS: Origin not allowed: ${origin}`);
+    // Log rejected origins for debugging (not in production to avoid log spam)
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(`⚠️ CORS: Origin not allowed: ${origin}`);
+    }
+    
     callback(new Error("Not allowed by CORS"));
   },
   credentials: true,
@@ -50,6 +45,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(cookieParser()); // Parse cookies for authentication
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
