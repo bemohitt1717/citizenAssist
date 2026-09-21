@@ -117,8 +117,9 @@ Access to XMLHttpRequest at 'https://citizenassist.onrender.com/api/...'
 from origin 'https://your-vercel-url.vercel.app' has been blocked by CORS
 ```
 **Solution**: 
-- Check `CLIENT_ORIGIN` in Render matches your Vercel URL exactly
+- Check `CLIENT_URL` in Render matches your Vercel URL exactly (not `CLIENT_ORIGIN`)
 - No trailing slash: ✅ `https://app.vercel.app` ❌ `https://app.vercel.app/`
+- Make sure you're using `CLIENT_URL` variable name, not the old `CLIENT_ORIGIN`
 - Redeploy backend after changing
 
 **Issue 2: Google OAuth Error**
@@ -162,7 +163,7 @@ Error: Cannot find module...
   - [ ] `JWT_SECRET` (your secret)
   - [ ] `GOOGLE_CLIENT_ID`
   - [ ] `GOOGLE_CLIENT_SECRET`
-  - [ ] `CLIENT_ORIGIN` (your Vercel URL)
+  - [ ] `CLIENT_URL` (your Vercel URL, comma-separated for multiple origins)
 
 ### Frontend (Vercel)
 - [ ] Build completed successfully
@@ -214,7 +215,7 @@ Error: Cannot find module...
 1. Go to Project Settings → Domains
 2. Add your custom domain
 3. Update DNS records as instructed
-4. Update `CLIENT_ORIGIN` in Render with new domain
+4. Update `CLIENT_URL` in Render with new domain
 
 ### For Backend (Render)
 1. Not needed unless you have a custom backend domain

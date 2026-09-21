@@ -50,9 +50,10 @@
 
 1. Go to Render dashboard → Your API service
 2. Click "Environment" tab
-3. Edit `CLIENT_ORIGIN` variable
+3. Edit `CLIENT_URL` variable (or add if it doesn't exist)
 4. Set value to: `https://your-project.vercel.app`
-5. Save (will trigger auto-redeploy)
+5. **Important**: If you have old `CLIENT_ORIGIN` variable, DELETE it
+6. Save (will trigger auto-redeploy)
 
 ---
 
@@ -95,9 +96,10 @@ git push origin main
 
 1. Go to Render dashboard → Your API service
 2. Click "Environment" tab
-3. Edit `CLIENT_ORIGIN` variable
+3. Edit `CLIENT_URL` variable (or add if it doesn't exist)
 4. Set value to: `https://your-site.netlify.app`
-5. Save
+5. **Important**: If you have old `CLIENT_ORIGIN` variable, DELETE it
+6. Save
 
 ---
 
@@ -141,9 +143,10 @@ Try to sign up or log in:
 **Symptom**: Browser console shows CORS policy error
 
 **Solutions**:
-1. Update `CLIENT_ORIGIN` in Render to match your frontend URL exactly
+1. Update `CLIENT_URL` in Render to match your frontend URL exactly
 2. Ensure no trailing slash in URLs
 3. Check both URLs use `https://` (not `http://`)
+4. **Important**: Make sure you're using `CLIENT_URL` not the old `CLIENT_ORIGIN`
 4. Wait 1-2 minutes after updating environment variables
 
 ### Issue: Build Fails
@@ -183,7 +186,7 @@ Try to sign up or log in:
 ### Netlify
 1. Go to "Domain settings" → "Add custom domain"
 2. Follow DNS configuration instructions
-3. Update `CLIENT_ORIGIN` in backend to new domain
+3. Update `CLIENT_URL` in backend to new domain
 
 ---
 
@@ -211,9 +214,10 @@ Your site will auto-deploy in 2-3 minutes.
 | Platform | Variable | Value |
 |----------|----------|-------|
 | **Vercel/Netlify** | `VITE_API_URL` | `https://your-api.onrender.com/api` |
-| **Render (Backend)** | `CLIENT_ORIGIN` | `https://your-frontend.vercel.app` |
+| **Render (Backend)** | `CLIENT_URL` | `https://your-frontend.vercel.app` |
 
 **Important**: Update both when you change URLs!
+**Note**: The backend variable is `CLIENT_URL` (not `CLIENT_ORIGIN`)
 
 ---
 

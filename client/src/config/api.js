@@ -8,6 +8,7 @@ const API_URL =
 
 const api = axios.create({
   baseURL: API_URL.replace(/\/$/, ""),
+  withCredentials: true, // CRITICAL: Send cookies with requests for authentication
 });
 
 export default api;
