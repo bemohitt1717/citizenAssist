@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import Logo from '../../../../components/common/Logo/Logo';
 import UserMenu from '../../../../components/common/UserMenu/UserMenu';
 import Icon from '../../../../components/ui/Icon/Icon';
-import { AGENT_COUNTS, AGENT_PROFILE, AGENT_SECTIONS } from '../../agentData';
+import { getAgentDashboard, getAgentProfile } from '../../agentApi';
+import { AGENT_SECTIONS } from '../../agentData';
 import { useAuth } from '../../../../context/authContext';
 import './AgentShell.css';
 
@@ -18,6 +20,22 @@ import './AgentShell.css';
  */
 const AgentShell = ({ activeId, children }) => {
   const { user } = useAuth();
+  const [pendingCount, setPendingCount] = useState(0);
+  const [verificationStatus, setVerificationStatus] = useState('loading');
+
+  useEffect(() => {
+    let current = true;
+    Promise.all([getAgentDashboard(), getAgentProfile()])
+      .then(([dashboard, profile]) => {
+        if (!current) return;
+        setPendingCount(dashboard.data?.counts?.pending || 0);
+        setVerificationStatus(profile.data?.profile?.verificationStatus || 'unavailable');
+      })
+      .catch(() => {
+        if (current) setVerificationStatus('unavailable');
+      });
+    return () => { current = false; };
+  }, []);
   const section = AGENT_SECTIONS.find((item) => item.id === activeId) ?? AGENT_SECTIONS[0];
 
   /* The landing section greets by name; every other section is titled after
@@ -61,9 +79,9 @@ const AgentShell = ({ activeId, children }) => {
               >
                 <Icon name={item.icon} size={17} />
                 {item.label}
-                {item.id === 'requests' && AGENT_COUNTS.pending > 0 && (
+                {item.id === 'requests' && pendingCount > 0 && (
                   <span className="ca-agentdash__count" data-numeric>
-                    {AGENT_COUNTS.pending}
+                    {pendingCount}
                   </span>
                 )}
               </NavLink>
@@ -73,9 +91,19 @@ const AgentShell = ({ activeId, children }) => {
 
         <div className="ca-agentdash__standing">
           <span className="ca-label ca-agentdash__standing-key">Your standing</span>
-          <span className={`ca-status ca-status--${AGENT_PROFILE.verified ? 'done' : 'warn'}`}>
+          <span className={`ca-status ca-status--${verificationStatus === 'active' ? 'done' : 'warn'}`}>
             <span className="ca-status__dot" />
-            {AGENT_PROFILE.verified ? 'Verified · active' : 'Awaiting verification'}
+            {verificationStatus === 'active'
+              ? 'Verified · active'
+              : verificationStatus === 'loading'
+                ? 'Loading status…'
+                : verificationStatus === 'unavailable'
+                  ? 'Status unavailable'
+                  : verificationStatus === 'suspended'
+                    ? 'Account suspended'
+                    : verificationStatus === 'rejected'
+                      ? 'Application rejected'
+                      : 'Awaiting verification'}
           </span>
         </div>
       </nav>

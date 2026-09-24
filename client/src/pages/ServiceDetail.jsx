@@ -16,6 +16,11 @@ const SERVICE_ICONS = {
   'aadhaar-services': 'aadhaar',
 };
 
+const fromStaticService = (serviceId) => {
+  const service = SERVICES.find((item) => item.id === serviceId);
+  return service ? { ...service, documentCount: service.documents.length } : null;
+};
+
 /**
  * Service detail page with real-time data.
  * Fetches service from database to show latest info updated by admin.
@@ -31,9 +36,11 @@ const ServiceDetail = () => {
   }, [serviceId]);
 
   const fetchService = async () => {
+    setIsLoading(true);
+    setService(null);
     try {
       const response = await getAllServices();
-      const foundService = response.data.find((s) => s.serviceId === serviceId);
+      const foundService = response.data?.find((s) => s.serviceId === serviceId);
       
       if (foundService) {
         // Get constant data for fields not in database
@@ -48,17 +55,20 @@ const ServiceDetail = () => {
           charge: foundService.charge,
           timeline: foundService.timeline,
           summary: foundService.summary,
-          documents: foundService.requiredDocuments,
-          documentCount: foundService.requiredDocuments.length,
+          documents: foundService.requiredDocuments || [],
+          documentCount: foundService.requiredDocuments?.length || 0,
           // Fields from constants (not in database)
           usedFor: constantService?.usedFor || [],
           issuedBy: constantService?.issuedBy || 'Government Office',
           validity: constantService?.validity || 'As per government rules',
           tone: constantService?.tone || 'paper',
         });
+      } else {
+        setService(response.data?.length ? null : fromStaticService(serviceId));
       }
     } catch (error) {
       console.error('Failed to load service:', error);
+      setService(fromStaticService(serviceId));
     } finally {
       setIsLoading(false);
     }

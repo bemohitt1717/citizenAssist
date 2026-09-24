@@ -9,6 +9,7 @@ import {
 } from '../../../../constants/requests';
 import {
   createComplaint,
+  downloadRequestDocument,
   getMyRequests,
   updateMyRequest,
   uploadRequestDocument,
@@ -100,6 +101,8 @@ const TrackPanel = () => {
   const [editDetails, setEditDetails] = useState({ fullName: '', phone: '', email: '', district: '', address: '' });
   const [editFiles, setEditFiles] = useState([]);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isDownloadingFinal, setIsDownloadingFinal] = useState(false);
+  const [downloadError, setDownloadError] = useState('');
   const [editMessage, setEditMessage] = useState('');
   const fileInputRef = useRef(null);
 
@@ -174,6 +177,27 @@ const TrackPanel = () => {
       );
     } finally {
       setIsSubmittingComplaint(false);
+    }
+  };
+
+  const downloadFinalDocument = async () => {
+    if (!active?.completedDocument || isDownloadingFinal) return;
+    setIsDownloadingFinal(true);
+    setDownloadError('');
+    try {
+      const blob = await downloadRequestDocument(active.completedDocument);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = active.completedDocument.split('/').pop().replace(/^\d+-/, '');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setDownloadError('Could not download the completed document. Please try again.');
+    } finally {
+      setIsDownloadingFinal(false);
     }
   };
 
@@ -282,6 +306,20 @@ const TrackPanel = () => {
                 </dd>
               </div>
             </dl>
+
+            {active.completedDocument && (
+              <section className="ca-track__delivery" aria-label="Completed document">
+                <div>
+                  <h3 className="ca-track__complaint-title">Your completed document is ready</h3>
+                  <p className="ca-track__edit-note">Download the file shared by your agent.</p>
+                </div>
+                <button type="button" className="ca-pill ca-pill--solid" onClick={downloadFinalDocument} disabled={isDownloadingFinal}>
+                  {isDownloadingFinal ? 'Preparing…' : 'Download document'}
+                  <span className="ca-pill__disc"><Icon name="arrowRight" size={15} /></span>
+                </button>
+                {downloadError && <p className="ca-track__edit-note" role="alert">{downloadError}</p>}
+              </section>
+            )}
 
             <ol className="ca-timeline">
               {active.timeline.map((entry) => (

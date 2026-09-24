@@ -255,6 +255,25 @@
   border-top: 1px solid var(--color-line);
 }
 
+.ca-track__delivery {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1.25rem 0;
+  padding: 1rem;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 0.85rem;
+}
+
+@media (max-width: 34rem) {
+  .ca-track__delivery {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
 .ca-track__fact {
   display: grid;
   gap: 0.25rem;
@@ -552,4 +571,3 @@
 .ca-track__file-slot:hover .ca-track__file-action {
   color: var(--color-indigo);
 }
-

@@ -191,33 +191,44 @@ export const updateAgentStatus = async (req, res, next) => {
       });
     }
 
-    // Update agent status
-    agent.verificationStatus = status;
-
-    if (status === "active") {
-      agent.verifiedOn = new Date();
-      console.log('✅ [ADMIN] Agent verified, setting verifiedOn timestamp');
+    const user = await User.findById(agent.user).select("+pinHash");
+    if (!user) {
+      return res.status(404).json({ status: "error", message: "Agent account not found." });
     }
 
-    await agent.save();
+    if (status === "active") {
+      const phoneOwner = await User.findOne({ phone: agent.phone, _id: { $ne: user._id } });
+      if (phoneOwner) {
+        return res.status(409).json({ status: "error", message: "The agent mobile is now linked to another account. Ask the applicant to update it before approval." });
+      }
+    }
 
-    // Update user status
-    const userStatus = status === "active" ? "active" : status;
-    const userRole = status === "active" ? "agent" : "citizen";
-    const userUpdate = { status: userStatus, role: userRole };
     let issuedPin;
 
     if (status === "active") {
       issuedPin = generateAgentPin();
-      userUpdate.pinHash = await bcrypt.hash(issuedPin, 12);
-      userUpdate.failedPinAttempts = 0;
-      userUpdate.lastFailedAttempt = null;
-      userUpdate.lockedUntil = null;
+      user.phone = agent.phone;
+      user.role = "agent";
+      user.status = "active";
+      user.pinHash = await bcrypt.hash(issuedPin, 12);
+      user.failedPinAttempts = 0;
+      user.lastFailedAttempt = null;
+      user.lockedUntil = null;
+    } else if (status === "suspended") {
+      user.role = "agent";
+      user.status = "suspended";
+    } else {
+      // Rejection must leave the linked citizen account usable.
+      user.role = "citizen";
+      user.status = "active";
     }
 
-    await User.findByIdAndUpdate(agent.user, userUpdate);
+    await user.save();
+    agent.verificationStatus = status;
+    if (status === "active") agent.verifiedOn = new Date();
+    await agent.save();
 
-    console.log(`✅ [ADMIN] Agent status updated: ${status}, User status synced`);
+    console.log(`✅ [ADMIN] Agent status updated: ${status}`);
 
     return res.json({
       status: "success",

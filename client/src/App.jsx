@@ -19,6 +19,7 @@ import RequestFlowHost from "./features/request/RequestFlowHost";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { ProtectedRoute, RoleRoute } from "./routes/ProtectedRoute";
 import { useRequestFlow } from "./features/request/requestFlowContext";
+import { useAuth } from "./context/authContext";
 
 const GOOGLE_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_CLIENT_ID ||
@@ -44,12 +45,14 @@ if (import.meta.env.PROD) {
 const LoginPromptWrapper = () => {
   const { showLoginPrompt, handleLoginRedirect, closeLoginPrompt } =
     useRequestFlow();
+  const { user } = useAuth();
 
   return (
     <LoginPrompt
       isOpen={showLoginPrompt}
       onClose={closeLoginPrompt}
       onLogin={handleLoginRedirect}
+      requiresCitizen={Boolean(user && user.role !== "citizen")}
     />
   );
 };

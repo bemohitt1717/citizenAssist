@@ -9,6 +9,7 @@ import {
   uploadCitizenRequestDocument,
 } from "../controllers/request.controller.js";
 import { authorize, protect } from "../middleware/auth.midleware.js";
+import { getRequestDocument } from "../controllers/upload.controller.js";
 
 const requestRouter = express.Router();
 const upload = multer({
@@ -24,6 +25,11 @@ const upload = multer({
     },
   }),
   limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => {
+    const extension = path.extname(file.originalname).toLowerCase();
+    const supported = new Set([".pdf", ".jpg", ".jpeg", ".png"]);
+    callback(supported.has(extension) ? null : new Error("Only PDF, JPG and PNG documents are accepted."), supported.has(extension));
+  },
 });
 
 // Submit new request (citizen only)
@@ -40,6 +46,12 @@ requestRouter.get(
   protect,
   authorize("citizen"),
   getCitizenRequests
+);
+
+requestRouter.get(
+  "/request-documents/:filename",
+  protect,
+  getRequestDocument,
 );
 
 requestRouter.patch(

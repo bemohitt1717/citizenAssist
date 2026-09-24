@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Logo from '../components/common/Logo/Logo';
 import Icon from '../components/ui/Icon/Icon';
 import LoginForm from '../features/auth/components/LoginForm/LoginForm';
@@ -21,8 +21,9 @@ import './Login.css';
  * inside the form, not here — the role is the same either way.
  */
 const Login = () => {
+  const location = useLocation();
   // null until a role is picked, which is what shows the chooser.
-  const [roleId, setRoleId] = useState(null);
+  const [roleId, setRoleId] = useState(() => getRole(location.state?.roleId) ? location.state.roleId : null);
   const role = roleId ? getRole(roleId) : null;
 
   return (

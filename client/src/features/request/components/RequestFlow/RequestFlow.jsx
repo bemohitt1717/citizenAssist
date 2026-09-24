@@ -3,7 +3,7 @@ import Icon from '../../../../components/ui/Icon/Icon';
 import DocumentSchematic from '../../../../components/ui/DocumentSchematic/DocumentSchematic';
 import { DOCUMENTS, UPLOAD_RULES } from '../../../../constants/documents';
 import useAutoHeight from '../../../../hooks/useAutoHeight';
-import { submitRequest } from '../../requestApi';
+import { submitRequest, uploadRequestDocument } from '../../requestApi';
 import { useAuth } from '../../../../context/authContext';
 import './RequestFlow.css';
 
@@ -61,11 +61,14 @@ const RequestFlow = ({ service, onClose }) => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [touched, setTouched] = useState({});
   const [uploads, setUploads] = useState({});
+  const [fileErrors, setFileErrors] = useState({});
   const [consent, setConsent] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submittedReference, setSubmittedReference] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const [uploadWarning, setUploadWarning] = useState('');
 
   const dialogRef = useRef(null);
   const closeRef = useRef(null);
@@ -167,24 +170,37 @@ const RequestFlow = ({ service, onClose }) => {
     }
 
     if (step === 'review') {
-      // Submit request to backend
+      if (!consent || isSubmitting) return;
       setIsSubmitting(true);
       setSubmitError(null);
+      setUploadWarning('');
+      setUploadProgress(null);
 
       try {
-        const response = await submitRequest(
-          service.id, // serviceId like 'income-certificate'
-          form, // applicantDetails object
-          Object.keys(uploads) // document names array
-        );
+        const response = await submitRequest(service.id, form, []);
+        const request = response.data?.request;
+        if (!request?.id || !request.reference) throw new Error('Request confirmation was incomplete.');
 
-        // Success: show confirmation with reference number
-        setSubmittedReference(response.data.request.reference);
+        const selectedFiles = Object.entries(uploads);
+        const failedUploads = [];
+        for (let index = 0; index < selectedFiles.length; index += 1) {
+          const [documentId, file] = selectedFiles[index];
+          setUploadProgress({ current: index + 1, total: selectedFiles.length });
+          try {
+            await uploadRequestDocument(request.id, file, documentId);
+          } catch {
+            failedUploads.push(DOCUMENTS[documentId]?.name || file.name);
+          }
+        }
+
+        setUploadWarning(failedUploads.length
+          ? `Your request is in. These files did not finish uploading: ${failedUploads.join(', ')}. You can add them from Track Request.`
+          : '');
+        setSubmittedReference(request.reference);
         setIsDone(true);
       } catch (error) {
-        // Show error message
         setSubmitError(
-          error.response?.data?.message || 'Failed to submit request. Please try again.'
+          error.response?.data?.message || error.message || 'Failed to submit request. Please try again.'
         );
       } finally {
         setIsSubmitting(false);
@@ -211,7 +227,30 @@ const RequestFlow = ({ service, onClose }) => {
   const onPickFile = (docId) => (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    setUploads((current) => ({ ...current, [docId]: file.name }));
+    const document = DOCUMENTS[docId];
+    const extension = file.name.split('.').pop()?.toUpperCase();
+    if (!document?.formats.includes(extension)) {
+      setFileErrors((current) => ({ ...current, [docId]: `Choose a ${document?.formats.join(', ')} file.` }));
+      setUploads((current) => {
+        const next = { ...current };
+        delete next[docId];
+        return next;
+      });
+      event.target.value = '';
+      return;
+    }
+    if (file.size > document.maxSizeMb * 1024 * 1024) {
+      setFileErrors((current) => ({ ...current, [docId]: `File must be ${document.maxSizeMb} MB or smaller.` }));
+      setUploads((current) => {
+        const next = { ...current };
+        delete next[docId];
+        return next;
+      });
+      event.target.value = '';
+      return;
+    }
+    setFileErrors((current) => ({ ...current, [docId]: '' }));
+    setUploads((current) => ({ ...current, [docId]: file }));
   };
 
   const attachedCount = Object.keys(uploads).length;
@@ -294,6 +333,8 @@ const RequestFlow = ({ service, onClose }) => {
                   A verified agent will pick this up and confirm the exact charge with you before
                   any work starts. You can follow the status from Track request.
                 </p>
+
+                {uploadWarning && <p className="ca-rf__error" role="alert">{uploadWarning}</p>}
 
                 <span className="ca-rf__ref" data-numeric>
                   {submittedReference || 'Submitting...'}
@@ -448,7 +489,7 @@ const RequestFlow = ({ service, onClose }) => {
 
                     <div className="ca-rf__uploads">
                       {documents.map((doc) => {
-                        const fileName = uploads[doc.id];
+                        const fileName = uploads[doc.id]?.name;
 
                         return (
                           <div key={doc.id}>
@@ -475,6 +516,7 @@ const RequestFlow = ({ service, onClose }) => {
                                 {fileName ? 'Replace' : 'Attach'}
                               </span>
                             </button>
+                            {fileErrors[doc.id] && <p className="ca-rf__error" role="alert">{fileErrors[doc.id]}</p>}
 
                             <input
                               type="file"
@@ -581,9 +623,13 @@ const RequestFlow = ({ service, onClose }) => {
               className="ca-pill ca-pill--solid ca-rf__next"
               onClick={goNext}
               aria-disabled={!canAdvance() || isSubmitting}
-              disabled={isSubmitting}
+              disabled={isSubmitting || (step === 'review' && !consent)}
             >
-              {isSubmitting ? 'Submitting...' : copy.next}
+              {isSubmitting
+                ? uploadProgress
+                  ? `Uploading ${uploadProgress.current} of ${uploadProgress.total}…`
+                  : 'Submitting...'
+                : copy.next}
               <span className="ca-pill__disc">
                 <Icon name="arrowRight" size={15} />
               </span>

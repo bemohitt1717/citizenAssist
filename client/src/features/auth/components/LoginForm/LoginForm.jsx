@@ -1,10 +1,10 @@
 import { useState, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import Icon from "../../../../components/ui/Icon/Icon";
 import GoogleMark from "../../../../components/ui/GoogleMark/GoogleMark";
 import PinInput from "../PinInput/PinInput";
-import { forgotPin, googleLogin, startAuth, signIn, signUp } from "../../authApi";
+import { googleLogin, startAuth, signIn, signUp } from "../../authApi";
 import { useAuth } from "../../../../context/useAuth";
 import { getApiErrorMessage } from "../../../../utils/apiError";
 import "./LoginForm.css";
@@ -109,6 +109,7 @@ const Note = ({ note, id }) => (
  */
 const LoginForm = ({ role, onChangeRole }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const googleButtonRef = useRef(null);
 
@@ -120,7 +121,6 @@ const LoginForm = ({ role, onChangeRole }) => {
   const [isRevealed, setIsRevealed] = useState(false);
   const [error, setError] = useState("");
   const [isBusy, setIsBusy] = useState(false);
-  const [isForgotPin, setIsForgotPin] = useState(false);
   const canSignUp = role.id === "citizen";
 
   const copy = role[mode];
@@ -166,7 +166,9 @@ const LoginForm = ({ role, onChangeRole }) => {
   const finish = (token, loggedInUser) => {
     setIsBusy(false);
     login(token, loggedInUser);
-    navigate(HOME_BY_ROLE[loggedInUser.role] ?? "/");
+    const returnTo = location.state?.returnTo;
+    const safeReturnTo = typeof returnTo === "string" && returnTo.startsWith("/") && !returnTo.startsWith("//");
+    navigate(safeReturnTo ? returnTo : (HOME_BY_ROLE[loggedInUser.role] ?? "/"));
   };
 
   const submitPhone = (event) => {
@@ -256,12 +258,7 @@ const LoginForm = ({ role, onChangeRole }) => {
       return;
     }
 
-    setIsForgotPin(true);
-    setPin("");
-    setConfirmPin("");
-    setError("");
-    setIsRevealed(false);
-    goToStep("create");
+    setError("For your account safety, PIN recovery needs verified phone ownership. Please contact the support team to recover access.");
   };
 
   const submitConfirm = (event) => {
@@ -270,17 +267,15 @@ const LoginForm = ({ role, onChangeRole }) => {
 
     const completeAuth = async () => {
       try {
-        const response = isForgotPin
-          ? await forgotPin(phone, pin, role.id)
-          : await signUp(phone, pin);
+        const response = await signUp(phone, pin);
 
         console.info(
-          isForgotPin ? "[auth debug] forgot-pin flow succeeded" : "[auth debug] sign-up flow succeeded",
+          "[auth debug] sign-up flow succeeded",
         );
         finish(response.data.token, response.data.user);
       } catch (requestError) {
         console.info(
-          isForgotPin ? "[auth debug] forgot-pin flow failed" : "[auth debug] sign-up flow failed",
+          "[auth debug] sign-up flow failed",
           requestError.response?.status,
         );
         setError(getApiErrorMessage(requestError));
@@ -300,7 +295,6 @@ const LoginForm = ({ role, onChangeRole }) => {
     const next = mode === "signin" ? "signup" : "signin";
 
     setMode(next);
-    setIsForgotPin(false);
     setPin("");
     setConfirmPin("");
     setError("");
@@ -309,7 +303,6 @@ const LoginForm = ({ role, onChangeRole }) => {
   };
 
   const changeNumber = () => {
-    setIsForgotPin(false);
     setPin("");
     setConfirmPin("");
     setIsRevealed(false);
@@ -317,7 +310,6 @@ const LoginForm = ({ role, onChangeRole }) => {
   };
 
   const redoPin = () => {
-    setIsForgotPin(false);
     setPin("");
     setConfirmPin("");
     goToStep("create");
@@ -347,6 +339,12 @@ const LoginForm = ({ role, onChangeRole }) => {
       const response = await googleLogin(credentialResponse.credential);
       console.log('✅ [GOOGLE-LOGIN] Backend authentication successful');
 
+      if (response.data.user.role !== role.id) {
+        setError(`This Google account is registered as ${response.data.user.role}. Choose that role to continue.`);
+        setIsBusy(false);
+        return;
+      }
+
       finish(response.data.token, response.data.user);
     } catch (requestError) {
       console.error('❌ [GOOGLE-LOGIN] Failed:', requestError);
@@ -363,22 +361,16 @@ const LoginForm = ({ role, onChangeRole }) => {
 
   const heading = {
     phone: copy.title,
-    enter: isForgotPin ? "Reset your PIN" : "Enter your PIN",
-    create: isForgotPin ? "Set a new PIN" : "Set your PIN",
-    confirm: isForgotPin ? "Confirm your new PIN" : "Confirm your PIN",
+    enter: "Enter your PIN",
+    create: "Set your PIN",
+    confirm: "Confirm your PIN",
   }[step];
 
   const lede = {
     phone: copy.lede,
-    enter: isForgotPin
-      ? `Choose a new 4-digit PIN for +91 ${phone}.`
-      : `The 4-digit PIN you set for +91 ${phone}.`,
-    create: isForgotPin
-      ? `Pick a fresh 4-digit PIN for +91 ${phone}.`
-      : `Four digits, entered every time you sign in with +91 ${phone}.`,
-    confirm: isForgotPin
-      ? "Type the same new digits again so you can sign in without trouble."
-      : "Type the same four digits again so a slip cannot lock you out.",
+    enter: `The 4-digit PIN you set for +91 ${phone}.`,
+    create: `Four digits, entered every time you sign in with +91 ${phone}.`,
+    confirm: "Type the same four digits again so a slip cannot lock you out.",
   }[step];
 
   /* The number is only marked wrong once it has been submitted — going red on the

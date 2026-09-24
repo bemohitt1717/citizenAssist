@@ -410,108 +410,12 @@ export const signIn = async (req, res, next) => {
   }
 };
 
-export const forgotPin = async (req, res, next) => {
-  try {
-    const phone = normalizePhone(req.body.phone);
-    const pin = String(req.body.pin ?? "");
-    const role = req.body.role;
-
-    console.log("🔁 [AUTH] Forgot PIN attempt:", { phone, role });
-
-    if (!phone || !/^\+91[6-9]\d{9}$/.test(phone)) {
-      console.log("❌ [AUTH] Forgot PIN invalid phone:", phone);
-      return res.status(400).json({
-        status: "error",
-        message: "Enter a valid Indian mobile number.",
-      });
-    }
-
-    if (!isValidPin(pin)) {
-      console.log("❌ [AUTH] Forgot PIN invalid format");
-      return res.status(400).json({
-        status: "error",
-        message: "PIN must contain exactly 4 digits.",
-      });
-    }
-
-    if (isWeakPin(pin)) {
-      console.log("❌ [AUTH] Forgot PIN weak PIN rejected");
-      return res.status(400).json({
-        status: "error",
-        message: "Choose a stronger PIN.",
-      });
-    }
-
-    const user = await User.findOne({ phone }).select("+pinHash");
-
-    if (!user || !user.pinHash) {
-      console.log(
-        "❌ [AUTH] Forgot PIN no existing user found for phone:",
-        phone,
-      );
-      return res.status(404).json({
-        status: "error",
-        message: "No account found for this mobile number.",
-      });
-    }
-
-    if (role && user.role !== role) {
-      console.log("❌ [AUTH] Forgot PIN wrong role for phone:", {
-        phone,
-        userRole: user.role,
-        requestedRole: role,
-      });
-      return res.status(403).json({
-        status: "error",
-        message: `This mobile number is not registered as a ${role}.`,
-      });
-    }
-
-    if (user.status !== "active") {
-      console.log(
-        "❌ [AUTH] Forgot PIN blocked because account is not active:",
-        { phone, status: user.status },
-      );
-      return res.status(403).json({
-        status: "error",
-        message: "This account is currently unavailable.",
-      });
-    }
-
-    user.pinHash = await bcrypt.hash(pin, BCRYPT_ROUNDS);
-    user.failedPinAttempts = 0;
-    user.lastFailedAttempt = null;
-    user.lockedUntil = null;
-
-    await user.save();
-
-    const token = createAccessToken(user);
-    console.log("✅ [AUTH] PIN reset successful for user:", {
-      userId: user._id,
-      phone,
-      role: user.role,
-    });
-
-    return res.status(200).json({
-      status: "success",
-      message: "PIN reset successfully.",
-      data: {
-        token,
-        user: {
-          id: user._id,
-          name: user.name ?? "",
-          phone: user.phone,
-          role: user.role,
-          status: user.status,
-        },
-      },
-    });
-  } catch (error) {
-    console.error("❌ [AUTH] Forgot PIN failed:", error);
-    next(error);
-  }
+export const forgotPin = async (_req, res) => {
+  return res.status(501).json({
+    status: "error",
+    message: "PIN recovery is not available until phone ownership verification is configured. Contact support to recover your account.",
+  });
 };
-
 export const getProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);

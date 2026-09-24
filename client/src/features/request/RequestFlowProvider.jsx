@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { RequestFlowContext } from './requestFlowContext';
 import { useAuth } from '../../context/authContext';
 
@@ -14,14 +14,26 @@ import { useAuth } from '../../context/authContext';
  */
 const RequestFlowProvider = ({ children }) => {
   const [activeServiceId, setActiveServiceId] = useState(null);
+  const [pendingServiceId, setPendingServiceId] = useState(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!pendingServiceId || !user) return;
+    if (user.role !== 'citizen') {
+      setShowLoginPrompt(true);
+      return;
+    }
+    setActiveServiceId(pendingServiceId);
+    setPendingServiceId(null);
+  }, [user, pendingServiceId]);
 
   const openRequest = useCallback((serviceId) => {
     // Check if user is logged in
-    if (!user) {
-      console.log('🔒 [REQUEST] User not logged in, showing login prompt');
+    if (!user || user.role !== 'citizen') {
+      setPendingServiceId(serviceId);
       setShowLoginPrompt(true);
       return;
     }
@@ -33,13 +45,14 @@ const RequestFlowProvider = ({ children }) => {
   const closeRequest = useCallback(() => setActiveServiceId(null), []);
 
   const handleLoginRedirect = useCallback(() => {
-    console.log('🔄 [REQUEST] Redirecting to login page');
     setShowLoginPrompt(false);
-    navigate('/login');
-  }, [navigate]);
+    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+    navigate('/login', { state: { returnTo, resumeServiceId: pendingServiceId, roleId: 'citizen' } });
+  }, [location, navigate, pendingServiceId]);
 
   const closeLoginPrompt = useCallback(() => {
     setShowLoginPrompt(false);
+    setPendingServiceId(null);
   }, []);
 
   const value = useMemo(

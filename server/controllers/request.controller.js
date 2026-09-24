@@ -217,7 +217,7 @@ export const uploadCitizenRequestDocument = async (req, res, next) => {
     request.timeline.push({
       status: request.status,
       at: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
-      note: `Citizen uploaded ${req.file.originalname}.`,
+      note: `Citizen uploaded ${req.body.documentId || req.file.originalname}.`,
     });
     await request.save();
 

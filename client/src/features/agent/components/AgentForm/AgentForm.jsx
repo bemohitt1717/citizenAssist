@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { AGENT_TERMS, EXPERIENCE_BANDS } from '../../../../constants/agent';
 import { SERVICES } from '../../../../constants/services';
@@ -44,14 +45,7 @@ const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
  * Auto-fills name, mobile, and email from logged-in citizen's profile.
  * Validates that the mobile number is different from citizen account.
  *
- * ── NO BACKEND HERE ─────────────────────────────────────────────────────────
- * Nothing in this file talks to a server. The single place an API call belongs is
- * marked `TODO(api)` in `submit`, and the finished record is already assembled
- * there. Replace that one function body and nothing else has to change.
- *
- * Both mobile and email are required, because sign-in accepts either — the
- * mobile with a PIN, the email for Google. Collecting both here means an agent
- * can use whichever they have to hand later.
+ * Applications are tied to a signed-in citizen account and reviewed by an admin.
  */
 const AgentForm = () => {
   const { user } = useAuth();
@@ -119,6 +113,7 @@ const AgentForm = () => {
   };
 
   const submit = async () => {
+    if (!consent || !detailsValid || !user || isSubmitting) return;
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -152,6 +147,7 @@ const AgentForm = () => {
   };
 
   const goNext = () => {
+    if (isSubmitting) return;
     if (step === 'details' && !detailsValid) {
       setTouched({
         fullName: true,
@@ -165,6 +161,7 @@ const AgentForm = () => {
     }
 
     if (step === 'review') {
+      if (!consent) return;
       submit();
       return;
     }
@@ -194,14 +191,33 @@ const AgentForm = () => {
 
             <p className="ca-agent__done-text">
               An admin will review it and call you on{' '}
-              <strong data-numeric>+91 {form.mobile}</strong>. You can sign in with that number or
-              with {form.email} once you are verified.
-            </p>
-
-            <p className="ca-agent__done-note">
-              This is a prototype. Nothing has been stored and no admin has been notified.
+              <strong data-numeric>+91 {form.mobile}</strong>. If approved, you will receive the
+              sign-in details from the admin team.
             </p>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'citizen') {
+    const isSignedIn = Boolean(user);
+    return (
+      <div className="ca-agent">
+        <div className="ca-agent__card">
+          <h1 className="ca-agent__step-title">
+            {isSignedIn ? 'Citizen account required' : 'Sign in to apply'}
+          </h1>
+          <p className="ca-agent__step-lede">
+            Agent applications are linked to an active citizen account so the team can verify your
+            details and keep your account secure.
+          </p>
+          {!isSignedIn && (
+            <Link className="ca-pill ca-pill--solid" to="/login" state={{ returnTo: '/become-an-agent', roleId: 'citizen' }}>
+              Sign in as a citizen
+              <span className="ca-pill__disc"><Icon name="arrowRight" size={15} /></span>
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -473,8 +489,9 @@ const AgentForm = () => {
             className="ca-pill ca-pill--solid ca-agent__next"
             onClick={goNext}
             aria-disabled={step === 'review' && !consent}
+            disabled={isSubmitting || (step === 'review' && !consent)}
           >
-            {copy.next}
+            {isSubmitting ? 'Sending application…' : copy.next}
             <span className="ca-pill__disc">
               <Icon name="arrowRight" size={15} />
             </span>

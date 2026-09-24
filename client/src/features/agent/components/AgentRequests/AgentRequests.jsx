@@ -8,6 +8,7 @@ import { AGENT_NEXT_STATUS } from '../../agentData';
 import {
   addAgentRequestNote,
   decideAgentRequest,
+  downloadRequestDocument,
   getAgentRequests,
   updateAgentRequestStatus,
   uploadAgentRequestDocument,
@@ -54,6 +55,8 @@ const AgentRequests = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState(null);
+  const [downloadError, setDownloadError] = useState('');
+  const [downloadingDocument, setDownloadingDocument] = useState('');
 
   const fetchRequests = async () => {
     try {
@@ -152,6 +155,28 @@ const AgentRequests = () => {
       return false;
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const downloadDocument = async (documentPath) => {
+    const filename = documentPath.split('/').pop();
+    if (!documentPath.startsWith('/uploads/')) return;
+    setDownloadingDocument(filename);
+    setDownloadError('');
+    try {
+      const blob = await downloadRequestDocument(documentPath);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename.replace(/^\d+-/, '');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setDownloadError('Could not open this document. Refresh the request and try again.');
+    } finally {
+      setDownloadingDocument('');
     }
   };
 
@@ -360,9 +385,21 @@ const AgentRequests = () => {
                 <span className="ca-label">Documents provided</span>
                 {selectedRequest.documents?.length ? (
                   <ul className="ca-areq-modal__docs">
-                    {selectedRequest.documents.map((document) => <li key={document}>{document.split('/').pop()}</li>)}
+                    {selectedRequest.documents.map((document) => {
+                      const filename = document.split('/').pop().replace(/^\d+-/, '');
+                      return (
+                        <li key={document}>
+                          {document.startsWith('/uploads/') ? (
+                            <button type="button" className="ca-areq-modal__doc-link" onClick={() => downloadDocument(document)} disabled={downloadingDocument === document.split('/').pop()}>
+                              {downloadingDocument === document.split('/').pop() ? 'Downloading…' : `Download ${filename}`}
+                            </button>
+                          ) : filename}
+                        </li>
+                      );
+                    })}
                   </ul>
                 ) : <p className="ca-areq-modal__muted">No documents attached yet.</p>}
+                {downloadError && <p className="ca-areq-modal__muted" role="alert">{downloadError}</p>}
               </section>
 
               <section>

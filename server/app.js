@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import apiRoute from "./routes/index.route.js";
 import { authorize, protect } from "./middleware/auth.midleware.js";
+import { getRequestDocument } from "./controllers/upload.controller.js";
 
 const app = express();
 
@@ -47,7 +48,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(cookieParser()); // Parse cookies for authentication
 app.use(express.json());
-app.use("/uploads", express.static("uploads"));
+app.get("/uploads/:filename", protect, getRequestDocument);
 
 app.get("/api/health", (req, res) => {
   res.json({
@@ -80,12 +81,13 @@ app.use((req, res) => {
 app.use((error, req, res, next) => {
   console.error(error);
 
-  res.status(error.status ?? 500).json({
+  const uploadError = error.code === "LIMIT_FILE_SIZE" || error.message?.startsWith("Only PDF, JPG and PNG");
+  res.status(uploadError ? 400 : (error.status ?? 500)).json({
     status: "error",
     message:
       process.env.NODE_ENV === "production"
         ? "Something went wrong on our side."
-        : (error.message ?? "Unknown error"),
+      : (error.message ?? "Unknown error"),
   });
 });
 

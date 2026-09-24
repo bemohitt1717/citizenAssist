@@ -30,6 +30,11 @@ const upload = multer({
 		},
 	}),
 	limits: { fileSize: 10 * 1024 * 1024 },
+	fileFilter: (_req, file, callback) => {
+		const extension = path.extname(file.originalname).toLowerCase();
+		const supported = new Set([".pdf", ".jpg", ".jpeg", ".png"]);
+		callback(supported.has(extension) ? null : new Error("Only PDF, JPG and PNG documents are accepted."), supported.has(extension));
+	},
 });
 
 // Apply to become an agent (citizen only)

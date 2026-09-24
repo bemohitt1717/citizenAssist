@@ -55,13 +55,23 @@ export const updateMyRequest = async (requestId, applicantDetails) => {
   return response.data;
 };
 
-export const uploadRequestDocument = async (requestId, file) => {
+export const uploadRequestDocument = async (requestId, file, documentId) => {
   const formData = new FormData();
   formData.append('document', file);
+  if (documentId) formData.append('documentId', documentId);
   const response = await api.post(
     `/citizen/requests/${requestId}/documents`,
     formData,
     { headers: { Authorization: `Bearer ${getToken()}` } },
   );
+  return response.data;
+};
+
+export const downloadRequestDocument = async (documentPath) => {
+  const filename = documentPath.split('/').pop();
+  const response = await api.get(`/request-documents/${encodeURIComponent(filename)}`, {
+    responseType: 'blob',
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
   return response.data;
 };

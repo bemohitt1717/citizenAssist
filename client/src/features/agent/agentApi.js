@@ -91,3 +91,12 @@ export const uploadAgentRequestDocument = async (requestId, file) => {
   );
   return response.data;
 };
+
+export const downloadRequestDocument = async (documentPath) => {
+  const filename = documentPath.split('/').pop();
+  const response = await api.get(`/request-documents/${encodeURIComponent(filename)}`, {
+    ...authConfig(),
+    responseType: 'blob',
+  });
+  return response.data;
+};

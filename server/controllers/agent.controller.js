@@ -65,6 +65,10 @@ export const applyAsAgent = async (req, res, next) => {
     // Normalize mobile number (add +91 if not present)
     const normalizedMobile = mobile.startsWith('+91') ? mobile : `+91${mobile}`;
 
+    if (!/^\+91[6-9]\d{9}$/.test(normalizedMobile)) {
+      return res.status(400).json({ status: "error", message: "Enter a valid Indian mobile number." });
+    }
+
     // Validate: mobile must be different from citizen's phone
     if (normalizedMobile === req.user.phone) {
       console.log('❌ [ERROR] Agent mobile same as citizen phone:', { 
@@ -86,6 +90,11 @@ export const applyAsAgent = async (req, res, next) => {
         status: "error",
         message: "You have already applied as an agent.",
       });
+    }
+
+    const existingAccount = await User.findOne({ phone: normalizedMobile, _id: { $ne: req.user._id } });
+    if (existingAccount) {
+      return res.status(409).json({ status: "error", message: "This mobile number is already linked to another account." });
     }
 
     // Check if mobile number is already used by another agent

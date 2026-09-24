@@ -3,6 +3,7 @@ import ServiceCard from '../ServiceCard/ServiceCard';
 import useReveal from '../../../../hooks/useReveal';
 import usePointerGlow from '../../../../hooks/usePointerGlow';
 import { getAllServices } from '../../../services/servicesApi';
+import { SERVICES } from '../../../../constants/services';
 import './Services.css';
 
 // Icon mapping for each service (matches database serviceId)
@@ -27,6 +28,7 @@ const SERVICE_TONES = ['primary', 'paper', 'warm', 'paper', 'cool', 'paper'];
 const Services = () => {
   const [services, setServices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [usingFallback, setUsingFallback] = useState(false);
   const [gridRef, isRevealed] = useReveal({ trigger: services.length });
   const glowRef = usePointerGlow();
 
@@ -51,16 +53,30 @@ const Services = () => {
         timeline: service.timeline,
         summary: service.summary,
         documents: service.requiredDocuments,
-        documentCount: service.requiredDocuments.length,
+        documentCount: service.requiredDocuments?.length || 0,
         icon: SERVICE_ICONS[service.serviceId] || 'document',
         tone: SERVICE_TONES[index] || 'paper',
       }));
       
       console.log('🎨 [HOME-SERVICES] Formatted services:', formattedServices);
-      setServices(formattedServices);
+      if (formattedServices.length) {
+        setServices(formattedServices);
+      } else {
+        setServices(SERVICES.map((service) => ({
+          ...service,
+          description: service.summary,
+          documents: service.documents,
+        })));
+        setUsingFallback(true);
+      }
     } catch (error) {
-      console.error('❌ [HOME-SERVICES] Failed to load services:', error);
-      console.error('Error details:', error.response?.data || error.message);
+      console.error('Failed to load live services:', error.response?.data || error.message);
+      setServices(SERVICES.map((service) => ({
+        ...service,
+        description: service.summary,
+        documents: service.documents,
+      })));
+      setUsingFallback(true);
     } finally {
       setIsLoading(false);
     }
@@ -82,21 +98,6 @@ const Services = () => {
     );
   }
 
-  if (services.length === 0) {
-    return (
-      <section className="ca-services" id="services">
-        <div className="ca-services__inner">
-          <div style={{ padding: '4rem 0', textAlign: 'center', color: 'var(--color-ink-muted)' }}>
-            <p>No services available at the moment.</p>
-            <p style={{ marginTop: '1rem', fontSize: '0.875rem' }}>
-              Please check the browser console for errors or contact support.
-            </p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="ca-services" id="services">
       <div className="ca-services__inner" ref={glowRef}>
@@ -111,6 +112,13 @@ const Services = () => {
             gather — before you commit to anything.
           </p>
         </header>
+
+        {usingFallback && (
+          <p className="ca-services__notice" role="status">
+            Live service information is temporarily unavailable. These standard prices and
+            timelines are indicative.
+          </p>
+        )}
 
         <div ref={gridRef} className={`ca-grid ${isRevealed ? 'is-revealed' : ''}`.trim()}>
           {services.map((service, index) => (

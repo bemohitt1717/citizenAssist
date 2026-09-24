@@ -1,15 +1,33 @@
+import { useEffect, useState } from 'react';
 import { Stats, Stat } from '../../../../components/ui/DataKit/DataKit';
+import { getMyRequests } from '../../../request/requestApi';
 
 /**
  * Citizen dashboard home - simple overview
  */
 const CitizenHome = () => {
-  // TODO: Fetch real stats from API
-  const stats = {
-    totalRequests: 2,
-    pending: 1,
-    completed: 1,
-  };
+  const [stats, setStats] = useState(null);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    let current = true;
+    getMyRequests()
+      .then((response) => {
+        if (!current) return;
+        const requests = response.data?.requests || [];
+        setStats({
+          totalRequests: requests.length,
+          pending: requests.filter((request) => !['completed', 'cancelled', 'rejected'].includes(request.status)).length,
+          completed: requests.filter((request) => request.status === 'completed').length,
+        });
+      })
+      .catch(() => {
+        if (current) setHasError(true);
+      });
+    return () => { current = false; };
+  }, []);
+
+  const values = stats || { totalRequests: '—', pending: '—', completed: '—' };
 
   return (
     <>
@@ -17,21 +35,21 @@ const CitizenHome = () => {
         <Stat
           icon="document"
           label="Total Requests"
-          value={stats.totalRequests}
-          note="All time"
+          value={values.totalRequests}
+          note={hasError ? 'Could not load' : stats ? 'All time' : 'Loading'}
         />
         <Stat
           icon="track"
           label="Pending"
-          value={stats.pending}
-          note="In progress"
-          attention={stats.pending > 0}
+          value={values.pending}
+          note={hasError ? 'Could not load' : stats ? 'In progress' : 'Loading'}
+          attention={Boolean(stats?.pending)}
         />
         <Stat
           icon="check"
           label="Completed"
-          value={stats.completed}
-          note="Successfully processed"
+          value={values.completed}
+          note={hasError ? 'Could not load' : stats ? 'Successfully processed' : 'Loading'}
         />
       </Stats>
 
