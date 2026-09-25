@@ -1,0 +1,42 @@
+.ca-admin__document-actions {
+  display: grid;
+  justify-items: start;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.ca-admin__document-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.ca-admin__document-button[aria-disabled='true'] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.ca-admin__document-input:focus-visible + .ca-admin__document-button {
+  outline: 3px solid var(--color-indigo);
+  outline-offset: 2px;
+}
+
+.ca-admin__document-ready,
+.ca-admin__upload-feedback {
+  max-width: 32ch;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-ink-muted);
+}
+
+.ca-admin__upload-feedback--success {
+  color: var(--color-success-ink, #17683a);
+}
+
+.ca-admin__upload-feedback--error {
+  color: var(--color-danger-ink, #a32d20);
+}

@@ -3,6 +3,7 @@ import Icon from '../../../../components/ui/Icon/Icon';
 import ConfirmDialog from '../../../../components/ui/ConfirmDialog/ConfirmDialog';
 import { Empty, Panel, Tabs } from '../../../../components/ui/DataKit/DataKit';
 import { getAgents, updateAgentStatus } from '../../adminApi';
+import './AdminAgents.css';
 
 const FILTERS = [
   { id: 'pending', label: 'To verify' },
@@ -23,6 +24,8 @@ const AdminAgents = () => {
   const [agents, setAgents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [issuedPin, setIssuedPin] = useState(null);
+  const [busyAgentId, setBusyAgentId] = useState(null);
+  const [actionError, setActionError] = useState('');
 
   // Fetch all agents on mount
   useEffect(() => {
@@ -50,6 +53,9 @@ const AdminAgents = () => {
   }));
 
   const verify = async (agentId) => {
+    if (busyAgentId) return;
+    setBusyAgentId(agentId);
+    setActionError('');
     try {
       console.log('✅ [ADMIN-AGENTS] Verifying agent:', agentId);
       const response = await updateAgentStatus(agentId, 'active');
@@ -59,12 +65,17 @@ const AdminAgents = () => {
       await fetchAgents();
     } catch (error) {
       console.error('❌ [ADMIN-AGENTS] Verification failed:', error);
+      setActionError(error.response?.data?.message || 'Could not verify this agent. Refresh the list and try again.');
+    } finally {
+      setBusyAgentId(null);
     }
   };
 
   const confirmReject = async () => {
-    if (!rejecting) return;
+    if (!rejecting || busyAgentId) return;
 
+    setBusyAgentId(rejecting.id);
+    setActionError('');
     try {
       console.log('🚫 [ADMIN-AGENTS] Rejecting agent:', rejecting.id);
       await updateAgentStatus(rejecting.id, 'rejected');
@@ -74,11 +85,16 @@ const AdminAgents = () => {
       await fetchAgents();
     } catch (error) {
       console.error('❌ [ADMIN-AGENTS] Rejection failed:', error);
-      setRejecting(null);
+      setActionError(error.response?.data?.message || 'Could not reject this agent. Try again.');
+    } finally {
+      setBusyAgentId(null);
     }
   };
 
   const suspend = async (agentId) => {
+    if (busyAgentId) return;
+    setBusyAgentId(agentId);
+    setActionError('');
     try {
       console.log('⏸️  [ADMIN-AGENTS] Suspending agent:', agentId);
       await updateAgentStatus(agentId, 'suspended');
@@ -87,6 +103,9 @@ const AdminAgents = () => {
       await fetchAgents();
     } catch (error) {
       console.error('❌ [ADMIN-AGENTS] Suspension failed:', error);
+      setActionError(error.response?.data?.message || 'Could not suspend this agent. Try again.');
+    } finally {
+      setBusyAgentId(null);
     }
   };
 
@@ -110,6 +129,8 @@ const AdminAgents = () => {
       )}
       <Tabs tabs={tabs} activeId={filterId} onPick={setFilterId} label="Filter agents by status" />
 
+      {actionError && <p className="ca-admin-agents__error" role="alert">{actionError}</p>}
+
       <Panel title={`${FILTERS.find((f) => f.id === filterId)?.label} · ${rows.length}`}>
         {rows.length === 0 ? (
           <Empty
@@ -130,10 +151,16 @@ const AdminAgents = () => {
                     </span>
                   </span>
 
+                  {agent.accountAvailable === false && (
+                    <span className="ca-admin-agents__account-warning" role="status">
+                      Linked citizen account is missing. Verification actions are unavailable.
+                    </span>
+                  )}
+
                   <span className="ca-row__meta">
                     <span>{agent.district}</span>
                     <span data-numeric>{agent.mobile}</span>
-                    <span>{agent.email}</span>
+                    <span className="ca-admin-agents__email">{agent.email}</span>
                     <span>{agent.experience}</span>
                     <span data-numeric>{agent.services} services</span>
                     {agent.status === 'active' && (
@@ -153,14 +180,16 @@ const AdminAgents = () => {
                         type="button"
                         className="ca-row__yes"
                         onClick={() => verify(agent.id)}
+                        disabled={Boolean(busyAgentId) || agent.accountAvailable === false}
                       >
                         <Icon name="check" size={13} />
-                        Verify
+                        {busyAgentId === agent.id ? 'Verifying…' : 'Verify'}
                       </button>
                       <button
                         type="button"
                         className="ca-row__no"
                         onClick={() => setRejecting(agent)}
+                        disabled={Boolean(busyAgentId) || agent.accountAvailable === false}
                       >
                         Reject
                       </button>
@@ -172,8 +201,9 @@ const AdminAgents = () => {
                       type="button"
                       className="ca-row__no"
                       onClick={() => suspend(agent.id)}
+                      disabled={Boolean(busyAgentId) || agent.accountAvailable === false}
                     >
-                      Suspend
+                      {busyAgentId === agent.id ? 'Suspending…' : 'Suspend'}
                     </button>
                   )}
 

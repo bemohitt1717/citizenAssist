@@ -55,6 +55,8 @@ const AgentRequests = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState(null);
+  const [uploadingDocumentId, setUploadingDocumentId] = useState(null);
+  const [attachmentFeedback, setAttachmentFeedback] = useState({});
   const [downloadError, setDownloadError] = useState('');
   const [downloadingDocument, setDownloadingDocument] = useState('');
 
@@ -181,20 +183,40 @@ const AgentRequests = () => {
   };
 
   const attachDocument = async (requestId, event) => {
-    const file = event.target.files?.[0];
+    const input = event.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
 
+    setAttachmentFeedback((current) => ({
+      ...current,
+      [requestId]: { type: 'uploading', text: 'Uploading final document…' },
+    }));
     try {
       setBusyId(requestId);
+      setUploadingDocumentId(requestId);
       await uploadAgentRequestDocument(requestId, file);
       console.info('[agent] final document uploaded', { requestId, file: file.name });
       await fetchRequests();
+      setAttachmentFeedback((current) => ({
+        ...current,
+        [requestId]: {
+          type: 'success',
+          text: 'Attached. The citizen can download it from Track Request.',
+        },
+      }));
     } catch (requestError) {
       console.error('[agent] final document upload failed', requestError);
-      setError(requestError.response?.data?.message || 'Could not upload final document.');
+      setAttachmentFeedback((current) => ({
+        ...current,
+        [requestId]: {
+          type: 'error',
+          text: requestError.response?.data?.message || 'Could not upload the final document. Try again.',
+        },
+      }));
     } finally {
       setBusyId(null);
-      event.target.value = '';
+      setUploadingDocumentId(null);
+      input.value = '';
     }
   };
 
@@ -270,80 +292,112 @@ const AgentRequests = () => {
 
                   {isOpen && (
                     <div className="ca-areq__open">
-                      <div className="ca-areq__contact">
-                        <span className="ca-label ca-areq__contact-key">Citizen</span>
-                        <span className="ca-areq__contact-value">
-                          {request.citizen} · <span data-numeric>{request.citizenMobile}</span> ·{' '}
-                          {request.district}
-                        </span>
-                      </div>
+                      <section className="ca-areq__contact" aria-label="Citizen details">
+                        <h3 className="ca-areq__section-title">Citizen details</h3>
+                        <dl className="ca-areq__facts">
+                          <div><dt>Name</dt><dd>{request.citizen}</dd></div>
+                          <div><dt>Mobile</dt><dd data-numeric>{request.citizenMobile || 'Not provided'}</dd></div>
+                          <div><dt>District</dt><dd>{request.district || 'Not provided'}</dd></div>
+                        </dl>
+                      </section>
 
-                      <div className="ca-areq__controls">
-                        <div className="ca-field ca-areq__control">
-                          <label className="ca-field__label" htmlFor={`status-${request.id}`}>
-                            Move to
-                          </label>
-                          <select
-                            id={`status-${request.id}`}
-                            className="ca-field__select"
-                            defaultValue={request.status}
-                            onChange={(event) => changeStatus(request.id, event.target.value)}
-                            disabled={busyId === request.id}
+                      <section className="ca-areq__work" aria-label="Request actions">
+                        <h3 className="ca-areq__section-title">Move the request forward</h3>
+                        <div className="ca-areq__controls">
+                          <div className="ca-field ca-areq__control">
+                            <label className="ca-field__label" htmlFor={`status-${request.id}`}>
+                              Request status
+                            </label>
+                            <select
+                              id={`status-${request.id}`}
+                              className="ca-field__select"
+                              value={request.status}
+                              onChange={(event) => changeStatus(request.id, event.target.value)}
+                              disabled={busyId === request.id}
+                            >
+                              {AGENT_NEXT_STATUS.map((option) => (
+                                <option key={option.id} value={option.id}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="ca-field ca-areq__control">
+                            <label className="ca-field__label" htmlFor={`note-${request.id}`}>
+                              Note for the citizen
+                            </label>
+                            <textarea
+                              id={`note-${request.id}`}
+                              className="ca-field__area ca-areq__note"
+                              placeholder="Say what is needed, and why."
+                              value={noteDrafts[request.id] ?? ''}
+                              onChange={(event) =>
+                                setNoteDrafts((current) => ({
+                                  ...current,
+                                  [request.id]: event.target.value,
+                                }))
+                              }
+                              disabled={busyId === request.id}
+                            />
+                            <span className="ca-field__hint">
+                              A note appears on their tracking page and asks them to take action.
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="ca-areq__actions">
+                          <button
+                            type="button"
+                            className="ca-pill ca-pill--solid ca-areq__send"
+                            onClick={() => sendNote(request.id)}
+                            disabled={!noteDrafts[request.id]?.trim() || busyId === request.id}
                           >
-                            {AGENT_NEXT_STATUS.map((option) => (
-                              <option key={option.id} value={option.id}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
+                            <Icon name="check" size={14} />
+                            {busyId === request.id && uploadingDocumentId !== request.id ? 'Saving…' : 'Send note'}
+                          </button>
+                        </div>
+                      </section>
+
+                      <section className="ca-areq__delivery" aria-label="Final document">
+                        <div className="ca-areq__delivery-copy">
+                          <h3 className="ca-areq__section-title">Final document</h3>
+                          <p>Attach the finished file the citizen should receive.</p>
+                          <span className="ca-field__hint">PDF, JPG or PNG · up to 10 MB</span>
+                          {request.completedDocument && (
+                            <span className="ca-areq__attached-file">
+                              Current file: {request.completedDocument.split('/').pop().replace(/^\d+-/, '')}
+                            </span>
+                          )}
+                          {attachmentFeedback[request.id] && (
+                            <p
+                              className={`ca-areq__feedback ca-areq__feedback--${attachmentFeedback[request.id].type}`}
+                              role={attachmentFeedback[request.id].type === 'error' ? 'alert' : 'status'}
+                            >
+                              {attachmentFeedback[request.id].text}
+                            </p>
+                          )}
                         </div>
 
-                        <div className="ca-field ca-areq__control">
-                          <label className="ca-field__label" htmlFor={`note-${request.id}`}>
-                            Note for the citizen
-                          </label>
-                          <textarea
-                            id={`note-${request.id}`}
-                            className="ca-field__area ca-areq__note"
-                            placeholder="Say what is needed, and why."
-                            value={noteDrafts[request.id] ?? ''}
-                            onChange={(event) =>
-                              setNoteDrafts((current) => ({
-                                ...current,
-                                [request.id]: event.target.value,
-                              }))
-                            }
-                          />
-                          <span className="ca-field__hint">
-                            Appears on their tracking page and sets the status to “waiting on you”.
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="ca-areq__actions">
-                        <button
-                          type="button"
-                          className="ca-row__yes"
-                          onClick={() => sendNote(request.id)}
-                          aria-disabled={!noteDrafts[request.id] || busyId === request.id}
-                          disabled={!noteDrafts[request.id] || busyId === request.id}
+                        <label
+                          className="ca-pill ca-pill--outline ca-areq__attach"
+                          aria-disabled={busyId === request.id}
                         >
-                          <Icon name="check" size={13} />
-                          Send note
-                        </button>
-
-                        <label className="ca-row__no">
-                          <Icon name="document" size={13} />
-                          Attach finished document
+                          <Icon name="document" size={15} />
+                          {uploadingDocumentId === request.id
+                            ? 'Uploading…'
+                            : request.completedDocument
+                              ? 'Replace final document'
+                              : 'Attach final document'}
                           <input
+                            className="ca-areq__file-input ca-sr-only"
                             type="file"
                             accept=".pdf,.jpg,.jpeg,.png"
-                            hidden
                             onChange={(event) => attachDocument(request.id, event)}
                             disabled={busyId === request.id}
                           />
                         </label>
-                      </div>
+                      </section>
                     </div>
                   )}
                 </li>

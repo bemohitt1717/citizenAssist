@@ -1,0 +1,29 @@
+.ca-admin-agents__email {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.ca-admin-agents__account-warning {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.375rem 0.625rem;
+  color: var(--color-danger-ink, #a32d20);
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.ca-admin-agents__error {
+  margin: 0.75rem 0;
+  padding: 0.75rem 0.875rem;
+  color: var(--color-danger-ink, #a32d20);
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}

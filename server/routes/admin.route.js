@@ -1,4 +1,5 @@
 import express from "express";
+import uploadDocument from "../middleware/documentUpload.middleware.js";
 import {
   getAdminDashboard,
   getAdminProfile,
@@ -11,6 +12,7 @@ import {
   resolveComplaint,
   getServices,
   updateService,
+  uploadAdminRequestDocument,
 } from "../controllers/admin.controller.js";
 import { authorize, protect } from "../middleware/auth.midleware.js";
 
@@ -33,6 +35,7 @@ adminRouter.patch("/admin/agents/:id", updateAgentStatus);
 // Requests
 adminRouter.get("/admin/requests", getAdminRequests);
 adminRouter.patch("/admin/requests/:id/assign", assignAgentToRequest);
+adminRouter.post("/admin/requests/:id/document", uploadDocument.single("document"), uploadAdminRequestDocument);
 
 // Complaints
 adminRouter.get("/admin/complaints", getComplaints);

@@ -28,7 +28,7 @@ const DetailPanel = ({ service }) => {
   );
 
   const [activeId, setActiveId] = useState(documents[0]?.id);
-  const activeDoc = documents.find((doc) => doc.id === activeId) ?? documents[0];
+  const activeDoc = documents.find((doc) => doc.id === activeId) ?? documents[0] ?? null;
 
   return (
     <div className="ca-detail">
@@ -132,34 +132,42 @@ const DetailPanel = ({ service }) => {
           </div>
 
           <div className="ca-detail__preview">
-            <div className="ca-detail__stage">
-              {/* Keyed on the document so the drawing and caption replay their
-                  entrance on every change. */}
-              <div className="ca-detail__drawing" key={`${activeDoc.id}-art`}>
-                <DocumentSchematic type={activeDoc.schematic} />
+            {activeDoc ? (
+              <>
+                <div className="ca-detail__stage">
+                  {/* Keyed on the document so the drawing and caption replay their
+                      entrance on every change. */}
+                  <div className="ca-detail__drawing" key={`${activeDoc.id}-art`}>
+                    <DocumentSchematic type={activeDoc.schematic} />
+                  </div>
+                </div>
+
+                <div className="ca-detail__caption" key={`${activeDoc.id}-caption`}>
+                  <h3 className="ca-detail__caption-name">{activeDoc.name}</h3>
+                  <p className="ca-detail__caption-what">{activeDoc.what}</p>
+
+                  <p className="ca-detail__capture">
+                    <Icon name="check" size={14} />
+                    {activeDoc.capture}
+                  </p>
+
+                  <div className="ca-detail__formats">
+                    {activeDoc.formats.map((format) => (
+                      <span className="ca-detail__format" key={format}>
+                        {format}
+                      </span>
+                    ))}
+                    <span className="ca-detail__size" data-numeric>
+                      up to {activeDoc.maxSizeMb} MB
+                    </span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="ca-detail__stage" role="status">
+                <p className="ca-detail__docs-hint">Document preview is unavailable.</p>
               </div>
-            </div>
-
-            <div className="ca-detail__caption" key={`${activeDoc.id}-caption`}>
-              <h3 className="ca-detail__caption-name">{activeDoc.name}</h3>
-              <p className="ca-detail__caption-what">{activeDoc.what}</p>
-
-              <p className="ca-detail__capture">
-                <Icon name="check" size={14} />
-                {activeDoc.capture}
-              </p>
-
-              <div className="ca-detail__formats">
-                {activeDoc.formats.map((format) => (
-                  <span className="ca-detail__format" key={format}>
-                    {format}
-                  </span>
-                ))}
-                <span className="ca-detail__size" data-numeric>
-                  up to {activeDoc.maxSizeMb} MB
-                </span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

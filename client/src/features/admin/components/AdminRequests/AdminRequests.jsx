@@ -3,7 +3,13 @@ import Icon from '../../../../components/ui/Icon/Icon';
 import { Empty, Panel, Tabs } from '../../../../components/ui/DataKit/DataKit';
 import { getServiceById } from '../../../../constants/services';
 import { getStatus } from '../../../../constants/requests';
-import { getAdminRequests, getAgents, assignAgent } from '../../adminApi';
+import {
+  assignAgent,
+  getAdminRequests,
+  getAgents,
+  uploadAdminRequestDocument,
+} from '../../adminApi';
+import './AdminRequests.css';
 
 const FILTERS = [
   { id: 'unassigned', label: 'Unassigned' },
@@ -33,6 +39,8 @@ const AdminRequests = () => {
   const [requests, setRequests] = useState([]);
   const [agents, setAgents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [uploadingRequestId, setUploadingRequestId] = useState(null);
+  const [uploadFeedback, setUploadFeedback] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -67,6 +75,29 @@ const AdminRequests = () => {
       await fetchData();
     } catch (error) {
       console.error('❌ [ADMIN-REQUESTS] Assignment failed:', error);
+    }
+  };
+
+  const handleAttachDocument = async (requestId, event) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    setUploadingRequestId(requestId);
+    setUploadFeedback(null);
+    try {
+      const response = await uploadAdminRequestDocument(requestId, file);
+      setUploadFeedback({ requestId, type: 'success', text: response.message });
+      await fetchData();
+    } catch (error) {
+      setUploadFeedback({
+        requestId,
+        type: 'error',
+        text: error.response?.data?.message || 'Could not attach the final document. Try again.',
+      });
+    } finally {
+      setUploadingRequestId(null);
+      input.value = '';
     }
   };
 
@@ -139,6 +170,42 @@ const AdminRequests = () => {
                     <span style={{ fontSize: '0.875rem', color: 'var(--color-ink-muted)' }}>
                       Agent: {request.agentName}
                     </span>
+                  )}
+
+                  {request.status === 'completed' && (
+                    <div className="ca-admin__document-actions">
+                      <input
+                        className="ca-admin__document-input ca-sr-only"
+                        id={`final-document-${request.id}`}
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        aria-label={`Attach final document for ${request.reference}`}
+                        disabled={uploadingRequestId === request.id}
+                        onChange={(event) => handleAttachDocument(request.id, event)}
+                      />
+                      <label
+                        className="ca-pill ca-pill--outline ca-admin__document-button"
+                        htmlFor={`final-document-${request.id}`}
+                        aria-disabled={uploadingRequestId === request.id}
+                      >
+                        {uploadingRequestId === request.id
+                          ? 'Attaching…'
+                          : request.hasCompletedDocument
+                            ? 'Replace final document'
+                            : 'Attach final document'}
+                      </label>
+                      {request.hasCompletedDocument && (
+                        <span className="ca-admin__document-ready">Available in citizen Track Request</span>
+                      )}
+                      {uploadFeedback?.requestId === request.id && (
+                        <span
+                          className={`ca-admin__upload-feedback ca-admin__upload-feedback--${uploadFeedback.type}`}
+                          role={uploadFeedback.type === 'error' ? 'alert' : 'status'}
+                        >
+                          {uploadFeedback.text}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </span>
               </li>

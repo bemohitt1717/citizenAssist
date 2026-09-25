@@ -193,7 +193,7 @@ const TrackPanel = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      URL.revokeObjectURL(url);
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
       setDownloadError('Could not download the completed document. Please try again.');
     } finally {
@@ -313,9 +313,9 @@ const TrackPanel = () => {
                   <h3 className="ca-track__complaint-title">Your completed document is ready</h3>
                   <p className="ca-track__edit-note">Download the file shared by your agent.</p>
                 </div>
-                <button type="button" className="ca-pill ca-pill--solid" onClick={downloadFinalDocument} disabled={isDownloadingFinal}>
+                <button type="button" className="ca-pill ca-pill--solid ca-track__download-button" onClick={downloadFinalDocument} disabled={isDownloadingFinal}>
+                  <span className="ca-pill__disc" aria-hidden="true"><Icon name="document" size={15} /></span>
                   {isDownloadingFinal ? 'Preparing…' : 'Download document'}
-                  <span className="ca-pill__disc"><Icon name="arrowRight" size={15} /></span>
                 </button>
                 {downloadError && <p className="ca-track__edit-note" role="alert">{downloadError}</p>}
               </section>

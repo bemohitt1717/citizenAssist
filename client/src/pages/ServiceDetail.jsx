@@ -5,6 +5,7 @@ import DetailPanel, {
 } from '../features/serviceDetail/components/DetailPanel/DetailPanel';
 import { getAllServices } from '../features/services/servicesApi';
 import { SERVICES } from '../constants/services';
+import { DOCUMENTS } from '../constants/documents';
 
 // Icon mapping for each service
 const SERVICE_ICONS = {
@@ -19,6 +20,29 @@ const SERVICE_ICONS = {
 const fromStaticService = (serviceId) => {
   const service = SERVICES.find((item) => item.id === serviceId);
   return service ? { ...service, documentCount: service.documents.length } : null;
+};
+
+const documentIdsByName = Object.fromEntries(
+  Object.values(DOCUMENTS).map((document) => [document.name.toLocaleLowerCase(), document.id]),
+);
+
+const resolveServiceDocuments = (requiredDocuments, fallbackDocuments = []) => {
+  if (!Array.isArray(requiredDocuments) || requiredDocuments.length === 0) {
+    return fallbackDocuments;
+  }
+
+  const documentIds = requiredDocuments.map((document) => {
+    if (typeof document !== 'string') return null;
+    if (Object.hasOwn(DOCUMENTS, document)) return document;
+
+    return documentIdsByName[document.trim().toLocaleLowerCase()] || null;
+  });
+
+  if (documentIds.every(Boolean)) {
+    return [...new Set(documentIds)];
+  }
+
+  return fallbackDocuments.length ? fallbackDocuments : documentIds.filter(Boolean);
 };
 
 /**
@@ -46,6 +70,10 @@ const ServiceDetail = () => {
         if (foundService) {
           // Get constant data for fields not in database
           const constantService = SERVICES.find((s) => s.id === serviceId);
+          const documents = resolveServiceDocuments(
+            foundService.requiredDocuments,
+            constantService?.documents || [],
+          );
 
           // Merge database + constant data
           setService({
@@ -56,8 +84,8 @@ const ServiceDetail = () => {
             charge: foundService.charge,
             timeline: foundService.timeline,
             summary: foundService.summary,
-            documents: foundService.requiredDocuments || [],
-            documentCount: foundService.requiredDocuments?.length || 0,
+            documents,
+            documentCount: documents.length,
             // Fields from constants (not in database)
             usedFor: constantService?.usedFor || [],
             issuedBy: constantService?.issuedBy || 'Government Office',

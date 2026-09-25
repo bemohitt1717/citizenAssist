@@ -1,6 +1,7 @@
 import path from "node:path";
 import Agent from "../model/agent.js";
 import ServiceRequest from "../model/serviceRequest.js";
+import { findCompletedDocument, openCompletedDocument } from "../utils/completedDocumentStorage.js";
 
 export const getRequestDocument = async (req, res, next) => {
   try {
@@ -23,6 +24,20 @@ export const getRequestDocument = async (req, res, next) => {
     if (!canRead) return res.status(404).json({ status: "error", message: "Document not found." });
 
     res.setHeader("Cache-Control", "private, no-store");
+    if (request.completedDocument === storedPath) {
+      const completedFile = await findCompletedDocument(filename);
+      if (completedFile) {
+        res.setHeader("Content-Type", completedFile.contentType || "application/octet-stream");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename.replace(/^\d+-/, "")}"`);
+        const stream = openCompletedDocument(completedFile._id);
+        stream.on("error", (error) => {
+          if (!res.headersSent) return next(error);
+          res.destroy(error);
+        });
+        return stream.pipe(res);
+      }
+    }
+
     return res.sendFile(path.resolve("uploads", filename), (error) => {
       if (error && !res.headersSent) next(error);
     });

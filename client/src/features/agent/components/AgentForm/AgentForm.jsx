@@ -204,19 +204,34 @@ const AgentForm = () => {
     const isSignedIn = Boolean(user);
     return (
       <div className="ca-agent">
-        <div className="ca-agent__card">
+        <div className="ca-agent__card ca-agent__card--access">
+          <span className="ca-agent__access-mark" aria-hidden="true">
+            <Icon name="shieldCheck" size={25} />
+          </span>
+
           <h1 className="ca-agent__step-title">
             {isSignedIn ? 'Citizen account required' : 'Sign in to apply'}
           </h1>
+
           <p className="ca-agent__step-lede">
             Agent applications are linked to an active citizen account so the team can verify your
             details and keep your account secure.
           </p>
+
           {!isSignedIn && (
-            <Link className="ca-pill ca-pill--solid" to="/login" state={{ returnTo: '/become-an-agent', roleId: 'citizen' }}>
-              Sign in as a citizen
-              <span className="ca-pill__disc"><Icon name="arrowRight" size={15} /></span>
-            </Link>
+            <div className="ca-agent__access-actions">
+              <Link
+                className="ca-pill ca-pill--solid ca-agent__access-button"
+                to="/login"
+                state={{ returnTo: '/become-an-agent', roleId: 'citizen' }}
+              >
+                Sign in as a citizen
+                <span className="ca-pill__disc"><Icon name="arrowRight" size={15} /></span>
+              </Link>
+              <p className="ca-agent__access-note">
+                Your application will be ready to continue after you sign in.
+              </p>
+            </div>
           )}
         </div>
       </div>

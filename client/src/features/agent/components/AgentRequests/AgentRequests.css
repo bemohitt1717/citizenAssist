@@ -5,13 +5,15 @@
 .ca-areq__open {
   flex-basis: 100%;
   display: grid;
-  gap: 0.875rem;
+  grid-template-columns: minmax(13rem, 0.7fr) minmax(0, 1.7fr);
+  gap: 1.125rem 1.375rem;
   margin-top: 0.875rem;
-  padding: 1rem 1.0625rem 1.125rem;
+  padding: 1.125rem 1.25rem 1.25rem;
   background-color: var(--color-shell);
   border: 1px solid var(--color-line);
   border-radius: 1.125rem;
   animation: ca-areq-open 0.38s var(--ease-out-expo) both;
+  min-width: 0;
 }
 
 @keyframes ca-areq-open {
@@ -27,46 +29,205 @@
   }
 }
 
-/* Contact details are only rendered once a row is opened, so a list of requests
-   never puts every citizen's mobile number on screen at once. */
 .ca-areq__contact {
   display: grid;
-  gap: 0.25rem;
-  padding-bottom: 0.875rem;
-  border-bottom: 1px solid var(--color-line);
+  align-content: start;
+  gap: 0.75rem;
+  min-width: 0;
+  padding-right: 1.25rem;
+  border-right: 1px solid var(--color-line);
 }
 
-.ca-areq__contact-key {
+.ca-areq__section-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+.ca-areq__facts {
+  display: grid;
+  gap: 0.625rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.ca-areq__facts div {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.ca-areq__facts dt {
   color: var(--color-ink-subtle);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
 }
 
-.ca-areq__contact-value {
+.ca-areq__facts dd {
+  min-width: 0;
+  margin: 0;
   font-size: 0.875rem;
   font-weight: 700;
   letter-spacing: -0.014em;
+  overflow-wrap: anywhere;
+}
+
+.ca-areq__work {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
 .ca-areq__controls {
   display: grid;
+  grid-template-columns: minmax(11rem, 0.52fr) minmax(0, 1.48fr);
+  align-items: start;
   gap: 0.875rem;
-}
-
-@media (min-width: 44rem) {
-  .ca-areq__controls {
-    grid-template-columns: minmax(0, 14rem) minmax(0, 1fr);
-    align-items: start;
-  }
+  min-width: 0;
 }
 
 .ca-areq__note {
-  min-height: 4.5rem;
+  min-height: 5rem;
+  resize: vertical;
 }
 
 .ca-areq__actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.ca-areq__send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+}
+
+.ca-areq__send:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ca-areq__delivery {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  min-width: 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-line);
+}
+
+.ca-areq__delivery-copy {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.ca-areq__delivery-copy > p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-ink-muted);
+}
+
+.ca-areq__attached-file {
+  max-width: 100%;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.ca-areq__feedback {
+  margin: 0.125rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.ca-areq__feedback--uploading {
+  color: var(--color-ink-muted);
+}
+
+.ca-areq__feedback--success {
+  color: var(--color-success-ink, #17683a);
+}
+
+.ca-areq__feedback--error {
+  color: var(--color-danger-ink, #a32d20);
+}
+
+.ca-areq__attach {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  gap: 0.5rem;
+  min-width: 14.5rem;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ca-areq__attach:focus-within {
+  outline: 3px solid var(--color-indigo);
+  outline-offset: 3px;
+}
+
+.ca-areq__attach[aria-disabled='true'] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+@media (max-width: 52rem) {
+  .ca-areq__open {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ca-areq__contact {
+    padding: 0 0 0.875rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .ca-areq__delivery {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 38rem) {
+  .ca-areq__open {
+    gap: 1rem;
+    padding: 0.875rem;
+  }
+
+  .ca-areq__controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ca-areq__delivery {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+
+  .ca-areq__attach {
+    align-self: flex-start;
+    min-width: min(100%, 14.5rem);
+  }
 }
 
 .ca-areq-modal__scrim {
@@ -132,12 +293,14 @@
 
 .ca-areq-modal__facts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
   gap: 0.75rem;
+  min-width: 0;
   margin: 0;
 }
 
 .ca-areq-modal__facts div {
+  min-width: 0;
   padding: 0.75rem;
   background: var(--color-paper);
   border: 1px solid var(--color-line);
@@ -153,10 +316,12 @@
 }
 
 .ca-areq-modal__facts dd {
+  min-width: 0;
   margin: 0.3rem 0 0;
   font-size: 0.9375rem;
   font-weight: 700;
   letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
 }
 
 .ca-areq-modal__docs,

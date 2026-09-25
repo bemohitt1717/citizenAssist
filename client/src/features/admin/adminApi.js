@@ -72,6 +72,15 @@ export const assignAgent = async (requestId, agentId) => {
   return response.data;
 };
 
+export const uploadAdminRequestDocument = async (requestId, file) => {
+  const formData = new FormData();
+  formData.append("document", file);
+  const response = await api.post(`/admin/requests/${requestId}/document`, formData, {
+    headers: { Authorization: `Bearer ${getToken()}` },
+  });
+  return response.data;
+};
+
 // Get all complaints
 export const getComplaints = async () => {
   const token = getToken();

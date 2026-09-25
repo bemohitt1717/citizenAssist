@@ -5,6 +5,7 @@ import Complaint from "../model/complaint.js";
 import Service from "../model/service.js";
 import bcrypt from "bcrypt";
 import { randomInt } from "node:crypto";
+import { attachCompletedDocument } from "../utils/attachCompletedDocument.js";
 
 const generateAgentPin = () => {
   let pin;
@@ -137,7 +138,9 @@ export const getAgents = async (req, res, next) => {
     const formattedAgents = agents.map((agent) => ({
       id: agent._id,
       name: agent.name,
+      accountAvailable: Boolean(agent.user),
       district: agent.district,
+      mobile: agent.phone,
       phone: agent.phone,
       email: agent.email,
       experience: agent.experience,
@@ -270,6 +273,7 @@ export const getAdminRequests = async (req, res, next) => {
       agentName: request.agentName,
       status: request.status,
       charge: request.charge,
+      hasCompletedDocument: Boolean(request.completedDocument),
       createdAt: request.createdAt.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
@@ -286,6 +290,38 @@ export const getAdminRequests = async (req, res, next) => {
     });
   } catch (error) {
     console.error('❌ [ADMIN] Failed to fetch requests:', error);
+    next(error);
+  }
+};
+
+export const uploadAdminRequestDocument = async (req, res, next) => {
+  try {
+    const request = await ServiceRequest.findById(req.params.id);
+    if (!request) return res.status(404).json({ status: "error", message: "Request not found." });
+    if (request.status !== "completed") {
+      return res.status(409).json({ status: "error", message: "Complete the request before attaching its final document." });
+    }
+
+    const { document, filename } = await attachCompletedDocument({
+      request,
+      file: req.file,
+      userId: req.user._id,
+      uploader: "admin",
+      at: new Date().toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    });
+
+    console.log(`📎 [ADMIN] Final document attached to ${request.reference}: ${filename}`);
+    return res.json({
+      status: "success",
+      message: "Final document attached. The citizen can download it from Track Request.",
+      data: { document },
+    });
+  } catch (error) {
     next(error);
   }
 };

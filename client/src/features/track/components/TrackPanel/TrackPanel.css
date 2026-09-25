@@ -267,10 +267,37 @@
   border-radius: 0.85rem;
 }
 
+.ca-track__download-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-sizing: border-box;
+  width: auto;
+  max-width: 100%;
+  min-height: 3rem;
+  padding: 0.5rem 0.9rem 0.5rem 0.7rem;
+  gap: 0.5rem;
+}
+
+.ca-track__download-button .ca-pill__disc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
 @media (max-width: 34rem) {
   .ca-track__delivery {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .ca-track__download-button {
+    align-self: flex-start;
   }
 }
 

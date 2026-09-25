@@ -1,6 +1,8 @@
 import Agent from "../model/agent.js";
 import User from "../model/user.js";
+import Service from "../model/service.js";
 import ServiceRequest from "../model/serviceRequest.js";
+import { attachCompletedDocument } from "../utils/attachCompletedDocument.js";
 
 const formatDate = (date) => date.toLocaleDateString("en-GB", {
   day: "2-digit",
@@ -24,7 +26,7 @@ const moneyValue = (charge) => {
 
 const formatMoney = (value) => `₹${Math.round(value).toLocaleString('en-IN')}`;
 
-const formatRequest = (request) => ({
+const formatRequest = (request, requiredDocumentCounts) => ({
   id: request._id,
   reference: request.reference,
   serviceId: request.serviceId,
@@ -34,9 +36,10 @@ const formatRequest = (request) => ({
   district: request.applicantDetails.district,
   charge: request.charge,
   documentsAttached: request.documents.length,
-  documentsRequired: request.documentsRequired || request.documents.length,
+  documentsRequired: request.documentsRequired ?? requiredDocumentCounts.get(request.serviceId) ?? request.documents.length,
   applicantDetails: request.applicantDetails,
   documents: request.documents,
+  completedDocument: request.completedDocument || "",
   updatedAt: formatDate(request.updatedAt),
   lastNote: request.timeline.at(-1)?.note || null,
   createdAt: formatDate(request.createdAt),
@@ -228,8 +231,19 @@ export const getAgentRequests = async (req, res, next) => {
     }
 
     const requests = await ServiceRequest.find(filter).sort({ updatedAt: -1 });
+    const serviceIds = [...new Set(requests.map((request) => request.serviceId))];
+    const services = serviceIds.length
+      ? await Service.find({ serviceId: { $in: serviceIds } }).select("serviceId requiredDocuments").lean()
+      : [];
+    const requiredDocumentCounts = new Map(
+      services.map((service) => [service.serviceId, service.requiredDocuments?.length ?? 0])
+    );
     console.log(`📋 [AGENT] Loaded ${requests.length} requests for ${agent._id.toString()}`);
-    return res.json({ status: "success", count: requests.length, data: { requests: requests.map(formatRequest) } });
+    return res.json({
+      status: "success",
+      count: requests.length,
+      data: { requests: requests.map((request) => formatRequest(request, requiredDocumentCounts)) },
+    });
   } catch (error) {
     next(error);
   }
@@ -360,21 +374,19 @@ export const uploadAgentRequestDocument = async (req, res, next) => {
     const request = await ServiceRequest.findOne({ _id: req.params.id, agent: agent?._id });
 
     if (!agent || !request) return res.status(404).json({ status: "error", message: "Assigned request not found." });
-    if (!req.file) return res.status(400).json({ status: "error", message: "A document file is required." });
-
-    request.completedDocument = `/uploads/${req.file.filename}`;
-    request.timeline.push({
-      status: request.status,
+    const { document, filename } = await attachCompletedDocument({
+      request,
+      file: req.file,
+      userId: req.user._id,
+      uploader: "agent",
       at: formatDateTime(new Date()),
-      note: "Final document uploaded by the agent.",
     });
-    await request.save();
 
-    console.log(`📎 [AGENT] Final document uploaded for ${request.reference}: ${req.file.filename}`);
+    console.log(`📎 [AGENT] Final document uploaded for ${request.reference}: ${filename}`);
     return res.json({
       status: "success",
       message: "Final document uploaded successfully.",
-      data: { document: request.completedDocument },
+      data: { document },
     });
   } catch (error) {
     next(error);
