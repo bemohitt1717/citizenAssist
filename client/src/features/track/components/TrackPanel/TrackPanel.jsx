@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Icon from '../../../../components/ui/Icon/Icon';
-import { getServiceById } from '../../../../constants/services';
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import Icon from "../../../../components/ui/Icon/Icon";
+import { getServiceById } from "../../../../constants/services";
 import {
   STATUS_ASIDE,
   TOTAL_STAGES,
   getStatus,
-} from '../../../../constants/requests';
+} from "../../../../constants/requests";
 import {
   createComplaint,
   downloadRequestDocument,
   getMyRequests,
   updateMyRequest,
   uploadRequestDocument,
-} from '../../../request/requestApi';
-import './TrackPanel.css';
+} from "../../../request/requestApi";
+import "./TrackPanel.css";
 
 /**
  * Maps a status to the tone its pill and progress bar use. Kept as a function
@@ -22,9 +22,9 @@ import './TrackPanel.css';
  * different places later without editing the records.
  */
 const toneFor = (statusId) => {
-  if (statusId === 'completed') return 'done';
+  if (statusId === "completed") return "done";
   if (STATUS_ASIDE[statusId]) return STATUS_ASIDE[statusId].tone;
-  return 'open';
+  return "open";
 };
 
 const StatusPill = ({ statusId }) => {
@@ -47,14 +47,18 @@ const ProgressBar = ({ statusId }) => {
   const reached = status.position || 2;
 
   const fillClass =
-    tone === 'done' ? 'is-filled-done' : tone === 'open' ? 'is-filled' : 'is-filled-warn';
+    tone === "done"
+      ? "is-filled-done"
+      : tone === "open"
+        ? "is-filled"
+        : "is-filled-warn";
 
   return (
     <span className="ca-track__bar" aria-hidden="true">
       {Array.from({ length: TOTAL_STAGES }, (_, index) => (
         <span
           key={index}
-          className={`ca-track__bar-seg ${index < reached ? fillClass : ''}`.trim()}
+          className={`ca-track__bar-seg ${index < reached ? fillClass : ""}`.trim()}
         />
       ))}
     </span>
@@ -70,11 +74,14 @@ const EmptyState = () => (
     <h2 className="ca-track__empty-title">No requests yet</h2>
 
     <p className="ca-track__empty-text">
-      When you start a request, it will appear here with its status and everything your agent has
-      added to it.
+      When you start a request, it will appear here with its status and
+      everything your agent has added to it.
     </p>
 
-    <Link className="ca-pill ca-pill--solid ca-track__empty-cta" to="/#services">
+    <Link
+      className="ca-pill ca-pill--solid ca-track__empty-cta"
+      to="/#services"
+    >
       Browse services
       <span className="ca-pill__disc">
         <Icon name="arrowRight" size={15} />
@@ -93,17 +100,23 @@ const TrackPanel = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeId, setActiveId] = useState(null);
-  const [complaintSubject, setComplaintSubject] = useState('');
-  const [complaintDescription, setComplaintDescription] = useState('');
-  const [complaintMessage, setComplaintMessage] = useState('');
+  const [complaintSubject, setComplaintSubject] = useState("");
+  const [complaintDescription, setComplaintDescription] = useState("");
+  const [complaintMessage, setComplaintMessage] = useState("");
   const [isSubmittingComplaint, setIsSubmittingComplaint] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editDetails, setEditDetails] = useState({ fullName: '', phone: '', email: '', district: '', address: '' });
+  const [editDetails, setEditDetails] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    district: "",
+    address: "",
+  });
   const [editFiles, setEditFiles] = useState([]);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isDownloadingFinal, setIsDownloadingFinal] = useState(false);
-  const [downloadError, setDownloadError] = useState('');
-  const [editMessage, setEditMessage] = useState('');
+  const [downloadError, setDownloadError] = useState("");
+  const [editMessage, setEditMessage] = useState("");
   const fileInputRef = useRef(null);
 
   // Fetch requests on mount
@@ -114,7 +127,7 @@ const TrackPanel = () => {
         setRequests(response.data.requests);
         setActiveId(response.data.requests[0]?._id || null);
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load requests.');
+        setError(err.response?.data?.message || "Failed to load requests.");
       } finally {
         setIsLoading(false);
       }
@@ -123,14 +136,23 @@ const TrackPanel = () => {
     fetchRequests();
   }, []);
 
-  const active = requests.find((request) => request.id === activeId) ?? requests[0];
+  const active =
+    requests.find((request) => request.id === activeId) ?? requests[0];
 
   useEffect(() => {
     if (!active) return;
-    setEditDetails(active.applicantDetails || { fullName: '', phone: '', email: '', district: '', address: '' });
+    setEditDetails(
+      active.applicantDetails || {
+        fullName: "",
+        phone: "",
+        email: "",
+        district: "",
+        address: "",
+      },
+    );
     setIsEditing(false);
     setEditFiles([]);
-    setEditMessage('');
+    setEditMessage("");
   }, [active?.id]);
 
   const refreshRequests = async () => {
@@ -140,19 +162,29 @@ const TrackPanel = () => {
 
   const saveRequestEdit = async (event) => {
     event.preventDefault();
-    if (!active || !editDetails.fullName?.trim() || !editDetails.phone?.trim() || !editDetails.district?.trim()) return;
+    if (
+      !active ||
+      !editDetails.fullName?.trim() ||
+      !editDetails.phone?.trim() ||
+      !editDetails.district?.trim()
+    )
+      return;
 
     try {
       setIsSavingEdit(true);
-      setEditMessage('');
+      setEditMessage("");
       await updateMyRequest(active.id, editDetails);
-      for (const file of editFiles) await uploadRequestDocument(active.id, file);
+      for (const file of editFiles)
+        await uploadRequestDocument(active.id, file);
       await refreshRequests();
       setIsEditing(false);
       setEditFiles([]);
-      setEditMessage('Request updated and sent to your agent.');
+      setEditMessage("Request updated and sent to your agent.");
     } catch (requestError) {
-      setEditMessage(requestError.response?.data?.message || 'Could not update this request.');
+      setEditMessage(
+        requestError.response?.data?.message ||
+          "Could not update this request.",
+      );
     } finally {
       setIsSavingEdit(false);
     }
@@ -164,16 +196,16 @@ const TrackPanel = () => {
 
     try {
       setIsSubmittingComplaint(true);
-      setComplaintMessage('');
+      setComplaintMessage("");
       await createComplaint(active.id, complaintSubject, complaintDescription);
-      setComplaintSubject('');
-      setComplaintDescription('');
-      setComplaintMessage('Complaint submitted. An admin will review it.');
-      console.info('[citizen] complaint submitted', active.reference);
+      setComplaintSubject("");
+      setComplaintDescription("");
+      setComplaintMessage("Complaint submitted. An admin will review it.");
+      console.info("[citizen] complaint submitted", active.reference);
     } catch (requestError) {
-      console.error('[citizen] complaint submission failed', requestError);
+      console.error("[citizen] complaint submission failed", requestError);
       setComplaintMessage(
-        requestError.response?.data?.message || 'Could not submit complaint.',
+        requestError.response?.data?.message || "Could not submit complaint.",
       );
     } finally {
       setIsSubmittingComplaint(false);
@@ -183,19 +215,24 @@ const TrackPanel = () => {
   const downloadFinalDocument = async () => {
     if (!active?.completedDocument || isDownloadingFinal) return;
     setIsDownloadingFinal(true);
-    setDownloadError('');
+    setDownloadError("");
     try {
       const blob = await downloadRequestDocument(active.completedDocument);
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = active.completedDocument.split('/').pop().replace(/^\d+-/, '');
+      link.download = active.completedDocument
+        .split("/")
+        .pop()
+        .replace(/^\d+-/, "");
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
-      setDownloadError('Could not download the completed document. Please try again.');
+      setDownloadError(
+        "Could not download the completed document. Please try again.",
+      );
     } finally {
       setIsDownloadingFinal(false);
     }
@@ -217,7 +254,7 @@ const TrackPanel = () => {
       <div className="ca-track">
         <div className="ca-track__head">
           <h1 className="ca-track__title">Track a request</h1>
-          <p className="ca-track__lede" style={{ color: 'var(--color-error)' }}>
+          <p className="ca-track__lede" style={{ color: "var(--color-error)" }}>
             {error}
           </p>
         </div>
@@ -231,8 +268,8 @@ const TrackPanel = () => {
         <h1 className="ca-track__title">Track a request</h1>
 
         <p className="ca-track__lede">
-          Every request you have placed, with where it has got to and what your agent has said about
-          it.
+          Every request you have placed, with where it has got to and what your
+          agent has said about it.
         </p>
       </div>
 
@@ -248,12 +285,14 @@ const TrackPanel = () => {
                 <li key={request.id}>
                   <button
                     type="button"
-                    className={`ca-track__item ${request.id === active.id ? 'is-active' : ''}`.trim()}
+                    className={`ca-track__item ${request.id === active.id ? "is-active" : ""}`.trim()}
                     onClick={() => setActiveId(request.id)}
                     aria-pressed={request.id === active.id}
                   >
                     <span className="ca-track__item-top">
-                      <span className="ca-track__item-service">{service?.name}</span>
+                      <span className="ca-track__item-service">
+                        {service?.name}
+                      </span>
                       <span className="ca-track__item-ref" data-numeric>
                         {request.reference}
                       </span>
@@ -264,7 +303,11 @@ const TrackPanel = () => {
 
                     <span className="ca-track__item-meta">
                       <span data-numeric>Placed {request.createdAt}</span>
-                      <span>{request.agentName ? `Agent ${request.agentName}` : 'No agent yet'}</span>
+                      <span>
+                        {request.agentName
+                          ? `Agent ${request.agentName}`
+                          : "No agent yet"}
+                      </span>
                     </span>
                   </button>
                 </li>
@@ -275,7 +318,9 @@ const TrackPanel = () => {
           {/* Keyed on the request so the panel replays its entrance on change. */}
           <div className="ca-track__detail" key={active.id}>
             <div className="ca-track__detail-head">
-              <h2 className="ca-track__detail-service">{getServiceById(active.serviceId)?.name}</h2>
+              <h2 className="ca-track__detail-service">
+                {getServiceById(active.serviceId)?.name}
+              </h2>
               <StatusPill statusId={active.status} />
             </div>
 
@@ -289,7 +334,9 @@ const TrackPanel = () => {
 
               <div className="ca-track__fact">
                 <dt className="ca-label ca-track__fact-key">Agent</dt>
-                <dd className="ca-track__fact-value">{active.agentName ?? 'Not assigned yet'}</dd>
+                <dd className="ca-track__fact-value">
+                  {active.agentName ?? "Not assigned yet"}
+                </dd>
               </div>
 
               <div className="ca-track__fact">
@@ -308,16 +355,34 @@ const TrackPanel = () => {
             </dl>
 
             {active.completedDocument && (
-              <section className="ca-track__delivery" aria-label="Completed document">
+              <section
+                className="ca-track__delivery"
+                aria-label="Completed document"
+              >
                 <div>
-                  <h3 className="ca-track__complaint-title">Your completed document is ready</h3>
-                  <p className="ca-track__edit-note">Download the file shared by your agent.</p>
+                  <h3 className="ca-track__complaint-title">
+                    Your completed document is ready
+                  </h3>
+                  <p className="ca-track__edit-note">
+                    Download the file shared by your agent.
+                  </p>
                 </div>
-                <button type="button" className="ca-pill ca-pill--solid ca-track__download-button" onClick={downloadFinalDocument} disabled={isDownloadingFinal}>
-                  <span className="ca-pill__disc" aria-hidden="true"><Icon name="document" size={15} /></span>
-                  {isDownloadingFinal ? 'Preparing…' : 'Download document'}
+                <button
+                  type="button"
+                  className="ca-pill ca-pill--solid ca-track__download-button"
+                  onClick={downloadFinalDocument}
+                  disabled={isDownloadingFinal}
+                >
+                  <span className="ca-pill__disc" aria-hidden="true">
+                    <Icon name="document" size={15} />
+                  </span>
+                  {isDownloadingFinal ? "Preparing…" : "Download document"}
                 </button>
-                {downloadError && <p className="ca-track__edit-note" role="alert">{downloadError}</p>}
+                {downloadError && (
+                  <p className="ca-track__edit-note" role="alert">
+                    {downloadError}
+                  </p>
+                )}
               </section>
             )}
 
@@ -332,7 +397,9 @@ const TrackPanel = () => {
                   </span>
 
                   <span className="ca-timeline__top">
-                    <span className="ca-timeline__label">{getStatus(entry.status).label}</span>
+                    <span className="ca-timeline__label">
+                      {getStatus(entry.status).label}
+                    </span>
                     <span className="ca-timeline__at" data-numeric>
                       {entry.at}
                     </span>
@@ -343,74 +410,126 @@ const TrackPanel = () => {
               ))}
             </ol>
 
-            {!['completed', 'cancelled', 'rejected'].includes(active.status) && (
+            {!["completed", "cancelled", "rejected"].includes(
+              active.status,
+            ) && (
               <section className="ca-track__edit">
                 <div className="ca-track__edit-head">
                   <div>
-                    <h3 className="ca-track__complaint-title">Need to correct something?</h3>
-                    <p className="ca-track__edit-note">Update your information or send the missing documents requested by your agent.</p>
+                    <h3 className="ca-track__complaint-title">
+                      Need to correct something?
+                    </h3>
+                    <p className="ca-track__edit-note">
+                      Update your information or send the missing documents
+                      requested by your agent.
+                    </p>
                   </div>
-                  <button type="button" className="ca-pill" onClick={() => setIsEditing((current) => !current)}>
-                    {isEditing ? 'Close' : 'Edit request'}
+                  <button
+                    type="button"
+                    className="ca-pill"
+                    onClick={() => setIsEditing((current) => !current)}
+                  >
+                    {isEditing ? "Close" : "Edit request"}
                   </button>
                 </div>
 
                 {isEditing && (
-                  <form className="ca-track__edit-form" onSubmit={saveRequestEdit}>
-                    {['fullName', 'phone', 'email', 'district', 'address'].map((field) => (
-                      <label className="ca-field" key={field}>
-                        <span className="ca-field__label">{field === 'fullName' ? 'Full name' : field[0].toUpperCase() + field.slice(1)}</span>
-                        {field === 'address' ? (
-                          <textarea className="ca-field__area" value={editDetails[field] || ''} onChange={(event) => setEditDetails((current) => ({ ...current, [field]: event.target.value }))} />
-                        ) : (
-                          <input className="ca-field__input" value={editDetails[field] || ''} onChange={(event) => setEditDetails((current) => ({ ...current, [field]: event.target.value }))} required={['fullName', 'phone', 'district'].includes(field)} />
-                        )}
-                      </label>
-                    ))}
-                    
+                  <form
+                    className="ca-track__edit-form"
+                    onSubmit={saveRequestEdit}
+                  >
+                    {["fullName", "phone", "email", "district", "address"].map(
+                      (field) => (
+                        <label className="ca-field" key={field}>
+                          <span className="ca-field__label">
+                            {field === "fullName"
+                              ? "Full name"
+                              : field[0].toUpperCase() + field.slice(1)}
+                          </span>
+                          {field === "address" ? (
+                            <textarea
+                              className="ca-field__area"
+                              value={editDetails[field] || ""}
+                              onChange={(event) =>
+                                setEditDetails((current) => ({
+                                  ...current,
+                                  [field]: event.target.value,
+                                }))
+                              }
+                            />
+                          ) : (
+                            <input
+                              className="ca-field__input"
+                              value={editDetails[field] || ""}
+                              onChange={(event) =>
+                                setEditDetails((current) => ({
+                                  ...current,
+                                  [field]: event.target.value,
+                                }))
+                              }
+                              required={[
+                                "fullName",
+                                "phone",
+                                "district",
+                              ].includes(field)}
+                            />
+                          )}
+                        </label>
+                      ),
+                    )}
+
                     <div className="ca-track__file-section">
-                      <span className="ca-field__label">Add missing documents</span>
+                      <span className="ca-field__label">
+                        Add missing documents
+                      </span>
                       <button
                         type="button"
-                        className={`ca-track__file-slot ${editFiles.length > 0 ? 'is-filled' : ''}`.trim()}
+                        className={`ca-track__file-slot ${editFiles.length > 0 ? "is-filled" : ""}`.trim()}
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <span className="ca-track__file-mark">
-                          <Icon name={editFiles.length > 0 ? 'check' : 'document'} size={17} />
+                          <Icon
+                            name={editFiles.length > 0 ? "check" : "document"}
+                            size={17}
+                          />
                         </span>
-                        
+
                         <span className="ca-track__file-body">
                           <span className="ca-track__file-name">
-                            {editFiles.length > 0 
-                              ? `${editFiles.length} document${editFiles.length > 1 ? 's' : ''} selected`
-                              : 'Choose documents to upload'
-                            }
+                            {editFiles.length > 0
+                              ? `${editFiles.length} document${editFiles.length > 1 ? "s" : ""} selected`
+                              : "Choose documents to upload"}
                           </span>
                           <span className="ca-track__file-hint">
-                            {editFiles.length > 0 
-                              ? editFiles.map(f => f.name).join(', ')
-                              : 'PDF, JPG, PNG · Multiple files allowed'
-                            }
+                            {editFiles.length > 0
+                              ? editFiles.map((f) => f.name).join(", ")
+                              : "PDF, JPG, PNG · Multiple files allowed"}
                           </span>
                         </span>
-                        
+
                         <span className="ca-track__file-action">
-                          {editFiles.length > 0 ? 'Change' : 'Attach'}
+                          {editFiles.length > 0 ? "Change" : "Attach"}
                         </span>
                       </button>
-                      
+
                       <input
                         ref={fileInputRef}
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
                         multiple
                         hidden
-                        onChange={(event) => setEditFiles(Array.from(event.target.files || []))}
+                        onChange={(event) =>
+                          setEditFiles(Array.from(event.target.files || []))
+                        }
                       />
                     </div>
-                    
-                    <button type="submit" className="ca-pill ca-pill--solid" disabled={isSavingEdit}>
-                      {isSavingEdit ? 'Sending...' : 'Save and send to agent'}
+
+                    <button
+                      type="submit"
+                      className="ca-pill ca-pill--solid"
+                      disabled={isSavingEdit}
+                    >
+                      {isSavingEdit ? "Sending..." : "Save and send to agent"}
                     </button>
                   </form>
                 )}
@@ -419,7 +538,9 @@ const TrackPanel = () => {
             )}
 
             <form className="ca-track__complaint" onSubmit={submitComplaint}>
-              <h3 className="ca-track__complaint-title">Need help with this request?</h3>
+              <h3 className="ca-track__complaint-title">
+                Need help with this request?
+              </h3>
               <input
                 className="ca-field__input"
                 value={complaintSubject}
@@ -430,7 +551,9 @@ const TrackPanel = () => {
               <textarea
                 className="ca-field__area"
                 value={complaintDescription}
-                onChange={(event) => setComplaintDescription(event.target.value)}
+                onChange={(event) =>
+                  setComplaintDescription(event.target.value)
+                }
                 placeholder="Tell us what went wrong"
                 aria-label="Complaint details"
                 required
@@ -438,9 +561,13 @@ const TrackPanel = () => {
               <button
                 type="submit"
                 className="ca-pill ca-pill--solid"
-                disabled={isSubmittingComplaint || !complaintSubject.trim() || !complaintDescription.trim()}
+                disabled={
+                  isSubmittingComplaint ||
+                  !complaintSubject.trim() ||
+                  !complaintDescription.trim()
+                }
               >
-                {isSubmittingComplaint ? 'Sending...' : 'Raise complaint'}
+                {isSubmittingComplaint ? "Sending..." : "Raise complaint"}
               </button>
               {complaintMessage && <p role="status">{complaintMessage}</p>}
             </form>

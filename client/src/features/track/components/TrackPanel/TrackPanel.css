@@ -101,12 +101,16 @@
 .ca-track__item:hover {
   border-color: rgb(22 23 15 / 0.2);
   transform: translateY(-2px);
-  box-shadow: 0 1px 2px rgb(22 23 15 / 0.04), 0 16px 30px -20px rgb(22 23 15 / 0.4);
+  box-shadow:
+    0 1px 2px rgb(22 23 15 / 0.04),
+    0 16px 30px -20px rgb(22 23 15 / 0.4);
 }
 
 .ca-track__item.is-active {
   border-color: var(--color-indigo);
-  box-shadow: 0 0 0 1px var(--color-indigo), 0 18px 34px -22px rgb(35 42 92 / 0.5);
+  box-shadow:
+    0 0 0 1px var(--color-indigo),
+    0 18px 34px -22px rgb(35 42 92 / 0.5);
 }
 
 .ca-track__item-top {
@@ -343,7 +347,7 @@
 
 /* The rail runs between markers, not through the last one. */
 .ca-timeline__row:not(:last-child)::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0.6875rem;
   top: 1.625rem;
