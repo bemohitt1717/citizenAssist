@@ -1,10 +1,12 @@
+import { lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import AgentShell from '../features/agent/components/AgentShell/AgentShell';
-import AgentHome from '../features/agent/components/AgentHome/AgentHome';
-import AgentRequests from '../features/agent/components/AgentRequests/AgentRequests';
-import AgentEarnings from '../features/agent/components/AgentEarnings/AgentEarnings';
-import AgentProfile from '../features/agent/components/AgentProfile/AgentProfile';
 import { AGENT_SECTIONS } from '../features/agent/agentData';
+
+const AgentHome = lazy(() => import('../features/agent/components/AgentHome/AgentHome'));
+const AgentRequests = lazy(() => import('../features/agent/components/AgentRequests/AgentRequests'));
+const AgentEarnings = lazy(() => import('../features/agent/components/AgentEarnings/AgentEarnings'));
+const AgentProfile = lazy(() => import('../features/agent/components/AgentProfile/AgentProfile'));
 
 /** Each section, keyed by the URL segment that selects it. */
 const SECTIONS = {
@@ -29,7 +31,9 @@ const AgentDashboard = () => {
 
   return (
     <AgentShell activeId={activeId}>
-      <Section />
+      <Suspense fallback={<p role="status" aria-live="polite">Loading section…</p>}>
+        <Section />
+      </Suspense>
     </AgentShell>
   );
 };

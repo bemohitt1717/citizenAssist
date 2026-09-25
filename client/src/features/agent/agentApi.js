@@ -29,6 +29,8 @@ const authConfig = () => ({
   headers: { Authorization: `Bearer ${getToken()}` },
 });
 
+let agentDashboardRequest;
+
 export const getAgentProfile = async () => {
   const response = await api.get("/agent/profile", authConfig());
   return response.data;
@@ -40,8 +42,16 @@ export const updateAgentProfile = async (profile) => {
 };
 
 export const getAgentDashboard = async () => {
-  const response = await api.get("/agent/dashboard", authConfig());
-  return response.data;
+  if (!agentDashboardRequest) {
+    agentDashboardRequest = api
+      .get("/agent/dashboard", authConfig())
+      .then((response) => response.data)
+      .finally(() => {
+        agentDashboardRequest = null;
+      });
+  }
+
+  return agentDashboardRequest;
 };
 
 export const getAgentEarnings = async () => {

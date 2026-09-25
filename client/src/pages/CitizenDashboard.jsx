@@ -1,8 +1,10 @@
+import { lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import CitizenShell from '../features/citizen/components/CitizenShell/CitizenShell';
-import CitizenHome from '../features/citizen/components/CitizenHome/CitizenHome';
-import CitizenProfile from '../features/citizen/components/CitizenProfile/CitizenProfile';
-import TrackRequest from './TrackRequest';
+
+const CitizenHome = lazy(() => import('../features/citizen/components/CitizenHome/CitizenHome'));
+const CitizenProfile = lazy(() => import('../features/citizen/components/CitizenProfile/CitizenProfile'));
+const TrackRequest = lazy(() => import('./TrackRequest'));
 
 /**
  * Citizen dashboard router
@@ -24,7 +26,13 @@ const CitizenDashboard = () => {
     }
   };
 
-  return <CitizenShell activeId={section}>{renderSection()}</CitizenShell>;
+  return (
+    <CitizenShell activeId={section}>
+      <Suspense fallback={<p role="status" aria-live="polite">Loading section…</p>}>
+        {renderSection()}
+      </Suspense>
+    </CitizenShell>
+  );
 };
 
 export default CitizenDashboard;

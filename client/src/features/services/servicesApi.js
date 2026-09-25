@@ -1,15 +1,22 @@
 import api from "../../config/api";
 import { getToken } from "../../utils/storage";
 
+let publicServicesCache = null;
+let publicServicesCacheUntil = 0;
+
 /**
  * Shared service APIs for both admin and agents
  */
 
 // Get all services (public + admin)
-export const getAllServices = async () => {
-  const response = await api.get("/services");
-  console.log('🔍 [API] getAllServices raw response:', response);
-  console.log('🔍 [API] response.data:', response.data);
+export const getAllServices = async ({ signal } = {}) => {
+  if (publicServicesCache && Date.now() < publicServicesCacheUntil) {
+    return publicServicesCache;
+  }
+
+  const response = await api.get("/services", { signal, timeout: 6500 });
+  publicServicesCache = response.data;
+  publicServicesCacheUntil = Date.now() + 30_000;
   return response.data;
 };
 
@@ -27,6 +34,8 @@ export const updateService = async (serviceId, data) => {
     data,
     { headers: { Authorization: `Bearer ${token}` } }
   );
+  publicServicesCache = null;
+  publicServicesCacheUntil = 0;
   return response.data;
 };
 

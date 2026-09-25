@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { Panel, Panels, Readiness, Stat, Stats } from '../../../../components/ui/DataKit/DataKit';
@@ -24,55 +24,34 @@ const AgentHome = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async (isCurrent = () => true) => {
     try {
       const [dashboardResponse, requestsResponse, earningsResponse] = await Promise.all([
         getAgentDashboard(),
         getAgentRequests('offered'),
         getAgentEarnings(),
       ]);
+      if (!isCurrent()) return;
       setCounts(dashboardResponse.data.counts);
       setOffered(requestsResponse.data.requests);
       setEarnings(earningsResponse.data);
-      console.info('[agent] dashboard loaded', dashboardResponse.data.counts);
     } catch (requestError) {
-      console.error('[agent] dashboard load failed', requestError);
+      if (!isCurrent()) return;
       setError(requestError.response?.data?.message || 'Could not load agent dashboard.');
     } finally {
-      setIsLoading(false);
+      if (isCurrent()) setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     let isCurrent = true;
 
-    const loadDashboard = async () => {
-      try {
-        const [dashboardResponse, requestsResponse, earningsResponse] = await Promise.all([
-          getAgentDashboard(),
-          getAgentRequests('offered'),
-          getAgentEarnings(),
-        ]);
-        if (!isCurrent) return;
-        setCounts(dashboardResponse.data.counts);
-        setOffered(requestsResponse.data.requests);
-        setEarnings(earningsResponse.data);
-        console.info('[agent] dashboard loaded', dashboardResponse.data.counts);
-      } catch (requestError) {
-        if (!isCurrent) return;
-        console.error('[agent] dashboard load failed', requestError);
-        setError(requestError.response?.data?.message || 'Could not load agent dashboard.');
-      } finally {
-        if (isCurrent) setIsLoading(false);
-      }
-    };
-
-    loadDashboard();
+    fetchDashboard(() => isCurrent);
 
     return () => {
       isCurrent = false;
     };
-  }, []);
+  }, [fetchDashboard]);
 
   const decide = async (requestId, decision) => {
     try {

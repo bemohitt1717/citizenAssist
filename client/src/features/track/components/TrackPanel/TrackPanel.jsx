@@ -322,8 +322,11 @@ const TrackPanel = () => {
             )}
 
             <ol className="ca-timeline">
-              {active.timeline.map((entry) => (
-                <li className="ca-timeline__row" key={`${entry.status}-${entry.at}`}>
+              {active.timeline.map((entry, index) => (
+                <li
+                  className="ca-timeline__row"
+                  key={entry._id || `${entry.status}-${entry.at}-${index}`}
+                >
                   <span className="ca-timeline__mark">
                     <Icon name="check" size={13} />
                   </span>

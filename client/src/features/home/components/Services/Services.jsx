@@ -18,6 +18,11 @@ const SERVICE_ICONS = {
 
 // Tone pattern for visual variety (matches position in grid)
 const SERVICE_TONES = ['primary', 'paper', 'warm', 'paper', 'cool', 'paper'];
+const STATIC_SERVICES = SERVICES.map((service) => ({
+  ...service,
+  description: service.summary,
+  documents: service.documents,
+}));
 
 /**
  * Services with real-time data from database.
@@ -26,24 +31,16 @@ const SERVICE_TONES = ['primary', 'paper', 'warm', 'paper', 'cool', 'paper'];
  * (charge, timeline, summary), changes reflect here immediately.
  */
 const Services = () => {
-  const [services, setServices] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [services, setServices] = useState(STATIC_SERVICES);
   const [usingFallback, setUsingFallback] = useState(false);
   const [gridRef, isRevealed] = useReveal({ trigger: services.length });
   const glowRef = usePointerGlow();
 
-  const fetchServices = async () => {
+  const fetchServices = async (signal) => {
     try {
-      console.log('🏠 [HOME-SERVICES] Fetching services from API...');
-      const response = await getAllServices();
-      
-      console.log('📦 [HOME-SERVICES] API Response:', response);
-      
+      const response = await getAllServices({ signal });
       // Backend returns { status: "success", count: X, data: [...] }
       const servicesData = response.data || [];
-      
-      console.log(`✅ [HOME-SERVICES] Found ${servicesData.length} services`);
-      
       // Convert backend data to match frontend format
       const formattedServices = servicesData.map((service, index) => ({
         id: service.serviceId,
@@ -57,46 +54,24 @@ const Services = () => {
         icon: SERVICE_ICONS[service.serviceId] || 'document',
         tone: SERVICE_TONES[index] || 'paper',
       }));
-      
-      console.log('🎨 [HOME-SERVICES] Formatted services:', formattedServices);
       if (formattedServices.length) {
         setServices(formattedServices);
+        setUsingFallback(false);
       } else {
-        setServices(SERVICES.map((service) => ({
-          ...service,
-          description: service.summary,
-          documents: service.documents,
-        })));
+        setServices(STATIC_SERVICES);
         setUsingFallback(true);
       }
-    } catch (error) {
-      console.error('Failed to load live services:', error.response?.data || error.message);
-      setServices(SERVICES.map((service) => ({
-        ...service,
-        description: service.summary,
-        documents: service.documents,
-      })));
+    } catch {
+      if (signal?.aborted) return;
       setUsingFallback(true);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchServices();
+    const controller = new AbortController();
+    fetchServices(controller.signal);
+    return () => controller.abort();
   }, []);
-
-  if (isLoading) {
-    return (
-      <section className="ca-services" id="services">
-        <div className="ca-services__inner">
-          <div style={{ padding: '4rem 0', textAlign: 'center', color: 'var(--color-ink-muted)' }}>
-            Loading services...
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section className="ca-services" id="services">

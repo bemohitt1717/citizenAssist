@@ -1,12 +1,14 @@
+import { lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import AdminShell from '../features/admin/components/AdminShell/AdminShell';
-import AdminHome from '../features/admin/components/AdminHome/AdminHome';
-import AdminRequests from '../features/admin/components/AdminRequests/AdminRequests';
-import AdminAgents from '../features/admin/components/AdminAgents/AdminAgents';
-import AdminServices from '../features/admin/components/AdminServices/AdminServices';
-import AdminComplaints from '../features/admin/components/AdminComplaints/AdminComplaints';
-import AdminProfile from '../features/admin/components/AdminProfile/AdminProfile';
 import { ADMIN_SECTIONS } from '../features/admin/adminData';
+
+const AdminHome = lazy(() => import('../features/admin/components/AdminHome/AdminHome'));
+const AdminRequests = lazy(() => import('../features/admin/components/AdminRequests/AdminRequests'));
+const AdminAgents = lazy(() => import('../features/admin/components/AdminAgents/AdminAgents'));
+const AdminServices = lazy(() => import('../features/admin/components/AdminServices/AdminServices'));
+const AdminComplaints = lazy(() => import('../features/admin/components/AdminComplaints/AdminComplaints'));
+const AdminProfile = lazy(() => import('../features/admin/components/AdminProfile/AdminProfile'));
 
 /** Each section, keyed by the URL segment that selects it. */
 const SECTIONS = {
@@ -33,7 +35,9 @@ const AdminDashboard = () => {
 
   return (
     <AdminShell activeId={activeId}>
-      <Section />
+      <Suspense fallback={<p role="status" aria-live="polite">Loading section…</p>}>
+        <Section />
+      </Suspense>
     </AdminShell>
   );
 };

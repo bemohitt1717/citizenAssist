@@ -28,60 +28,64 @@ const fromStaticService = (serviceId) => {
  */
 const ServiceDetail = () => {
   const { serviceId } = useParams();
-  const [service, setService] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [service, setService] = useState(() => fromStaticService(serviceId));
+  const [isLoading, setIsLoading] = useState(() => !fromStaticService(serviceId));
 
   useEffect(() => {
-    fetchService();
-  }, [serviceId]);
+    const controller = new AbortController();
+    const fallbackService = fromStaticService(serviceId);
+    setService(fallbackService);
+    setIsLoading(!fallbackService);
 
-  const fetchService = async () => {
-    setIsLoading(true);
-    setService(null);
-    try {
-      const response = await getAllServices();
-      const foundService = response.data?.find((s) => s.serviceId === serviceId);
-      
-      if (foundService) {
-        // Get constant data for fields not in database
-        const constantService = SERVICES.find((s) => s.id === serviceId);
-        
-        // Merge database + constant data
-        setService({
-          id: foundService.serviceId,
-          name: foundService.name,
-          icon: SERVICE_ICONS[foundService.serviceId] || 'document',
-          description: foundService.description,
-          charge: foundService.charge,
-          timeline: foundService.timeline,
-          summary: foundService.summary,
-          documents: foundService.requiredDocuments || [],
-          documentCount: foundService.requiredDocuments?.length || 0,
-          // Fields from constants (not in database)
-          usedFor: constantService?.usedFor || [],
-          issuedBy: constantService?.issuedBy || 'Government Office',
-          validity: constantService?.validity || 'As per government rules',
-          tone: constantService?.tone || 'paper',
-        });
-      } else {
-        setService(response.data?.length ? null : fromStaticService(serviceId));
+    const fetchService = async () => {
+      try {
+        const response = await getAllServices({ signal: controller.signal });
+        if (controller.signal.aborted) return;
+        const foundService = response.data?.find((s) => s.serviceId === serviceId);
+
+        if (foundService) {
+          // Get constant data for fields not in database
+          const constantService = SERVICES.find((s) => s.id === serviceId);
+
+          // Merge database + constant data
+          setService({
+            id: foundService.serviceId,
+            name: foundService.name,
+            icon: SERVICE_ICONS[foundService.serviceId] || 'document',
+            description: foundService.description,
+            charge: foundService.charge,
+            timeline: foundService.timeline,
+            summary: foundService.summary,
+            documents: foundService.requiredDocuments || [],
+            documentCount: foundService.requiredDocuments?.length || 0,
+            // Fields from constants (not in database)
+            usedFor: constantService?.usedFor || [],
+            issuedBy: constantService?.issuedBy || 'Government Office',
+            validity: constantService?.validity || 'As per government rules',
+            tone: constantService?.tone || 'paper',
+          });
+        } else {
+          setService(response.data?.length ? null : fallbackService);
+        }
+      } catch {
+        if (!controller.signal.aborted) setService(fallbackService);
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to load service:', error);
-      setService(fromStaticService(serviceId));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    fetchService();
+    return () => controller.abort();
+  }, [serviceId]);
 
   if (isLoading) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
         justifyContent: 'center',
-        color: 'var(--color-ink-muted)' 
+        color: 'var(--color-ink-muted)',
       }}>
         Loading service...
       </div>

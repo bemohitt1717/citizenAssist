@@ -405,8 +405,11 @@ const AgentRequests = () => {
               <section>
                 <span className="ca-label">Request history</span>
                 <ul className="ca-areq-modal__timeline">
-                  {(selectedRequest.timeline || []).map((entry) => (
-                    <li key={`${entry.status}-${entry.at}`}><strong>{getStatus(entry.status).label}</strong><span>{entry.note}</span></li>
+                  {(selectedRequest.timeline || []).map((entry, index) => (
+                    <li key={entry._id || `${entry.status}-${entry.at}-${index}`}>
+                      <strong>{getStatus(entry.status).label}</strong>
+                      <span>{entry.note}</span>
+                    </li>
                   ))}
                 </ul>
               </section>

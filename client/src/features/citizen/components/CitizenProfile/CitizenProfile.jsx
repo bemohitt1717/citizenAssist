@@ -1,16 +1,17 @@
 import { useEffect, useState, useRef } from 'react';
-import { GoogleLogin } from '@react-oauth/google';
+import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { Field, Panel, Panels, SaveRow } from '../../../../components/ui/DataKit/DataKit';
 import { useAuth } from '../../../../context/authContext';
 import { getProfile, linkGoogle, linkMobile, updateProfile } from '../../../auth/authApi';
 import PinInput from '../../../auth/components/PinInput/PinInput';
+import { GOOGLE_CLIENT_ID } from '../../../../config/google';
 import './CitizenProfile.css';
 
 /**
  * Citizen profile - manage the stored user details in MongoDB.
  * Includes account linking for mobile ↔ Google.
  */
-const CitizenProfile = () => {
+const CitizenProfileContent = () => {
   const { user, setUser } = useAuth();
   const googleButtonRef = useRef(null);
   
@@ -405,5 +406,11 @@ const CitizenProfile = () => {
     </Panels>
   );
 };
+
+const CitizenProfile = () => (
+  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+    <CitizenProfileContent />
+  </GoogleOAuthProvider>
+);
 
 export default CitizenProfile;

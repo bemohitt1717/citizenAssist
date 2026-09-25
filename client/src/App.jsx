@@ -1,17 +1,8 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import Navbar, { TOP_SENTINEL_ID } from "./components/common/Navbar/Navbar";
 import Footer from "./components/common/Footer/Footer";
 import LoginPrompt from "./components/common/LoginPrompt/LoginPrompt";
-import Home from "./pages/Home";
-import ServiceDetail from "./pages/ServiceDetail";
-import Login from "./pages/Login";
-import BecomeAgent from "./pages/BecomeAgent";
-import TrackRequest from "./pages/TrackRequest";
-import CitizenDashboard from "./pages/CitizenDashboard";
-import AgentDashboard from "./pages/AgentDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/common/ErrorBoundary/ErrorBoundary";
 import ScrollToHash from "./routes/ScrollToHash";
 import RequestFlowProvider from "./features/request/RequestFlowProvider";
@@ -21,9 +12,25 @@ import { ProtectedRoute, RoleRoute } from "./routes/ProtectedRoute";
 import { useRequestFlow } from "./features/request/requestFlowContext";
 import { useAuth } from "./context/authContext";
 
-const GOOGLE_CLIENT_ID =
-  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-  "214641340065-r8ohdaaalk4e347qucfip6crcicjma6s.apps.googleusercontent.com";
+const Home = lazy(() => import("./pages/Home"));
+const ServiceDetail = lazy(() => import("./pages/ServiceDetail"));
+const Login = lazy(() => import("./pages/Login"));
+const BecomeAgent = lazy(() => import("./pages/BecomeAgent"));
+const TrackRequest = lazy(() => import("./pages/TrackRequest"));
+const CitizenDashboard = lazy(() => import("./pages/CitizenDashboard"));
+const AgentDashboard = lazy(() => import("./pages/AgentDashboard"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+const RouteLoading = () => (
+  <div
+    role="status"
+    aria-live="polite"
+    style={{ minHeight: '42vh', display: 'grid', placeItems: 'center', color: 'var(--color-ink-muted)' }}
+  >
+    Opening your page…
+  </div>
+);
 
 // Suppress Google OAuth warnings in production
 if (import.meta.env.PROD) {
@@ -80,23 +87,15 @@ const HomeLayout = () => (
 
 const App = () => (
   <ErrorBoundary>
-    <GoogleOAuthProvider
-      clientId={GOOGLE_CLIENT_ID}
-      onScriptLoadError={() =>
-        console.error("Failed to load Google OAuth script")
-      }
-      onScriptLoadSuccess={() =>
-        console.log("Google OAuth script loaded successfully")
-      }
-    >
-      <BrowserRouter>
-        <AuthProvider>
-          <RequestFlowProvider>
-            <ScrollToHash />
+    <BrowserRouter>
+      <AuthProvider>
+        <RequestFlowProvider>
+          <ScrollToHash />
 
-            {/* Login prompt shown when user clicks "Start request" without login */}
-            <LoginPromptWrapper />
+          {/* Login prompt shown when user clicks "Start request" without login */}
+          <LoginPromptWrapper />
 
+          <Suspense fallback={<RouteLoading />}>
             <Routes>
               <Route path="/" element={<HomeLayout />} />
               <Route path="/services/:serviceId" element={<ServiceDetail />} />
@@ -146,14 +145,14 @@ const App = () => (
                   broken link looked like it had worked. */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+          </Suspense>
 
-            {/* Mounted once, above the routes, so the flow survives whichever surface
-                opened it. */}
-            <RequestFlowHost />
-          </RequestFlowProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </GoogleOAuthProvider>
+          {/* Mounted once, above the routes, so the flow survives whichever surface
+              opened it. */}
+          <RequestFlowHost />
+        </RequestFlowProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </ErrorBoundary>
 );
 
