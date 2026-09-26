@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../../components/ui/Icon/Icon';
+import { Button } from '../../../../components/ui/button';
+import { Spinner } from '../../../../components/ui/spinner';
 import { Distribution, Panel, Panels, Stat, Stats } from '../../../../components/ui/DataKit/DataKit';
 import { getServiceById } from '../../../../constants/services';
 import { getAdminDashboard, getAgents, updateAgentStatus } from '../../adminApi';
@@ -16,6 +18,8 @@ const AdminHome = () => {
   const [pendingAgents, setPendingAgents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [issuedPin, setIssuedPin] = useState(null);
+  const [busyAgentId, setBusyAgentId] = useState(null);
+  const [actionError, setActionError] = useState('');
 
   // Fetch dashboard data
   useEffect(() => {
@@ -39,7 +43,10 @@ const AdminHome = () => {
   }, []);
 
   const decide = async (agentId, decision) => {
+    if (busyAgentId) return;
     try {
+      setBusyAgentId(agentId);
+      setActionError('');
       const response = await updateAgentStatus(agentId, decision);
       if (decision === 'active' && response.data?.pin) {
         setIssuedPin({ pin: response.data.pin, mobile: response.data.mobile });
@@ -49,6 +56,9 @@ const AdminHome = () => {
       setPendingAgents(agentsData.data.agents);
     } catch (error) {
       console.error('Failed to update agent status:', error);
+      setActionError(error.response?.data?.message || 'Could not update this agent. Try again.');
+    } finally {
+      setBusyAgentId(null);
     }
   };
 
@@ -97,6 +107,8 @@ const AdminHome = () => {
         />
       </Stats>
 
+      {actionError && <p role="alert" style={{ color: 'var(--color-error)' }}>{actionError}</p>}
+
       <Panels split>
         <Panel
           title={`Agents to review · ${pendingAgents.length}`}
@@ -127,21 +139,28 @@ const AdminHome = () => {
                 </span>
 
                 <span className="ca-row__actions">
-                  <button
-                    type="button"
+                  <Button
                     className="ca-row__yes"
+                    variant="unstyled"
+                    size="sm"
                     onClick={() => decide(agent.id, 'active')}
+                    disabled={Boolean(busyAgentId)}
+                    aria-busy={busyAgentId === agent.id}
                   >
-                    <Icon name="check" size={13} />
-                    Approve
-                  </button>
-                  <button
-                    type="button"
+                    {busyAgentId === agent.id ? <Spinner data-icon="inline-start" /> : <Icon name="check" size={13} />}
+                    {busyAgentId === agent.id ? 'Approving…' : 'Approve'}
+                  </Button>
+                  <Button
                     className="ca-row__no"
+                    variant="unstyled"
+                    size="sm"
                     onClick={() => decide(agent.id, 'rejected')}
+                    disabled={Boolean(busyAgentId)}
+                    aria-busy={busyAgentId === agent.id}
                   >
-                    Reject
-                  </button>
+                    {busyAgentId === agent.id && <Spinner data-icon="inline-start" />}
+                    {busyAgentId === agent.id ? 'Rejecting…' : 'Reject'}
+                  </Button>
                 </span>
               </li>
             ))}

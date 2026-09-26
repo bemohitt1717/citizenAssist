@@ -118,6 +118,14 @@
   transform: none;
 }
 
+.ca-areq__saving {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-ink-muted);
+  font-size: 0.8125rem;
+}
+
 .ca-areq__delivery {
   grid-column: 1 / -1;
   display: flex;

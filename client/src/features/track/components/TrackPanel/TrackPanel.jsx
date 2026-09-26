@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Icon from "../../../../components/ui/Icon/Icon";
+import { Button } from "../../../../components/ui/button";
+import { Spinner } from "../../../../components/ui/spinner";
 import { getServiceById } from "../../../../constants/services";
 import {
   STATUS_ASIDE,
@@ -366,17 +368,19 @@ const TrackPanel = () => {
                     Your agent has added the finished file.
                   </p>
                 </div>
-                <button
+                <Button
                   type="button"
                   className="ca-pill ca-pill--solid ca-track__download-button"
+                  variant="unstyled"
                   onClick={downloadFinalDocument}
                   disabled={isDownloadingFinal}
+                  aria-busy={isDownloadingFinal}
                 >
                   <span className="ca-pill__disc" aria-hidden="true">
-                    <Icon name="document" size={15} />
+                    {isDownloadingFinal ? <Spinner /> : <Icon name="document" size={15} />}
                   </span>
                   {isDownloadingFinal ? "Preparing…" : "Download document"}
-                </button>
+                </Button>
                 {downloadError && (
                   <p className="ca-track__edit-note" role="alert">
                     {downloadError}
@@ -522,13 +526,16 @@ const TrackPanel = () => {
                       />
                     </div>
 
-                    <button
+                    <Button
                       type="submit"
                       className="ca-pill ca-pill--solid"
+                      variant="unstyled"
                       disabled={isSavingEdit}
+                      aria-busy={isSavingEdit}
                     >
+                      {isSavingEdit && <Spinner data-icon="inline-start" />}
                       {isSavingEdit ? "Sending..." : "Save and send to agent"}
-                    </button>
+                    </Button>
                   </form>
                 )}
                 {editMessage && <p role="status">{editMessage}</p>}
@@ -556,17 +563,20 @@ const TrackPanel = () => {
                 aria-label="Complaint details"
                 required
               />
-              <button
+              <Button
                 type="submit"
                 className="ca-pill ca-pill--solid"
+                variant="unstyled"
                 disabled={
                   isSubmittingComplaint ||
                   !complaintSubject.trim() ||
                   !complaintDescription.trim()
                 }
+                aria-busy={isSubmittingComplaint}
               >
+                {isSubmittingComplaint && <Spinner data-icon="inline-start" />}
                 {isSubmittingComplaint ? "Sending..." : "Raise complaint"}
-              </button>
+              </Button>
               {complaintMessage && <p role="status">{complaintMessage}</p>}
             </form>
           </div>

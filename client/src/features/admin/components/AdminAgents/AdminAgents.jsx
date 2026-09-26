@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import Icon from '../../../../components/ui/Icon/Icon';
+import { Button } from '../../../../components/ui/button';
+import { Spinner } from '../../../../components/ui/spinner';
 import ConfirmDialog from '../../../../components/ui/ConfirmDialog/ConfirmDialog';
 import { Empty, Panel, Tabs } from '../../../../components/ui/DataKit/DataKit';
 import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
@@ -171,55 +173,69 @@ const AdminAgents = () => {
                 <span className="ca-row__actions">
                   {agent.status === 'pending' && (
                     <>
-                      <button
-                        type="button"
+                      <Button
                         className="ca-row__yes"
+                        variant="unstyled"
+                        size="sm"
                         onClick={() => verify(agent.id)}
                         disabled={Boolean(busyAgentId) || agent.accountAvailable === false}
+                        aria-busy={busyAgentId === agent.id}
                       >
-                        <Icon name="check" size={13} />
+                        {busyAgentId === agent.id ? <Spinner data-icon="inline-start" /> : <Icon name="check" size={13} />}
                         {busyAgentId === agent.id ? 'Approving…' : 'Approve'}
-                      </button>
-                      <button
-                        type="button"
+                      </Button>
+                      <Button
                         className="ca-row__no"
+                        variant="unstyled"
+                        size="sm"
                         onClick={() => setRejecting(agent)}
                         disabled={Boolean(busyAgentId) || agent.accountAvailable === false}
                       >
                         Reject
-                      </button>
+                      </Button>
                     </>
                   )}
 
                   {agent.status === 'active' && (
-                    <button
-                      type="button"
+                    <Button
                       className="ca-row__no"
+                      variant="unstyled"
+                      size="sm"
                       onClick={() => suspend(agent.id)}
                       disabled={Boolean(busyAgentId) || agent.accountAvailable === false}
+                      aria-busy={busyAgentId === agent.id}
                     >
+                      {busyAgentId === agent.id && <Spinner data-icon="inline-start" />}
                       {busyAgentId === agent.id ? 'Pausing…' : 'Pause access'}
-                    </button>
+                    </Button>
                   )}
 
                   {agent.status === 'rejected' && (
-                    <button
-                      type="button"
+                    <Button
                       className="ca-row__no"
+                      variant="unstyled"
+                      size="sm"
                       onClick={() => verify(agent.id)}
+                      disabled={Boolean(busyAgentId)}
+                      aria-busy={busyAgentId === agent.id}
                     >
-                      Review again
-                    </button>
+                      {busyAgentId === agent.id && <Spinner data-icon="inline-start" />}
+                      {busyAgentId === agent.id ? 'Approving…' : 'Review again'}
+                    </Button>
                   )}
 
                   {agent.status === 'suspended' && (
-                    <button
-                      type="button"
+                    <Button
                       className="ca-row__yes"
+                      variant="unstyled"
+                      size="sm"
                       onClick={() => verify(agent.id)}
+                      disabled={Boolean(busyAgentId)}
+                      aria-busy={busyAgentId === agent.id}
                     >
-                      Restore access
-                    </button>
+                      {busyAgentId === agent.id && <Spinner data-icon="inline-start" />}
+                      {busyAgentId === agent.id ? 'Restoring…' : 'Restore access'}
+                    </Button>
                   )}
                 </span>
               </li>
@@ -235,6 +251,8 @@ const AdminAgents = () => {
           title={`Reject ${rejecting.name}?`}
           text="They will not be able to take requests. You can approve them later from the Rejected list."
           confirmLabel="Reject application"
+          loadingLabel="Rejecting…"
+          isLoading={busyAgentId === rejecting.id}
           onConfirm={confirmReject}
           onCancel={() => setRejecting(null)}
         />

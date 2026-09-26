@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
+import { Button } from '../../../../components/ui/button';
+import { Spinner } from '../../../../components/ui/spinner';
 import { Field, Panel, Panels, SaveRow } from '../../../../components/ui/DataKit/DataKit';
 import { useAuth } from '../../../../context/authContext';
 import { getProfile, linkGoogle, linkMobile, updateProfile } from '../../../auth/authApi';
@@ -20,6 +22,7 @@ const CitizenProfileContent = () => {
   const [email, setEmail] = useState(user?.email || '');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
   // Link mobile states
@@ -58,12 +61,14 @@ const CitizenProfileContent = () => {
   }, []);
 
   const save = async () => {
+    if (isSaving) return;
     if (!name || name.trim() === '') {
       alert('Name cannot be empty');
       return;
     }
 
     try {
+      setIsSaving(true);
       console.log('💾 [PROFILE] Updating citizen profile:', { name, email });
       const response = await updateProfile({ name: name.trim(), email: email.trim() });
       const updatedUser = response.data.user;
@@ -81,6 +86,8 @@ const CitizenProfileContent = () => {
     } catch (requestError) {
       console.error('[citizen] profile save failed', requestError);
       setError(requestError.response?.data?.message || 'Could not save your profile. Try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -140,6 +147,8 @@ const CitizenProfileContent = () => {
   };
 
   const handleLinkGoogleClick = () => {
+    if (isLinkingGoogle) return;
+    setIsLinkingGoogle(true);
     setShowGoogleButton(true);
     // Wait for next tick to ensure button is mounted
     setTimeout(() => {
@@ -179,6 +188,7 @@ const CitizenProfileContent = () => {
   const handleGoogleLinkError = () => {
     console.error('❌ [LINK-GOOGLE] Google authentication failed');
     setError('Google sign-in failed. Try again.');
+    setIsLinkingGoogle(false);
     setShowGoogleButton(false);
   };
 
@@ -225,7 +235,7 @@ const CitizenProfileContent = () => {
 
           {error && <p role="alert" style={{ color: 'var(--color-error)', marginBottom: '1rem' }}>{error}</p>}
 
-          <SaveRow onSave={save} isSaved={isSaved} />
+          <SaveRow onSave={save} isSaved={isSaved} isSaving={isSaving} />
         </div>
       </Panel>
 
@@ -248,20 +258,23 @@ const CitizenProfileContent = () => {
 
         {/* Show Google linking if no Google account */}
         {!user?.googleId && !user?.email && (
-          <button
+          <Button
             type="button"
             className="ca-profile-link-button"
+            variant="unstyled"
             onClick={handleLinkGoogleClick}
             disabled={isLinkingGoogle}
+            aria-busy={isLinkingGoogle}
           >
+            {isLinkingGoogle && <Spinner data-icon="inline-start" />}
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            {isLinkingGoogle ? 'Adding…' : 'Add Google sign-in'}
-          </button>
+            {isLinkingGoogle ? 'Connecting…' : 'Add Google sign-in'}
+          </Button>
         )}
 
         {/* Show Google linked status */}
@@ -284,9 +297,10 @@ const CitizenProfileContent = () => {
             </p>
 
             {!showLinkMobile ? (
-              <button
+              <Button
                 type="button"
                 className="ca-profile-link-button ca-profile-link-button--secondary"
+                variant="unstyled"
                 onClick={() => setShowLinkMobile(true)}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -294,7 +308,7 @@ const CitizenProfileContent = () => {
                   <line x1="12" y1="18" x2="12.01" y2="18" />
                 </svg>
                 Add phone number
-              </button>
+              </Button>
             ) : (
               <div className="ca-profile-link-form">
                 <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: '1rem' }}>
@@ -376,17 +390,21 @@ const CitizenProfileContent = () => {
                 )}
 
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <button
+                  <Button
                     type="button"
                     className="ca-profile-link-button"
+                    variant="unstyled"
                     onClick={handleLinkMobile}
                     disabled={isLinkingMobile || (linkStep === 'phone' && linkPhone.length !== 10) || (linkStep === 'pin' && linkPin.length !== 4) || (linkStep === 'confirm' && linkConfirmPin.length !== 4)}
+                    aria-busy={isLinkingMobile}
                   >
+                    {isLinkingMobile && <Spinner data-icon="inline-start" />}
                     {isLinkingMobile ? 'Adding…' : linkStep === 'confirm' ? 'Save phone number' : 'Continue'}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     className="ca-profile-link-button ca-profile-link-button--secondary"
+                    variant="unstyled"
                     onClick={() => {
                       setShowLinkMobile(false);
                       setLinkPhone('');
@@ -397,7 +415,7 @@ const CitizenProfileContent = () => {
                     }}
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

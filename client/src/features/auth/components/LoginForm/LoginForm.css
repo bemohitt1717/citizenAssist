@@ -307,10 +307,17 @@
 .ca-login__submit {
   justify-content: space-between;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   height: 3.5rem;
   padding-left: 1.5rem;
   padding-right: 0.5rem;
   font-size: 1rem;
+}
+
+.ca-login__submit:disabled:hover .ca-pill__disc {
+  transform: none;
 }
 
 /* The way back out of a step. Deliberately quiet — it is a correction, and it

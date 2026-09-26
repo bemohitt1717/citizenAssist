@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import Icon from '../../../../components/ui/Icon/Icon';
+import { Button } from '../../../../components/ui/button';
+import { Spinner } from '../../../../components/ui/spinner';
 import ConfirmDialog from '../../../../components/ui/ConfirmDialog/ConfirmDialog';
 import { Empty, Panel, Readiness, Tabs } from '../../../../components/ui/DataKit/DataKit';
 import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
@@ -56,6 +58,7 @@ const AgentRequests = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState(null);
+  const [busyAction, setBusyAction] = useState('');
   const [uploadingDocumentId, setUploadingDocumentId] = useState(null);
   const [attachmentFeedback, setAttachmentFeedback] = useState({});
   const [downloadError, setDownloadError] = useState('');
@@ -108,28 +111,35 @@ const AgentRequests = () => {
   }));
 
   const decide = async (requestId, decision) => {
+    if (busyId) return false;
     try {
       setBusyId(requestId);
+      setBusyAction('decision');
       await decideAgentRequest(requestId, decision);
       console.info('[agent] request decision saved', { requestId, decision });
       await fetchRequests();
+      return true;
     } catch (requestError) {
       console.error('[agent] request decision failed', requestError);
       setError(requestError.response?.data?.message || 'Could not update this request. Try again.');
+      return false;
     } finally {
       setBusyId(null);
+      setBusyAction('');
     }
   };
 
   const confirmDecline = async () => {
     if (!declining) return;
-    await decide(declining.id, 'reject');
-    setDeclining(null);
+    const declined = await decide(declining.id, 'reject');
+    if (declined) setDeclining(null);
   };
 
   const changeStatus = async (requestId, status) => {
+    if (busyId) return;
     try {
       setBusyId(requestId);
+      setBusyAction('status');
       await updateAgentRequestStatus(requestId, status);
       console.info('[agent] request status saved', { requestId, status });
       await fetchRequests();
@@ -138,15 +148,17 @@ const AgentRequests = () => {
       setError(requestError.response?.data?.message || 'Could not update this request. Try again.');
     } finally {
       setBusyId(null);
+      setBusyAction('');
     }
   };
 
   const sendNote = async (id) => {
     const note = noteDrafts[id]?.trim();
-    if (!note) return;
+    if (!note || busyId) return false;
 
     try {
       setBusyId(id);
+      setBusyAction('note');
       await addAgentRequestNote(id, note);
       console.info('[agent] request note saved', { requestId: id });
       setNoteDrafts((current) => ({ ...current, [id]: '' }));
@@ -158,12 +170,13 @@ const AgentRequests = () => {
       return false;
     } finally {
       setBusyId(null);
+      setBusyAction('');
     }
   };
 
   const downloadDocument = async (documentPath) => {
     const filename = documentPath.split('/').pop();
-    if (!documentPath.startsWith('/uploads/')) return;
+    if (!documentPath.startsWith('/uploads/') || downloadingDocument) return;
     setDownloadingDocument(filename);
     setDownloadError('');
     try {
@@ -186,7 +199,7 @@ const AgentRequests = () => {
   const attachDocument = async (requestId, event) => {
     const input = event.currentTarget;
     const file = input.files?.[0];
-    if (!file) return;
+    if (!file || busyId) return;
 
     setAttachmentFeedback((current) => ({
       ...current,
@@ -194,6 +207,7 @@ const AgentRequests = () => {
     }));
     try {
       setBusyId(requestId);
+      setBusyAction('upload');
       setUploadingDocumentId(requestId);
       await uploadAgentRequestDocument(requestId, file);
       console.info('[agent] final document uploaded', { requestId, file: file.name });
@@ -216,6 +230,7 @@ const AgentRequests = () => {
       }));
     } finally {
       setBusyId(null);
+      setBusyAction('');
       setUploadingDocumentId(null);
       input.value = '';
     }
@@ -269,15 +284,16 @@ const AgentRequests = () => {
 
                   <span className="ca-row__actions">
                     {request.status === 'offered' ? (
-                      <button
-                        type="button"
+                      <Button
                         className="ca-row__yes"
+                        variant="unstyled"
+                        size="sm"
                         onClick={() => setSelectedRequest(request)}
                         disabled={busyId === request.id}
                       >
                         <Icon name="document" size={13} />
                         Review
-                      </button>
+                      </Button>
                     ) : (
                       <button
                         type="button"
@@ -314,7 +330,7 @@ const AgentRequests = () => {
                               className="ca-field__select"
                               value={request.status}
                               onChange={(event) => changeStatus(request.id, event.target.value)}
-                              disabled={busyId === request.id}
+                              disabled={Boolean(busyId)}
                             >
                               {AGENT_NEXT_STATUS.map((option) => (
                                 <option key={option.id} value={option.id}>
@@ -322,6 +338,11 @@ const AgentRequests = () => {
                                 </option>
                               ))}
                             </select>
+                            {busyId === request.id && busyAction === 'status' && (
+                              <span className="ca-areq__saving" role="status">
+                                <Spinner /> Saving status…
+                              </span>
+                            )}
                           </div>
 
                           <div className="ca-field ca-areq__control">
@@ -348,15 +369,17 @@ const AgentRequests = () => {
                         </div>
 
                         <div className="ca-areq__actions">
-                          <button
-                            type="button"
+                          <Button
                             className="ca-pill ca-pill--solid ca-areq__send"
+                            variant="unstyled"
+                            size="sm"
                             onClick={() => sendNote(request.id)}
-                            disabled={!noteDrafts[request.id]?.trim() || busyId === request.id}
+                            disabled={!noteDrafts[request.id]?.trim() || Boolean(busyId)}
+                            aria-busy={busyId === request.id && busyAction === 'note'}
                           >
-                            <Icon name="check" size={14} />
-                            {busyId === request.id && uploadingDocumentId !== request.id ? 'Saving…' : 'Send note'}
-                          </button>
+                            {busyId === request.id && busyAction === 'note' ? <Spinner data-icon="inline-start" /> : <Icon name="check" size={14} />}
+                            {busyId === request.id && busyAction === 'note' ? 'Sending…' : 'Send note'}
+                          </Button>
                         </div>
                       </section>
 
@@ -380,24 +403,29 @@ const AgentRequests = () => {
                           )}
                         </div>
 
-                        <label
+                        <Button
+                          asChild
+                          variant="unstyled"
                           className="ca-pill ca-pill--outline ca-areq__attach"
-                          aria-disabled={busyId === request.id}
+                          aria-disabled={Boolean(busyId)}
+                          aria-busy={uploadingDocumentId === request.id}
                         >
-                          <Icon name="document" size={15} />
-                          {uploadingDocumentId === request.id
-                            ? 'Uploading…'
-                            : request.completedDocument
-                              ? 'Replace final document'
-                              : 'Attach final document'}
-                          <input
-                            className="ca-areq__file-input ca-sr-only"
-                            type="file"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={(event) => attachDocument(request.id, event)}
-                            disabled={busyId === request.id}
-                          />
-                        </label>
+                          <label>
+                            {uploadingDocumentId === request.id ? <Spinner /> : <Icon name="document" size={15} />}
+                            {uploadingDocumentId === request.id
+                              ? 'Uploading…'
+                              : request.completedDocument
+                                ? 'Replace final document'
+                                : 'Attach final document'}
+                            <input
+                              className="ca-areq__file-input ca-sr-only"
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={(event) => attachDocument(request.id, event)}
+                              disabled={Boolean(busyId)}
+                            />
+                          </label>
+                        </Button>
                       </section>
                     </div>
                   )}
@@ -419,7 +447,7 @@ const AgentRequests = () => {
                 <h2 id="request-dialog-title">{getServiceById(selectedRequest.serviceId)?.name}</h2>
                 <span className="ca-areq-modal__reference" data-numeric>{selectedRequest.reference}</span>
               </div>
-              <button type="button" className="ca-usermenu__close" onClick={() => setSelectedRequest(null)} aria-label="Close request details">
+              <button type="button" className="ca-usermenu__close" onClick={() => setSelectedRequest(null)} aria-label="Close request details" disabled={busyId === selectedRequest.id}>
                 <Icon name="close" size={17} />
               </button>
             </div>
@@ -445,9 +473,10 @@ const AgentRequests = () => {
                       return (
                         <li key={document}>
                           {document.startsWith('/uploads/') ? (
-                            <button type="button" className="ca-areq-modal__doc-link" onClick={() => downloadDocument(document)} disabled={downloadingDocument === document.split('/').pop()}>
+                            <Button type="button" variant="unstyled" className="ca-areq-modal__doc-link" onClick={() => downloadDocument(document)} disabled={Boolean(downloadingDocument)} aria-busy={downloadingDocument === document.split('/').pop()}>
+                              {downloadingDocument === document.split('/').pop() && <Spinner data-icon="inline-start" />}
                               {downloadingDocument === document.split('/').pop() ? 'Downloading…' : `Download ${filename}`}
-                            </button>
+                            </Button>
                           ) : filename}
                         </li>
                       );
@@ -483,18 +512,20 @@ const AgentRequests = () => {
                     [selectedRequest.id]: event.target.value,
                   }))}
                 />
-                <button
-                  type="button"
+                <Button
                   className="ca-row__no"
+                  variant="unstyled"
+                  size="sm"
                   onClick={async () => {
                     const sent = await sendNote(selectedRequest.id);
                     if (sent) setSelectedRequest(null);
                   }}
-                  disabled={!noteDrafts[selectedRequest.id]?.trim() || busyId === selectedRequest.id}
+                  disabled={!noteDrafts[selectedRequest.id]?.trim() || Boolean(busyId)}
+                  aria-busy={busyId === selectedRequest.id && busyAction === 'note'}
                 >
-                  <Icon name="check" size={13} />
-                  {busyId === selectedRequest.id ? 'Sending...' : 'Send note'}
-                </button>
+                  {busyId === selectedRequest.id && busyAction === 'note' ? <Spinner data-icon="inline-start" /> : <Icon name="check" size={13} />}
+                  {busyId === selectedRequest.id && busyAction === 'note' ? 'Sending…' : 'Send note'}
+                </Button>
                 <span className="ca-field__hint">
                   The request will show as waiting for the citizen.
                 </span>
@@ -502,13 +533,24 @@ const AgentRequests = () => {
             </div>
 
             <div className="ca-areq-modal__actions">
-              <button type="button" className="ca-row__no" onClick={() => { setDeclining(selectedRequest); setSelectedRequest(null); }}>
+              <Button type="button" variant="unstyled" size="sm" className="ca-row__no" onClick={() => { setDeclining(selectedRequest); setSelectedRequest(null); }} disabled={Boolean(busyId)}>
                 Decline request
-              </button>
-              <button type="button" className="ca-row__yes" onClick={() => { decide(selectedRequest.id, 'accept'); setSelectedRequest(null); }}>
-                <Icon name="check" size={13} />
-                Accept request
-              </button>
+              </Button>
+              <Button
+                type="button"
+                variant="unstyled"
+                size="sm"
+                className="ca-row__yes"
+                onClick={async () => {
+                  const accepted = await decide(selectedRequest.id, 'accept');
+                  if (accepted) setSelectedRequest(null);
+                }}
+                disabled={Boolean(busyId)}
+                aria-busy={busyId === selectedRequest.id && busyAction === 'decision'}
+              >
+                {busyId === selectedRequest.id && busyAction === 'decision' ? <Spinner data-icon="inline-start" /> : <Icon name="check" size={13} />}
+                {busyId === selectedRequest.id && busyAction === 'decision' ? 'Accepting…' : 'Accept request'}
+              </Button>
             </div>
           </div>
         </div>
@@ -521,7 +563,9 @@ const AgentRequests = () => {
           title={`Decline ${declining.reference}?`}
           text="This request will go back to the admin to find another agent. The citizen may wait longer."
           confirmLabel="Decline it"
+          loadingLabel="Declining…"
           onConfirm={confirmDecline}
+          isLoading={busyId === declining.id && busyAction === 'decision'}
           onCancel={() => setDeclining(null)}
         />
       )}

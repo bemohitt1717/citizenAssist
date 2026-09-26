@@ -22,6 +22,7 @@ const AgentProfile = () => {
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({ name: '', district: '', experience: '', services: [] });
   const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -71,7 +72,9 @@ const AgentProfile = () => {
   };
 
   const save = async () => {
+    if (isSaving) return;
     try {
+      setIsSaving(true);
       setError('');
       await updateAgentProfile(form);
       setProfile((current) => ({ ...current, ...form }));
@@ -84,6 +87,8 @@ const AgentProfile = () => {
       console.info('[agent] profile saved');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Could not save your profile. Try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -166,7 +171,7 @@ const AgentProfile = () => {
             </span>
           </div>
 
-          <SaveRow onSave={save} isSaved={isSaved} hint="Applies to new requests." />
+          <SaveRow onSave={save} isSaved={isSaved} isSaving={isSaving} hint="Applies to new requests." />
         </div>
       </Panel>
 

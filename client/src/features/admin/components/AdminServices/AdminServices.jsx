@@ -17,6 +17,7 @@ const AdminServices = () => {
   const [services, setServices] = useState([]);
   const [drafts, setDrafts] = useState({});
   const [savedId, setSavedId] = useState(null);
+  const [savingId, setSavingId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -59,6 +60,7 @@ const AdminServices = () => {
   };
 
   const save = async (serviceId) => {
+    if (savingId) return;
     const draft = drafts[serviceId];
 
     if (!draft.charge || !draft.timeline || !draft.summary) {
@@ -67,6 +69,7 @@ const AdminServices = () => {
     }
 
     try {
+      setSavingId(serviceId);
       console.log('💾 [ADMIN-SERVICES] Updating service:', serviceId);
       await updateService(serviceId, {
         charge: draft.charge.trim(),
@@ -82,6 +85,8 @@ const AdminServices = () => {
     } catch (error) {
       console.error('❌ [ADMIN-SERVICES] Update failed:', error);
       alert('Could not save these changes. Try again.');
+    } finally {
+      setSavingId(null);
     }
   };
 
@@ -148,6 +153,7 @@ const AdminServices = () => {
               <SaveRow
                 onSave={() => save(service.id)}
                 isSaved={savedId === service.id}
+                isSaving={savingId === service.id}
                 hint="New requests will use these details."
               />
             </div>

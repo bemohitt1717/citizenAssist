@@ -1,5 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import Icon from '../../../../components/ui/Icon/Icon';
+import { Button } from '../../../../components/ui/button';
+import { Spinner } from '../../../../components/ui/spinner';
 import DocumentSchematic from '../../../../components/ui/DocumentSchematic/DocumentSchematic';
 import { DOCUMENTS, UPLOAD_RULES } from '../../../../constants/documents';
 import useAutoHeight from '../../../../hooks/useAutoHeight';
@@ -612,13 +614,16 @@ const RequestFlow = ({ service, onClose }) => {
               </p>
             )}
 
-            <button
+            <Button
               type="button"
               className="ca-pill ca-pill--solid ca-rf__next"
+              variant="unstyled"
               onClick={goNext}
               aria-disabled={!canAdvance() || isSubmitting}
               disabled={isSubmitting || (step === 'review' && !consent)}
+              aria-busy={isSubmitting}
             >
+              {isSubmitting && <Spinner data-icon="inline-start" />}
               {isSubmitting
                 ? uploadProgress
                   ? `Uploading ${uploadProgress.current} of ${uploadProgress.total}…`
@@ -627,7 +632,7 @@ const RequestFlow = ({ service, onClose }) => {
               <span className="ca-pill__disc">
                 <Icon name="arrowRight" size={15} />
               </span>
-            </button>
+            </Button>
           </footer>
         )}
 

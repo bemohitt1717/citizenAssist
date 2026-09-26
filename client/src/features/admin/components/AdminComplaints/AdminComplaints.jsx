@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import Icon from '../../../../components/ui/Icon/Icon';
+import { Button } from '../../../../components/ui/button';
+import { Spinner } from '../../../../components/ui/spinner';
 import { Empty, Panel, Tabs } from '../../../../components/ui/DataKit/DataKit';
 import { getComplaints, resolveComplaint } from '../../adminApi';
 import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
@@ -17,6 +19,7 @@ const AdminComplaints = () => {
   const [drafts, setDrafts] = useState({});
   const [complaints, setComplaints] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [busyComplaintId, setBusyComplaintId] = useState(null);
 
   useEffect(() => {
     fetchComplaints();
@@ -43,6 +46,7 @@ const AdminComplaints = () => {
   }));
 
   const handleResolve = async (id) => {
+    if (busyComplaintId) return;
     const resolution = drafts[id];
 
     if (!resolution || resolution.trim() === '') {
@@ -51,6 +55,7 @@ const AdminComplaints = () => {
     }
 
     try {
+      setBusyComplaintId(id);
       console.log('✅ [ADMIN-COMPLAINTS] Resolving complaint:', id);
       await resolveComplaint(id, resolution.trim());
       console.log('✅ [ADMIN-COMPLAINTS] Complaint marked as resolved');
@@ -63,6 +68,8 @@ const AdminComplaints = () => {
     } catch (error) {
       console.error('❌ [ADMIN-COMPLAINTS] Failed to resolve:', error);
       alert('Could not resolve the complaint. Try again.');
+    } finally {
+      setBusyComplaintId(null);
     }
   };
 
@@ -136,16 +143,19 @@ const AdminComplaints = () => {
                   </div>
 
                   <div className="ca-form__actions">
-                    <button
+                    <Button
                       type="button"
                       className="ca-row__yes"
+                      variant="unstyled"
+                      size="sm"
                       onClick={() => handleResolve(complaint.id)}
                       aria-disabled={!drafts[complaint.id]}
-                      disabled={!drafts[complaint.id]}
+                      disabled={!drafts[complaint.id] || Boolean(busyComplaintId)}
+                      aria-busy={busyComplaintId === complaint.id}
                     >
-                      <Icon name="check" size={13} />
-                      Mark resolved
-                    </button>
+                      {busyComplaintId === complaint.id ? <Spinner data-icon="inline-start" /> : <Icon name="check" size={13} />}
+                      {busyComplaintId === complaint.id ? 'Saving…' : 'Mark resolved'}
+                    </Button>
 
                     <span className="ca-field__hint">
                       Add a note before marking this resolved.

@@ -1,0 +1,27 @@
+@keyframes ca-spinner-rotate {
+  to { transform: rotate(360deg); }
+}
+
+.ca-spinner {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  animation: ca-spinner-rotate 0.75s linear infinite;
+}
+
+.ca-spinner__track,
+.ca-spinner__arc {
+  stroke: currentColor;
+  stroke-width: 2.5;
+}
+
+.ca-spinner__track { opacity: 0.25; }
+
+.ca-spinner__arc {
+  stroke-linecap: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-spinner { animation-duration: 1.5s; }
+}

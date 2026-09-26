@@ -2,6 +2,8 @@ import { useState, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import Icon from "../../../../components/ui/Icon/Icon";
+import { Button } from "../../../../components/ui/button";
+import { Spinner } from "../../../../components/ui/spinner";
 import GoogleMark from "../../../../components/ui/GoogleMark/GoogleMark";
 import PinInput from "../PinInput/PinInput";
 import { googleLogin, startAuth, signIn, signUp } from "../../authApi";
@@ -164,7 +166,6 @@ const LoginForm = ({ role, onChangeRole }) => {
 
   /** Store the backend session and use its role for navigation. */
   const finish = (token, loggedInUser) => {
-    setIsBusy(false);
     login(token, loggedInUser);
     const returnTo = location.state?.returnTo;
     const safeReturnTo = typeof returnTo === "string" && returnTo.startsWith("/") && !returnTo.startsWith("//");
@@ -224,7 +225,9 @@ const LoginForm = ({ role, onChangeRole }) => {
 
   const submitEnter = (event) => {
     event.preventDefault();
-    if (!isPinComplete) return;
+    if (!isPinComplete || isBusy) return;
+
+    setIsBusy(true);
 
     const authenticate = async () => {
       try {
@@ -564,16 +567,19 @@ const LoginForm = ({ role, onChangeRole }) => {
 
             <Note note={enterNote} id="ca-enter-note" />
 
-            <button
+            <Button
               type="submit"
               className="ca-pill ca-pill--solid ca-login__submit"
+              variant="unstyled"
               disabled={isBusy || !isPinComplete}
+              aria-busy={isBusy}
             >
+              {isBusy ? <Spinner data-icon="inline-start" /> : null}
               {isBusy ? "Signing in…" : "Sign in"}
               <span className="ca-pill__disc">
                 <Icon name="arrowRight" size={15} />
               </span>
-            </button>
+            </Button>
 
             <button
               type="button"

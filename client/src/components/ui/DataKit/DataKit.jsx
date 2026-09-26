@@ -1,4 +1,6 @@
 import Icon from '../Icon/Icon';
+import { Button } from '../button';
+import { Spinner } from '../spinner';
 import './DataKit.css';
 
 /**
@@ -143,14 +145,22 @@ export const Field = ({
 );
 
 /** Save row with a transient confirmation. */
-export const SaveRow = ({ onSave, isSaved, label = 'Save changes', hint }) => (
+export const SaveRow = ({ onSave, isSaved, isSaving = false, label = 'Save changes', hint }) => (
   <div className="ca-form__actions">
-    <button type="button" className="ca-pill ca-pill--solid ca-form__save" onClick={onSave}>
-      {label}
+    <Button
+      type="button"
+      variant="unstyled"
+      className="ca-pill ca-pill--solid ca-form__save"
+      onClick={onSave}
+      disabled={isSaving}
+      aria-busy={isSaving}
+    >
+      {isSaving && <Spinner data-icon="inline-start" />}
+      {isSaving ? 'Saving…' : label}
       <span className="ca-pill__disc">
-        <Icon name="check" size={15} />
+        {isSaved ? <Icon name="check" size={15} /> : <Icon name="arrowRight" size={15} />}
       </span>
-    </button>
+    </Button>
 
     {isSaved && (
       <span className="ca-form__saved">

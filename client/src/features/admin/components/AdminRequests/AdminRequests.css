@@ -15,6 +15,14 @@
   cursor: pointer;
 }
 
+.ca-admin__action-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-ink-muted);
+  font-size: 0.8125rem;
+}
+
 .ca-admin__document-button[aria-disabled='true'] {
   opacity: 0.55;
   pointer-events: none;

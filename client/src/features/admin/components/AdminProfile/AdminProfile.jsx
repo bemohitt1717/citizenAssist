@@ -12,6 +12,7 @@ const AdminProfile = () => {
   const [profile, setProfile] = useState(null);
   const [counts, setCounts] = useState(null);
   const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { user, setUser } = useAuth(); // Get auth context to update navbar
 
@@ -39,12 +40,14 @@ const AdminProfile = () => {
   };
 
   const save = async () => {
+    if (isSaving) return;
     if (!name || name.trim() === '') {
       alert('Name cannot be empty');
       return;
     }
 
     try {
+      setIsSaving(true);
       console.log('💾 [ADMIN-PROFILE] Updating name:', name);
       await updateAdminProfile(name.trim());
       setIsSaved(true);
@@ -63,6 +66,8 @@ const AdminProfile = () => {
     } catch (error) {
       console.error('❌ [ADMIN-PROFILE] Update failed:', error);
       alert('Could not save your profile. Try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -106,7 +111,7 @@ const AdminProfile = () => {
             />
           </div>
 
-          <SaveRow onSave={save} isSaved={isSaved} />
+          <SaveRow onSave={save} isSaved={isSaved} isSaving={isSaving} />
         </div>
       </Panel>
 

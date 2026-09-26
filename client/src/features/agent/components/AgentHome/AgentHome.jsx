@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../../components/ui/Icon/Icon';
+import { Button } from '../../../../components/ui/button';
+import { Spinner } from '../../../../components/ui/spinner';
 import { Panel, Panels, Readiness, Stat, Stats } from '../../../../components/ui/DataKit/DataKit';
 import { getServiceById } from '../../../../constants/services';
 import {
@@ -24,6 +26,7 @@ const AgentHome = () => {
   const [earnings, setEarnings] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [busyRequestId, setBusyRequestId] = useState(null);
 
   const fetchDashboard = useCallback(async (isCurrent = () => true) => {
     try {
@@ -55,13 +58,18 @@ const AgentHome = () => {
   }, [fetchDashboard]);
 
   const decide = async (requestId, decision) => {
+    if (busyRequestId) return;
     try {
+      setBusyRequestId(requestId);
+      setError('');
       await decideAgentRequest(requestId, decision);
       console.info('[agent] dashboard decision saved', { requestId, decision });
       await fetchDashboard();
     } catch (requestError) {
       console.error('[agent] dashboard decision failed', requestError);
       setError(requestError.response?.data?.message || 'Could not update this request. Try again.');
+    } finally {
+      setBusyRequestId(null);
     }
   };
 
@@ -87,6 +95,8 @@ const AgentHome = () => {
         />
         <Stat icon="check" label="Completed" value={counts.completed} note="All time" />
       </Stats>
+
+      {error && <p role="alert" style={{ color: 'var(--color-error)' }}>{error}</p>}
 
       <Panels split>
         <Panel
@@ -116,13 +126,28 @@ const AgentHome = () => {
                 </span>
 
                 <span className="ca-row__actions">
-                  <button type="button" className="ca-row__yes" onClick={() => decide(request.id, 'accept')}>
-                    <Icon name="check" size={13} />
-                    Accept
-                  </button>
-                  <button type="button" className="ca-row__no" onClick={() => decide(request.id, 'reject')}>
-                    Decline
-                  </button>
+                  <Button
+                    className="ca-row__yes"
+                    variant="unstyled"
+                    size="sm"
+                    onClick={() => decide(request.id, 'accept')}
+                    disabled={Boolean(busyRequestId)}
+                    aria-busy={busyRequestId === request.id}
+                  >
+                    {busyRequestId === request.id ? <Spinner data-icon="inline-start" /> : <Icon name="check" size={13} />}
+                    {busyRequestId === request.id ? 'Accepting…' : 'Accept'}
+                  </Button>
+                  <Button
+                    className="ca-row__no"
+                    variant="unstyled"
+                    size="sm"
+                    onClick={() => decide(request.id, 'reject')}
+                    disabled={Boolean(busyRequestId)}
+                    aria-busy={busyRequestId === request.id}
+                  >
+                    {busyRequestId === request.id && <Spinner data-icon="inline-start" />}
+                    {busyRequestId === request.id ? 'Declining…' : 'Decline'}
+                  </Button>
                 </span>
               </li>
             ))}

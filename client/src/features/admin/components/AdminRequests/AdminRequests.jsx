@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import Icon from '../../../../components/ui/Icon/Icon';
+import { Button } from '../../../../components/ui/button';
+import { Spinner } from '../../../../components/ui/spinner';
 import { Empty, Panel, Tabs } from '../../../../components/ui/DataKit/DataKit';
 import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 import { getServiceById } from '../../../../constants/services';
@@ -41,6 +42,7 @@ const AdminRequests = () => {
   const [agents, setAgents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [uploadingRequestId, setUploadingRequestId] = useState(null);
+  const [assigningRequestId, setAssigningRequestId] = useState(null);
   const [uploadFeedback, setUploadFeedback] = useState(null);
 
   useEffect(() => {
@@ -66,9 +68,10 @@ const AdminRequests = () => {
   };
 
   const handleAssign = async (requestId, agentId) => {
-    if (!agentId) return; // "Not assigned" selected
+    if (!agentId || assigningRequestId || uploadingRequestId) return; // "Not assigned" selected
 
     try {
+      setAssigningRequestId(requestId);
       console.log('🔗 [ADMIN-REQUESTS] Assigning agent:', { requestId, agentId });
       await assignAgent(requestId, agentId);
       console.log('✅ [ADMIN-REQUESTS] Agent assigned successfully');
@@ -76,6 +79,8 @@ const AdminRequests = () => {
       await fetchData();
     } catch (error) {
       console.error('❌ [ADMIN-REQUESTS] Assignment failed:', error);
+    } finally {
+      setAssigningRequestId(null);
     }
   };
 
@@ -83,6 +88,7 @@ const AdminRequests = () => {
     const input = event.currentTarget;
     const file = input.files?.[0];
     if (!file) return;
+    if (uploadingRequestId || assigningRequestId) return;
 
     setUploadingRequestId(requestId);
     setUploadFeedback(null);
@@ -154,6 +160,7 @@ const AdminRequests = () => {
                         className="ca-field__select"
                         defaultValue=""
                         onChange={(e) => handleAssign(request.id, e.target.value)}
+                        disabled={Boolean(assigningRequestId) || Boolean(uploadingRequestId)}
                       >
                         <option value="">Choose an agent…</option>
                         {agents.map((agent) => (
@@ -162,6 +169,11 @@ const AdminRequests = () => {
                           </option>
                         ))}
                       </select>
+                      {assigningRequestId === request.id && (
+                        <span className="ca-admin__action-loading" role="status">
+                          <Spinner /> Assigning…
+                        </span>
+                      )}
                     </>
                   )}
 
@@ -179,20 +191,25 @@ const AdminRequests = () => {
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
                         aria-label={`Attach final document for ${request.reference}`}
-                        disabled={uploadingRequestId === request.id}
+                        disabled={Boolean(uploadingRequestId) || Boolean(assigningRequestId)}
                         onChange={(event) => handleAttachDocument(request.id, event)}
                       />
-                      <label
+                      <Button
+                        asChild
+                        variant="unstyled"
                         className="ca-pill ca-pill--outline ca-admin__document-button"
-                        htmlFor={`final-document-${request.id}`}
-                        aria-disabled={uploadingRequestId === request.id}
+                        aria-disabled={Boolean(uploadingRequestId) || Boolean(assigningRequestId)}
+                        aria-busy={uploadingRequestId === request.id}
                       >
-                        {uploadingRequestId === request.id
-                          ? 'Attaching…'
-                          : request.hasCompletedDocument
-                            ? 'Replace final document'
-                            : 'Attach final document'}
-                      </label>
+                        <label htmlFor={`final-document-${request.id}`}>
+                          {uploadingRequestId === request.id && <Spinner />}
+                          {uploadingRequestId === request.id
+                            ? 'Attaching…'
+                            : request.hasCompletedDocument
+                              ? 'Replace final document'
+                              : 'Attach final document'}
+                        </label>
+                      </Button>
                       {request.hasCompletedDocument && (
                         <span className="ca-admin__document-ready">Citizen can download this from their request page</span>
                       )}
