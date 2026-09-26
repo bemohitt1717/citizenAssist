@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Field, Panel, SaveRow } from '../../../../components/ui/DataKit/DataKit';
 import { DOCUMENTS } from '../../../../constants/documents';
 import { getAdminServices, updateService } from '../../../services/servicesApi';
+import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 
 /**
  * Service management with real data.
@@ -61,7 +62,7 @@ const AdminServices = () => {
     const draft = drafts[serviceId];
 
     if (!draft.charge || !draft.timeline || !draft.summary) {
-      alert('All fields are required.');
+      alert('Fill in all three fields.');
       return;
     }
 
@@ -80,16 +81,14 @@ const AdminServices = () => {
       await fetchServices();
     } catch (error) {
       console.error('❌ [ADMIN-SERVICES] Update failed:', error);
-      alert('Failed to update service. Please try again.');
+      alert('Could not save these changes. Try again.');
     }
   };
 
-  if (isLoading) {
-    return <div style={{ padding: '2rem' }}>Loading services...</div>;
-  }
+  if (isLoading) return <SectionLoading variant="services" />;
 
   if (services.length === 0) {
-    return <div style={{ padding: '2rem' }}>No services found.</div>;
+    return <div style={{ padding: '2rem' }}>No services to show.</div>;
   }
 
   return (
@@ -107,10 +106,10 @@ const AdminServices = () => {
               <div className="ca-form__row">
                 <Field
                   id={`charge-${service.id}`}
-                  label="Assistance charge"
+                  label="Agent fee"
                   value={draft.charge || ''}
                   onChange={setField(service.id, 'charge')}
-                  hint="Shown as a range. The agent confirms the exact figure."
+                  hint="Citizens see a range. The agent confirms the final fee."
                 />
 
                 <Field
@@ -118,13 +117,13 @@ const AdminServices = () => {
                   label="Usual timeline"
                   value={draft.timeline || ''}
                   onChange={setField(service.id, 'timeline')}
-                  hint="What a citizen should expect, not a promise."
+                  hint="Usual time. The actual wait may be different."
                 />
               </div>
 
               <Field
                 id={`summary-${service.id}`}
-                label="What a citizen reads"
+                label="Service description"
                 as="textarea"
                 value={draft.summary || ''}
                 onChange={setField(service.id, 'summary')}
@@ -132,7 +131,7 @@ const AdminServices = () => {
 
               <div className="ca-field">
                 <span className="ca-field__label">
-                  Required documents · {documents.length}
+                  Documents needed · {documents.length}
                 </span>
                 <div className="ca-chips">
                   {documents.map((name, idx) => (
@@ -142,15 +141,14 @@ const AdminServices = () => {
                   ))}
                 </div>
                 <span className="ca-field__hint">
-                  Changing this list affects every open request for this service, so it is not edited
-                  from here.
+                  This list cannot be changed here.
                 </span>
               </div>
 
               <SaveRow
                 onSave={() => save(service.id)}
                 isSaved={savedId === service.id}
-                hint="Applies to new requests immediately."
+                hint="New requests will use these details."
               />
             </div>
           </Panel>

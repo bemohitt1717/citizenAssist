@@ -4,6 +4,7 @@ import Icon from '../../../../components/ui/Icon/Icon';
 import { Distribution, Panel, Panels, Stat, Stats } from '../../../../components/ui/DataKit/DataKit';
 import { getServiceById } from '../../../../constants/services';
 import { getAdminDashboard, getAgents, updateAgentStatus } from '../../adminApi';
+import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 
 /**
  * Admin dashboard landing.
@@ -51,18 +52,16 @@ const AdminHome = () => {
     }
   };
 
-  if (isLoading) {
-    return <div style={{ padding: '2rem' }}>Loading dashboard...</div>;
-  }
+  if (isLoading) return <SectionLoading variant="dashboard" />;
 
   if (!counts) {
-    return <div style={{ padding: '2rem' }}>Failed to load dashboard data.</div>;
+    return <div style={{ padding: '2rem' }}>Could not load the dashboard. Try again.</div>;
   }
 
   return (
     <>
       {issuedPin && (
-        <Panel title="Agent verified">
+        <Panel title="Agent approved">
           <p style={{ padding: '1rem' }}>
             Share this login PIN with <strong data-numeric>+91 {issuedPin.mobile}</strong>:{' '}
             <strong data-numeric>{issuedPin.pin}</strong>
@@ -72,16 +71,16 @@ const AdminHome = () => {
       <Stats>
         <Stat
           icon="shieldCheck"
-          label="Agents to verify"
+          label="Agents to review"
           value={counts.pendingAgents}
-          note="Blocking their first file"
+          note="Waiting for review"
           attention={counts.pendingAgents > 0}
         />
         <Stat
           icon="phone"
           label="Open complaints"
           value={counts.openComplaints}
-          note="Awaiting resolution"
+          note="Need a reply"
           attention={counts.openComplaints > 0}
         />
         <Stat
@@ -100,17 +99,17 @@ const AdminHome = () => {
 
       <Panels split>
         <Panel
-          title={`Waiting for verification · ${pendingAgents.length}`}
+          title={`Agents to review · ${pendingAgents.length}`}
           action={
             <Link className="ca-panel__more" to="/admin/agents">
-              All agents
+              View all
               <Icon name="arrowRight" size={14} />
             </Link>
           }
         >
           {pendingAgents.length === 0 ? (
             <p style={{ padding: '1rem', color: 'var(--color-ink-muted)' }}>
-              No pending agents at the moment.
+              No agents to review.
             </p>
           ) : (
             <ul className="ca-rows">
@@ -134,7 +133,7 @@ const AdminHome = () => {
                     onClick={() => decide(agent.id, 'active')}
                   >
                     <Icon name="check" size={13} />
-                    Verify
+                    Approve
                   </button>
                   <button
                     type="button"

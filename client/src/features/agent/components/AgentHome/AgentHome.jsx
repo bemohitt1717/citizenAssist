@@ -9,6 +9,7 @@ import {
   getAgentEarnings,
   getAgentRequests,
 } from '../../agentApi';
+import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 
 /**
  * Agent dashboard landing.
@@ -37,7 +38,7 @@ const AgentHome = () => {
       setEarnings(earningsResponse.data);
     } catch (requestError) {
       if (!isCurrent()) return;
-      setError(requestError.response?.data?.message || 'Could not load agent dashboard.');
+      setError(requestError.response?.data?.message || 'Could not load your dashboard. Try again.');
     } finally {
       if (isCurrent()) setIsLoading(false);
     }
@@ -60,11 +61,11 @@ const AgentHome = () => {
       await fetchDashboard();
     } catch (requestError) {
       console.error('[agent] dashboard decision failed', requestError);
-      setError(requestError.response?.data?.message || 'Could not update this request.');
+      setError(requestError.response?.data?.message || 'Could not update this request. Try again.');
     }
   };
 
-  if (isLoading) return <p>Loading dashboard...</p>;
+  if (isLoading) return <SectionLoading variant="dashboard" />;
   if (!counts || !earnings) return <p role="alert">{error || 'Dashboard unavailable.'}</p>;
 
   return (
@@ -74,15 +75,15 @@ const AgentHome = () => {
           icon="document"
           label="Awaiting your decision"
           value={counts.pending}
-          note="Accept or decline"
+          note="Needs your reply"
           attention={counts.pending > 0}
         />
-        <Stat icon="clock" label="In progress" value={counts.active} note="Accepted by you" />
+        <Stat icon="clock" label="In progress" value={counts.active} />
         <Stat
           icon="phone"
           label="Waiting on citizen"
           value={counts.action}
-          note="You asked for something"
+          note="Waiting for a reply"
         />
         <Stat icon="check" label="Completed" value={counts.completed} note="All time" />
       </Stats>
@@ -92,7 +93,7 @@ const AgentHome = () => {
           title="Assigned to you"
           action={
             <Link className="ca-panel__more" to="/agent/requests">
-              All requests
+              View all
               <Icon name="arrowRight" size={14} />
             </Link>
           }
@@ -132,7 +133,7 @@ const AgentHome = () => {
           title="Earnings"
           action={
             <Link className="ca-panel__more" to="/agent/earnings">
-              History
+              View history
               <Icon name="arrowRight" size={14} />
             </Link>
           }

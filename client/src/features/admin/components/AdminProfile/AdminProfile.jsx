@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Field, Panel, Panels, SaveRow } from '../../../../components/ui/DataKit/DataKit';
 import { getAdminProfile, updateAdminProfile, getAdminDashboard } from '../../adminApi';
 import { useAuth } from '../../../../context/authContext';
+import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 
 /**
  * Administrator profile with real data.
@@ -61,16 +62,14 @@ const AdminProfile = () => {
       setTimeout(() => setIsSaved(false), 2000);
     } catch (error) {
       console.error('❌ [ADMIN-PROFILE] Update failed:', error);
-      alert('Failed to update profile. Please try again.');
+      alert('Could not save your profile. Try again.');
     }
   };
 
-  if (isLoading) {
-    return <div style={{ padding: '2rem' }}>Loading profile...</div>;
-  }
+  if (isLoading) return <SectionLoading variant="profile" />;
 
   if (!profile) {
-    return <div style={{ padding: '2rem' }}>Failed to load profile.</div>;
+    return <div style={{ padding: '2rem' }}>Could not load your profile. Try again.</div>;
   }
 
   return (
@@ -85,7 +84,7 @@ const AdminProfile = () => {
               setName(event.target.value);
               setIsSaved(false);
             }}
-            hint="Shown on complaint resolutions and in the activity record."
+            hint="Citizens see this name on complaint replies."
           />
 
           <div className="ca-form__row">
@@ -94,7 +93,7 @@ const AdminProfile = () => {
               label="Mobile"
               value={profile.phone}
               disabled
-              hint="A sign-in identity. Changed by another administrator."
+              hint="Ask another admin to change this."
               data-numeric
             />
 
@@ -103,7 +102,7 @@ const AdminProfile = () => {
               label="Google account"
               value={profile.email || 'Not set'}
               disabled
-              hint="A sign-in identity. Changed by another administrator."
+              hint="Ask another admin to change this."
             />
           </div>
 
@@ -111,12 +110,12 @@ const AdminProfile = () => {
         </div>
       </Panel>
 
-      <Panel title="Access">
+      <Panel title="Account access">
         <ul className="ca-rows">
           <li className="ca-row">
             <span className="ca-row__body">
               <span className="ca-row__title">Role</span>
-              <span className="ca-row__meta">Full platform access</span>
+              <span className="ca-row__meta">Full access</span>
             </span>
             <span className="ca-row__actions">
               <span className="ca-status ca-status--done">
@@ -128,7 +127,7 @@ const AdminProfile = () => {
 
           <li className="ca-row">
             <span className="ca-row__body">
-              <span className="ca-row__title">Administrator since</span>
+              <span className="ca-row__title">Admin since</span>
               <span className="ca-row__meta" data-numeric>
                 {profile.since}
               </span>
@@ -137,7 +136,7 @@ const AdminProfile = () => {
 
           <li className="ca-row">
             <span className="ca-row__body">
-              <span className="ca-row__title">Agents you have verified</span>
+          <span className="ca-row__title">Agents you approved</span>
               <span className="ca-row__meta" data-numeric>
                 {counts?.agents || 0}
               </span>
@@ -146,7 +145,7 @@ const AdminProfile = () => {
         </ul>
 
         <p className="ca-field__hint">
-          New administrator accounts are created by an existing administrator, never by signing in.
+          Ask an existing admin to create another admin account.
         </p>
       </Panel>
     </Panels>

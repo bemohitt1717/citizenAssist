@@ -17,24 +17,24 @@
  */
 
 export const AGENT_SECTIONS = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'track', blurb: 'What needs your attention today.' },
+  { id: 'dashboard', label: 'Dashboard', icon: 'track', blurb: 'See what needs your attention.' },
   {
     id: 'requests',
     label: 'Requests',
     icon: 'document',
-    blurb: 'Everything assigned to you, by status.',
+    blurb: 'View and update your requests.',
   },
   {
     id: 'earnings',
     label: 'Earnings',
     icon: 'income',
-    blurb: 'What you have earned, and from which requests.',
+    blurb: 'See amounts from completed requests.',
   },
   {
     id: 'profile',
     label: 'Profile',
     icon: 'shieldCheck',
-    blurb: 'Your details and verification status.',
+    blurb: 'Change your details and see your status.',
   },
 ];
 
@@ -216,8 +216,8 @@ export const AGENT_PAYOUTS = [
 
 /** Statuses an agent can move a request to, in order. */
 export const AGENT_NEXT_STATUS = [
-  { id: 'review', label: 'Documents under review' },
-  { id: 'processing', label: 'With the government office' },
-  { id: 'action', label: 'Waiting on the citizen' },
+  { id: 'review', label: 'Checking documents' },
+  { id: 'processing', label: 'At the office' },
+  { id: 'action', label: 'Waiting for citizen' },
   { id: 'completed', label: 'Completed' },
 ];

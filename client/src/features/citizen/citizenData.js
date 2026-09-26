@@ -7,18 +7,18 @@ export const CITIZEN_SECTIONS = [
     id: 'dashboard',
     label: 'Dashboard',
     icon: 'shieldCheck',
-    blurb: 'Your overview',
+    blurb: 'See your requests at a glance.',
   },
   {
     id: 'track',
-    label: 'Track Request',
+    label: 'Track a request',
     icon: 'track',
-    blurb: 'Check request status',
+    blurb: 'See the latest updates.',
   },
   {
     id: 'profile',
     label: 'Profile',
     icon: 'phoneDevice',
-    blurb: 'Your account settings',
+    blurb: 'Update your account details.',
   },
 ];

@@ -5,6 +5,7 @@ import { EXPERIENCE_BANDS } from '../../../../constants/agent';
 import { SERVICES } from '../../../../constants/services';
 import { getAgentProfile, updateAgentProfile } from '../../agentApi';
 import { useAuth } from '../../../../context/authContext';
+import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 
 /**
  * Agent profile.
@@ -41,7 +42,7 @@ const AgentProfile = () => {
         });
         console.info('[agent] profile loaded', loadedProfile.id);
       } catch (requestError) {
-        if (isCurrent) setError(requestError.response?.data?.message || 'Could not load profile.');
+        if (isCurrent) setError(requestError.response?.data?.message || 'Could not load your profile. Try again.');
       } finally {
         if (isCurrent) setIsLoading(false);
       }
@@ -82,12 +83,12 @@ const AgentProfile = () => {
       setIsSaved(true);
       console.info('[agent] profile saved');
     } catch (requestError) {
-      setError(requestError.response?.data?.message || 'Could not save profile.');
+      setError(requestError.response?.data?.message || 'Could not save your profile. Try again.');
     }
   };
 
-  if (isLoading) return <p>Loading profile...</p>;
-  if (!profile) return <p role="alert">{error || 'Profile unavailable.'}</p>;
+  if (isLoading) return <SectionLoading variant="profile" />;
+  if (!profile) return <p role="alert">{error || 'Could not load your profile. Try again.'}</p>;
 
   return (
     <Panels split>
@@ -125,7 +126,7 @@ const AgentProfile = () => {
               label="Mobile"
               value={profile.phone}
               disabled
-              hint="Used to sign in. Contact an admin to change it."
+              hint="Ask an admin to change this."
               data-numeric
             />
 
@@ -134,7 +135,7 @@ const AgentProfile = () => {
               label="Google account"
               value={profile.email}
               disabled
-              hint="Used to sign in. Contact an admin to change it."
+              hint="Ask an admin to change this."
             />
           </div>
 
@@ -161,38 +162,38 @@ const AgentProfile = () => {
             </div>
 
             <span className="ca-field__hint">
-              Only requests for these services will be assigned to you.
+              You will only get requests for these services.
             </span>
           </div>
 
-          <SaveRow onSave={save} isSaved={isSaved} hint="Changes apply to new assignments." />
+          <SaveRow onSave={save} isSaved={isSaved} hint="Applies to new requests." />
         </div>
       </Panel>
 
-      <Panel title="Verification">
+      <Panel title="Application status">
         <ul className="ca-rows">
           <li className="ca-row">
             <span className="ca-row__body">
               <span className="ca-row__title">Status</span>
               <span className="ca-row__meta">
                 {profile.verificationStatus === 'active'
-                  ? 'Checked by an admin. You can receive requests.'
+                  ? 'Approved by an admin. You can receive requests.'
                   : 'Under review. You cannot receive requests yet.'}
               </span>
             </span>
             <span className="ca-row__actions">
               <span className={`ca-status ca-status--${profile.verificationStatus === 'active' ? 'done' : 'warn'}`}>
                 <span className="ca-status__dot" />
-                {profile.verificationStatus === 'active' ? 'Verified' : 'Pending'}
+                {profile.verificationStatus === 'active' ? 'Approved' : 'Waiting for approval'}
               </span>
             </span>
           </li>
 
           <li className="ca-row">
             <span className="ca-row__body">
-              <span className="ca-row__title">Verified on</span>
+              <span className="ca-row__title">Approved on</span>
               <span className="ca-row__meta" data-numeric>
-                {profile.verifiedOn || 'Not verified yet'}
+                {profile.verifiedOn || 'Not approved yet'}
               </span>
             </span>
           </li>
@@ -208,7 +209,7 @@ const AgentProfile = () => {
         </ul>
 
         <p className="ca-field__hint">
-          Verification is set by an administrator and cannot be changed from here.
+          Only an admin can change this status.
         </p>
       </Panel>
     </Panels>

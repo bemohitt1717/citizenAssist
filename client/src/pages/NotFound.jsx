@@ -1,26 +1,18 @@
 import { Link, useLocation } from 'react-router-dom';
 import Logo from '../components/common/Logo/Logo';
 import Icon from '../components/ui/Icon/Icon';
+import NotFoundAnimation from './NotFoundAnimation';
 import './NotFound.css';
 
-/* Every real destination, so a wrong URL is one click from being right. */
+/* The links that help most people recover from a mistyped page. */
 const WAYS_OUT = [
-  { label: 'All six services', to: '/', hash: '#services', icon: 'document' },
-  { label: 'How it works', to: '/', hash: '#how-it-works', icon: 'track' },
   { label: 'Track a request', to: '/track', icon: 'clock' },
-  { label: 'Become an agent', to: '/become-an-agent', icon: 'shieldCheck' },
   { label: 'Sign in', to: '/login', icon: 'phone' },
+  { label: 'Apply as an agent', to: '/become-an-agent', icon: 'shieldCheck' },
 ];
 
-/**
- * The not-found page.
- *
- * Names the path that failed, because half of these are a typo the visitor can
- * see and correct themselves. Then lists the real destinations — a page that only
- * offers "go home" makes someone start their journey again from scratch.
- */
 const NotFound = () => {
-  const { pathname } = useLocation();
+  const location = useLocation();
 
   return (
     <div className="ca-oops">
@@ -30,40 +22,46 @@ const NotFound = () => {
         </Link>
       </div>
 
-      <div className="ca-oops__body">
-        <p className="ca-label ca-oops__code">
-          <Icon name="close" size={13} />
-          Error 404
-        </p>
+      <main className="ca-oops__body ca-oops__body--not-found" key={location.pathname}>
+        <section className="ca-oops__copy" aria-labelledby="not-found-title">
+          <p className="ca-label ca-oops__code">
+            <Icon name="close" size={13} />
+            404 · Page not found
+          </p>
 
-        <h1 className="ca-oops__title">This page does not exist</h1>
+          <h1 className="ca-oops__title" id="not-found-title">We can’t find that page</h1>
 
-        <p className="ca-oops__text">
-          Nothing lives at <strong>{pathname}</strong>. The link may be out of date, or the address
-          may have a typo in it. Nothing has gone wrong with your account or any request you have
-          placed.
-        </p>
+          <p className="ca-oops__text">
+            The link may be old, or the address may have a mistake. Choose a page below to continue.
+          </p>
 
-        <div className="ca-oops__actions">
-          <Link className="ca-pill ca-pill--solid ca-oops__action" to="/">
-            Back to home
-            <span className="ca-pill__disc">
-              <Icon name="arrowRight" size={15} />
-            </span>
-          </Link>
+          <div className="ca-oops__actions">
+            <Link className="ca-pill ca-pill--solid ca-oops__action" to="/#services">
+              View services
+              <span className="ca-pill__disc">
+                <Icon name="arrowRight" size={15} />
+              </span>
+            </Link>
+          </div>
+
+          <nav className="ca-oops__nav" aria-label="More pages">
+            <ul className="ca-oops__links">
+              {WAYS_OUT.map((way) => (
+                <li key={way.label}>
+                  <Link className="ca-oops__link" to={way.to}>
+                    <Icon name={way.icon} size={15} />
+                    {way.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </section>
+
+        <div className="ca-oops__art" role="img" aria-label="A friendly cat illustration">
+          <NotFoundAnimation />
         </div>
-
-        <ul className="ca-oops__links">
-          {WAYS_OUT.map((way) => (
-            <li key={way.label}>
-              <Link className="ca-oops__link" to={`${way.to}${way.hash ?? ''}`}>
-                <Icon name={way.icon} size={15} />
-                {way.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
+      </main>
     </div>
   );
 };

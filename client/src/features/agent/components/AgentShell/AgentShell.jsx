@@ -90,20 +90,20 @@ const AgentShell = ({ activeId, children }) => {
         </ul>
 
         <div className="ca-agentdash__standing">
-          <span className="ca-label ca-agentdash__standing-key">Your standing</span>
+          <span className="ca-label ca-agentdash__standing-key">Your status</span>
           <span className={`ca-status ca-status--${verificationStatus === 'active' ? 'done' : 'warn'}`}>
             <span className="ca-status__dot" />
             {verificationStatus === 'active'
-              ? 'Verified · active'
+              ? 'Approved'
               : verificationStatus === 'loading'
-                ? 'Loading status…'
+                ? <span className="ca-inline-loader" role="status" aria-label="Loading status" />
                 : verificationStatus === 'unavailable'
                   ? 'Status unavailable'
                   : verificationStatus === 'suspended'
-                    ? 'Account suspended'
+                    ? 'Access paused'
                     : verificationStatus === 'rejected'
                       ? 'Application rejected'
-                      : 'Awaiting verification'}
+                    : 'Waiting for approval'}
           </span>
         </div>
       </nav>

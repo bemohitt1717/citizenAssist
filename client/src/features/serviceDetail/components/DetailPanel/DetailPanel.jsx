@@ -51,7 +51,7 @@ const DetailPanel = ({ service }) => {
 
             <dl className="ca-detail__facts">
               <div className="ca-detail__fact">
-                <dt className="ca-label ca-detail__fact-key">Assistance charge</dt>
+                <dt className="ca-label ca-detail__fact-key">Agent fee</dt>
                 <dd className="ca-detail__fact-value" data-numeric>
                   {service.charge}
                 </dd>
@@ -89,7 +89,7 @@ const DetailPanel = ({ service }) => {
               <h2 className="ca-label ca-detail__fact-key">
                 Documents · <span data-numeric>{documents.length}</span>
               </h2>
-              <p className="ca-detail__docs-hint">Select one to see what it looks like</p>
+              <p className="ca-detail__docs-hint">Choose a document to see an example</p>
             </div>
 
             <ul className="ca-detail__docs">
@@ -126,7 +126,7 @@ const DetailPanel = ({ service }) => {
               </button>
 
               <p className="ca-detail__action-note">
-                Nothing is charged now. Your agent confirms the figure first.
+                No payment now. Your agent confirms the fee first.
               </p>
             </div>
           </div>
@@ -165,7 +165,7 @@ const DetailPanel = ({ service }) => {
               </>
             ) : (
               <div className="ca-detail__stage" role="status">
-                <p className="ca-detail__docs-hint">Document preview is unavailable.</p>
+                <p className="ca-detail__docs-hint">No example is available for this document.</p>
               </div>
             )}
           </div>
@@ -187,12 +187,11 @@ export const ServiceMissing = () => (
         <h1 className="ca-detail__missing-title">We do not have that service</h1>
 
         <p className="ca-detail__missing-text">
-          It may have been renamed, or the link may be out of date. All six services are listed on
-          the home page.
+          See all services on the home page.
         </p>
 
         <Link className="ca-pill ca-pill--solid ca-detail__start" to="/#services">
-          Browse services
+          View services
           <span className="ca-pill__disc">
             <Icon name="arrowRight" size={15} />
           </span>

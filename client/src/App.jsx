@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Navbar, { TOP_SENTINEL_ID } from "./components/common/Navbar/Navbar";
 import Footer from "./components/common/Footer/Footer";
@@ -11,6 +11,8 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import { ProtectedRoute, RoleRoute } from "./routes/ProtectedRoute";
 import { useRequestFlow } from "./features/request/requestFlowContext";
 import { useAuth } from "./context/authContext";
+import HomeIntroGate, { useMarkHomeReady } from "./components/ui/LoadingStates/HomeIntroGate";
+import { RouteLoading } from "./components/ui/LoadingStates/LoadingStates";
 
 const Home = lazy(() => import("./pages/Home"));
 const ServiceDetail = lazy(() => import("./pages/ServiceDetail"));
@@ -21,16 +23,6 @@ const CitizenDashboard = lazy(() => import("./pages/CitizenDashboard"));
 const AgentDashboard = lazy(() => import("./pages/AgentDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-
-const RouteLoading = () => (
-  <div
-    role="status"
-    aria-live="polite"
-    style={{ minHeight: '42vh', display: 'grid', placeItems: 'center', color: 'var(--color-ink-muted)' }}
-  >
-    Opening your page…
-  </div>
-);
 
 // Suppress Google OAuth warnings in production
 if (import.meta.env.PROD) {
@@ -64,6 +56,16 @@ const LoginPromptWrapper = () => {
   );
 };
 
+const HomeReadySignal = () => {
+  const markHomeReady = useMarkHomeReady();
+
+  useEffect(() => {
+    markHomeReady();
+  }, [markHomeReady]);
+
+  return null;
+};
+
 /**
  * The landing page carries the full chrome. The service detail route
  * deliberately carries none — it is a single-viewport decision surface with its
@@ -80,6 +82,7 @@ const HomeLayout = () => (
     <Navbar />
     <main>
       <Home />
+      <HomeReadySignal />
     </main>
     <Footer />
   </>
@@ -88,70 +91,72 @@ const HomeLayout = () => (
 const App = () => (
   <ErrorBoundary>
     <BrowserRouter>
-      <AuthProvider>
-        <RequestFlowProvider>
-          <ScrollToHash />
+      <HomeIntroGate>
+        <AuthProvider>
+          <RequestFlowProvider>
+            <ScrollToHash />
 
-          {/* Login prompt shown when user clicks "Start request" without login */}
-          <LoginPromptWrapper />
+            {/* Login prompt shown when user clicks "Start request" without login */}
+            <LoginPromptWrapper />
 
-          <Suspense fallback={<RouteLoading />}>
-            <Routes>
-              <Route path="/" element={<HomeLayout />} />
-              <Route path="/services/:serviceId" element={<ServiceDetail />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/become-an-agent" element={<BecomeAgent />} />
+            <Suspense fallback={<RouteLoading />}>
+              <Routes>
+                <Route path="/" element={<HomeLayout />} />
+                <Route path="/services/:serviceId" element={<ServiceDetail />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/become-an-agent" element={<BecomeAgent />} />
 
-              <Route element={<ProtectedRoute />}>
-                <Route
-                  path="/citizen/:section?"
-                  element={
-                    <RoleRoute allowedRoles={["citizen"]}>
-                      <CitizenDashboard />
-                    </RoleRoute>
-                  }
-                />
+                <Route element={<ProtectedRoute />}>
+                  <Route
+                    path="/citizen/:section?"
+                    element={
+                      <RoleRoute allowedRoles={["citizen"]}>
+                        <CitizenDashboard />
+                      </RoleRoute>
+                    }
+                  />
 
-                <Route
-                  path="/track"
-                  element={
-                    <RoleRoute allowedRoles={["citizen"]}>
-                      <TrackRequest />
-                    </RoleRoute>
-                  }
-                />
+                  <Route
+                    path="/track"
+                    element={
+                      <RoleRoute allowedRoles={["citizen"]}>
+                        <TrackRequest />
+                      </RoleRoute>
+                    }
+                  />
 
-                {/* The section is a URL segment, so each dashboard needs one route
-                    rather than one route per section. */}
-                <Route
-                  path="/agent/:section?"
-                  element={
-                    <RoleRoute allowedRoles={["agent"]}>
-                      <AgentDashboard />
-                    </RoleRoute>
-                  }
-                />
-                <Route
-                  path="/admin/:section?"
-                  element={
-                    <RoleRoute allowedRoles={["admin"]}>
-                      <AdminDashboard />
-                    </RoleRoute>
-                  }
-                />
-              </Route>
+                  {/* The section is a URL segment, so each dashboard needs one route
+                      rather than one route per section. */}
+                  <Route
+                    path="/agent/:section?"
+                    element={
+                      <RoleRoute allowedRoles={["agent"]}>
+                        <AgentDashboard />
+                      </RoleRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/:section?"
+                    element={
+                      <RoleRoute allowedRoles={["admin"]}>
+                        <AdminDashboard />
+                      </RoleRoute>
+                    }
+                  />
+                </Route>
 
-              {/* A real 404. This previously rendered the home page, which meant a
-                  broken link looked like it had worked. */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+                {/* A real 404. This previously rendered the home page, which meant a
+                    broken link looked like it had worked. */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
 
-          {/* Mounted once, above the routes, so the flow survives whichever surface
-              opened it. */}
-          <RequestFlowHost />
-        </RequestFlowProvider>
-      </AuthProvider>
+            {/* Mounted once, above the routes, so the flow survives whichever surface
+                opened it. */}
+            <RequestFlowHost />
+          </RequestFlowProvider>
+        </AuthProvider>
+      </HomeIntroGate>
     </BrowserRouter>
   </ErrorBoundary>
 );

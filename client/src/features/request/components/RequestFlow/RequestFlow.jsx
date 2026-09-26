@@ -12,22 +12,22 @@ const STEPS = ['confirm', 'details', 'documents', 'review'];
 const STEP_COPY = {
   confirm: {
     title: 'Before we start',
-    lede: 'Here is exactly what this service needs and what it costs. Nothing is charged now — your agent confirms the final figure with you first.',
-    next: 'Yes, continue',
+    lede: 'See what you need and the fee range. You do not pay now. Your agent confirms the fee first.',
+    next: 'Continue',
   },
   details: {
     title: 'Your details',
-    lede: 'Enough for an agent to reach you and to raise the application. Nothing more.',
-    next: 'Continue to documents',
+    lede: 'Tell us how to reach you.',
+    next: 'Continue',
   },
   documents: {
     title: 'Attach your documents',
-    lede: 'Attach what you have now. Anything missing can follow — your agent will tell you what is outstanding.',
-    next: 'Review and submit',
+    lede: 'Add the documents you have. You can send the rest later.',
+    next: 'Continue',
   },
   review: {
     title: 'Check and submit',
-    lede: 'One last look before this goes to an agent.',
+    lede: 'Check your details before sending.',
     next: 'Submit request',
   },
 };
@@ -194,13 +194,13 @@ const RequestFlow = ({ service, onClose }) => {
         }
 
         setUploadWarning(failedUploads.length
-          ? `Your request is in. These files did not finish uploading: ${failedUploads.join(', ')}. You can add them from Track Request.`
+          ? `Your request was sent, but these files did not upload: ${failedUploads.join(', ')}. You can add them from Track a request.`
           : '');
         setSubmittedReference(request.reference);
         setIsDone(true);
       } catch (error) {
         setSubmitError(
-          error.response?.data?.message || error.message || 'Failed to submit request. Please try again.'
+          error.response?.data?.message || error.message || 'Could not send your request. Try again.'
         );
       } finally {
         setIsSubmitting(false);
@@ -293,7 +293,7 @@ const RequestFlow = ({ service, onClose }) => {
               className="ca-rf__close"
               onClick={onClose}
               ref={closeRef}
-              aria-label="Close and discard this request"
+              aria-label="Close request"
             >
               <Icon name="close" size={18} />
             </button>
@@ -327,17 +327,16 @@ const RequestFlow = ({ service, onClose }) => {
                   <Icon name="check" size={26} />
                 </span>
 
-                <h3 className="ca-rf__done-title">That is with us</h3>
+                <h3 className="ca-rf__done-title">Request sent</h3>
 
                 <p className="ca-rf__done-text">
-                  A verified agent will pick this up and confirm the exact charge with you before
-                  any work starts. You can follow the status from Track request.
+                  An approved agent will contact you and confirm the fee. You can follow updates online.
                 </p>
 
                 {uploadWarning && <p className="ca-rf__error" role="alert">{uploadWarning}</p>}
 
                 <span className="ca-rf__ref" data-numeric>
-                  {submittedReference || 'Submitting...'}
+                  {submittedReference || 'Sending...'}
                 </span>
               </div>
             ) : (
@@ -348,7 +347,7 @@ const RequestFlow = ({ service, onClose }) => {
                     <p className="ca-rf__lede">{copy.lede}</p>
 
                     <p className="ca-label ca-rf__section-title">
-                      What you will need · {requiredDocuments.length} required
+                      Documents needed · {requiredDocuments.length} required
                     </p>
 
                     <ul className="ca-rf__reqs">
@@ -376,13 +375,12 @@ const RequestFlow = ({ service, onClose }) => {
                       </span>
 
                       <span className="ca-rf__charge-body">
-                        <span className="ca-label ca-rf__charge-key">Assistance charge</span>
+                        <span className="ca-label ca-rf__charge-key">Agent fee</span>
                         <span className="ca-rf__charge-value" data-numeric>
                           {service.charge}
                         </span>
                         <span className="ca-rf__charge-note">
-                          Our fee only, separate from the government fee. Issued by{' '}
-                          {service.issuedBy}.
+                          Government fees are separate. Issued by {service.issuedBy}.
                         </span>
                       </span>
                     </div>
@@ -405,7 +403,7 @@ const RequestFlow = ({ service, onClose }) => {
                           value={form.fullName}
                           onChange={setField('fullName')}
                           onBlur={blurField('fullName')}
-                          placeholder="As it appears on your Aadhaar"
+                          placeholder="As shown on your Aadhaar"
                           autoComplete="name"
                           aria-invalid={Boolean(touched.fullName && errors.fullName)}
                         />
@@ -425,7 +423,7 @@ const RequestFlow = ({ service, onClose }) => {
                             value={form.phone}
                             onChange={setField('phone')}
                             onBlur={blurField('phone')}
-                            placeholder="10 digits"
+                            placeholder="98765 43210"
                             inputMode="numeric"
                             autoComplete="tel-national"
                             aria-invalid={Boolean(touched.phone && errors.phone)}
@@ -445,7 +443,7 @@ const RequestFlow = ({ service, onClose }) => {
                             value={form.district}
                             onChange={setField('district')}
                             onBlur={blurField('district')}
-                            placeholder="Where you are applying"
+                            placeholder="Your district"
                             aria-invalid={Boolean(touched.district && errors.district)}
                           />
                           {touched.district && errors.district && (
@@ -465,7 +463,7 @@ const RequestFlow = ({ service, onClose }) => {
                           value={form.email}
                           onChange={setField('email')}
                           onBlur={blurField('email')}
-                          placeholder="For written updates"
+                          placeholder="Email for updates"
                           autoComplete="email"
                           aria-invalid={Boolean(touched.email && errors.email)}
                         />
@@ -476,8 +474,7 @@ const RequestFlow = ({ service, onClose }) => {
                     </div>
 
                     <p className="ca-rf__note">
-                      Your agent uses these to reach you and to fill the application. We do not
-                      share them outside the office handling your file.
+                      Your agent uses these details for your request. We share them only with the office handling it.
                     </p>
                   </>
                 )}
@@ -513,7 +510,7 @@ const RequestFlow = ({ service, onClose }) => {
                               </span>
 
                               <span className="ca-rf__slot-action">
-                                {fileName ? 'Replace' : 'Attach'}
+                                {fileName ? 'Change' : 'Attach'}
                               </span>
                             </button>
                             {fileErrors[doc.id] && <p className="ca-rf__error" role="alert">{fileErrors[doc.id]}</p>}
@@ -538,8 +535,7 @@ const RequestFlow = ({ service, onClose }) => {
                     </div>
 
                     <p className="ca-rf__note">
-                      {UPLOAD_RULES.guidance} Aim for {UPLOAD_RULES.minDpi} dpi or better if you are
-                      scanning.
+                      {UPLOAD_RULES.guidance}
                     </p>
                   </>
                 )}
@@ -569,7 +565,7 @@ const RequestFlow = ({ service, onClose }) => {
                         <span className="ca-rf__summary-value">{form.district}</span>
                       </div>
                       <div className="ca-rf__summary-row">
-                        <span className="ca-label ca-rf__summary-key">Attached</span>
+                        <span className="ca-label ca-rf__summary-key">Documents</span>
                         <span className="ca-rf__summary-value" data-numeric>
                           {attachedCount} of {documents.length}
                         </span>
@@ -590,9 +586,7 @@ const RequestFlow = ({ service, onClose }) => {
                         onChange={(event) => setConsent(event.target.checked)}
                       />
                       <span className="ca-rf__consent-text">
-                        I understand Citizen Assist provides assistance only, that the certificate is
-                        issued by {service.issuedBy}, and that the charge above is separate from any
-                        government fee.
+                        I understand: Citizen Assist helps with the application, {service.issuedBy} issues the certificate, and government fees are separate.
                       </span>
                     </label>
                   </>
@@ -628,7 +622,7 @@ const RequestFlow = ({ service, onClose }) => {
               {isSubmitting
                 ? uploadProgress
                   ? `Uploading ${uploadProgress.current} of ${uploadProgress.total}…`
-                  : 'Submitting...'
+                  : 'Sending request…'
                 : copy.next}
               <span className="ca-pill__disc">
                 <Icon name="arrowRight" size={15} />

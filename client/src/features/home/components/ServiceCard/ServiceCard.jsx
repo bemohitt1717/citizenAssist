@@ -35,14 +35,14 @@ const ServiceCard = ({ service, index }) => {
 
       <dl className="ca-svc__meta">
         <div className="ca-svc__stat">
-          <dt className="ca-label ca-svc__stat-key">Assistance charge</dt>
+          <dt className="ca-label ca-svc__stat-key">Agent fee</dt>
           <dd className="ca-svc__stat-value" data-numeric>
             {charge}
           </dd>
         </div>
 
         <div className="ca-svc__stat">
-          <dt className="ca-label ca-svc__stat-key">To gather</dt>
+          <dt className="ca-label ca-svc__stat-key">Documents</dt>
           <dd className="ca-svc__stat-value" data-numeric>
             {documentCount} documents
           </dd>
@@ -69,7 +69,7 @@ const ServiceCard = ({ service, index }) => {
           to={`/services/${id}`}
           aria-label={`See full details for ${name}`}
         >
-          See details
+          Service details
           <Icon name="arrowUpRight" size={16} />
         </Link>
       </div>

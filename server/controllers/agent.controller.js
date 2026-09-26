@@ -55,6 +55,15 @@ export const applyAsAgent = async (req, res, next) => {
     });
 
     const { name, mobile, email, district, experience, services } = req.body;
+    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const citizenEmail = typeof req.user.email === "string" ? req.user.email.trim().toLowerCase() : "";
+
+    if (normalizedEmail && citizenEmail && normalizedEmail === citizenEmail) {
+      return res.status(400).json({
+        status: "error",
+        message: "Use a different email than your citizen account.",
+      });
+    }
 
     // Validate required fields
     if (!name || !mobile || !district || !experience || !services || services.length === 0) {
@@ -116,7 +125,7 @@ export const applyAsAgent = async (req, res, next) => {
       user: req.user._id,
       name,
       phone: normalizedMobile,
-      email: email || "",
+      email: normalizedEmail,
       district,
       experience,
       services,

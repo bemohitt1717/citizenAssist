@@ -25,10 +25,8 @@ const About = () => {
           </h2>
 
           <p className="ca-about__lede">
-            Citizen Assist is an independent service. We do not issue certificates and we hold no
-            government authority. What we do is make the process legible — name every document
-            before you start, publish what our help costs, put a verified person on your file, and
-            keep the status open so you are never left guessing.
+            Citizen Assist is independent. We do not issue certificates. We list the documents and
+            fees, connect you with a checked agent, and let you follow your request.
           </p>
         </header>
 
@@ -51,7 +49,7 @@ const About = () => {
 
         <div className="ca-chain">
           <h3 className="ca-chain__title">
-            Nobody handles your file until an admin has checked who they are.
+            We check every agent before they receive a request.
           </h3>
 
           <ol className="ca-chain__rail">

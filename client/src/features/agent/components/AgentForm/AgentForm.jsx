@@ -11,18 +11,18 @@ const STEPS = ['terms', 'details', 'review'];
 
 const STEP_COPY = {
   terms: {
-    title: 'What you are agreeing to',
-    lede: 'Four things, before you fill anything in. If any of them do not suit you, this is the point to stop.',
-    next: 'I agree, continue',
+    title: 'Before you apply',
+    lede: 'Please read these four points before you continue.',
+    next: 'Agree and continue',
   },
   details: {
     title: 'Your details',
-    lede: 'Only what an admin needs to verify you and what a citizen needs to reach you. No photograph, no documents to upload.',
-    next: 'Review application',
+    lede: 'We use these details to review your application and contact you. No documents needed.',
+    next: 'Review details',
   },
   review: {
     title: 'Check and send',
-    lede: 'One last look before an admin sees this.',
+    lede: 'Check your details before sending.',
     next: 'Send application',
   },
 };
@@ -38,12 +38,15 @@ const EMPTY = {
 
 const isValidMobile = (value) => /^[6-9]\d{9}$/.test(value);
 const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
+const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+const isCitizenEmail = (value, citizenEmail) =>
+  Boolean(citizenEmail && normalizeEmail(value) === normalizeEmail(citizenEmail));
 
 /**
  * The agent application.
  *
  * Auto-fills name, mobile, and email from logged-in citizen's profile.
- * Validates that the mobile number is different from citizen account.
+ * Requires a different mobile number and email from the citizen account.
  *
  * Applications are tied to a signed-in citizen account and reviewed by an admin.
  */
@@ -86,7 +89,11 @@ const AgentForm = () => {
         ? 'You must use a different mobile number than your citizen account.' 
         : null)
       : 'Enter a 10-digit mobile number.',
-    email: isValidEmail(form.email) ? null : 'Enter the email on your Google account.',
+    email: !isValidEmail(form.email.trim())
+      ? 'Enter a valid email address.'
+      : isCitizenEmail(form.email, user?.email)
+        ? 'Use a different email than your citizen account.'
+        : null,
     district: form.district.trim() === '' ? 'Which district do you work in?' : null,
     experience: form.experience === '' ? 'Pick one.' : null,
     services: form.services.length === 0 ? 'Choose at least one service.' : null,
@@ -120,7 +127,14 @@ const AgentForm = () => {
     // Final validation: prevent same mobile as citizen account
     if (user?.phone && `+91${form.mobile}` === user.phone) {
       console.log('❌ [AGENT-FORM] Validation failed: same mobile as citizen account');
-      setSubmitError('You cannot apply as an agent with the same mobile number as your citizen account. Please use a different number.');
+      setSubmitError('Use a mobile number different from your citizen account.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (isCitizenEmail(form.email, user?.email)) {
+      console.log('❌ [AGENT-FORM] Validation failed: same email as citizen account');
+      setSubmitError('Use a different email than your citizen account.');
       setIsSubmitting(false);
       return;
     }
@@ -139,7 +153,7 @@ const AgentForm = () => {
     } catch (error) {
       console.error('❌ [AGENT-FORM] Application submission failed:', error);
       setSubmitError(
-        error.response?.data?.message || 'Failed to submit application. Please try again.'
+        error.response?.data?.message || 'We could not send your application. Try again.'
       );
     } finally {
       setIsSubmitting(false);
@@ -190,9 +204,8 @@ const AgentForm = () => {
             <h1 className="ca-agent__done-title">Application sent</h1>
 
             <p className="ca-agent__done-text">
-              An admin will review it and call you on{' '}
-              <strong data-numeric>+91 {form.mobile}</strong>. If approved, you will receive the
-              sign-in details from the admin team.
+              We will review your application and call you at{' '}
+              <strong data-numeric>+91 {form.mobile}</strong>. If approved, we will send your sign-in details.
             </p>
           </div>
         </div>
@@ -214,8 +227,7 @@ const AgentForm = () => {
           </h1>
 
           <p className="ca-agent__step-lede">
-            Agent applications are linked to an active citizen account so the team can verify your
-            details and keep your account secure.
+            You need an active citizen account to apply. We use it to check your details.
           </p>
 
           {!isSignedIn && (
@@ -229,7 +241,7 @@ const AgentForm = () => {
                 <span className="ca-pill__disc"><Icon name="arrowRight" size={15} /></span>
               </Link>
               <p className="ca-agent__access-note">
-                Your application will be ready to continue after you sign in.
+                Your application will be here after you sign in.
               </p>
             </div>
           )}
@@ -244,8 +256,8 @@ const AgentForm = () => {
         <h1 className="ca-agent__title">Become a Citizen Assist agent</h1>
 
         <p className="ca-agent__lede">
-          Assist citizens with government documentation in your district, to charges that are
-          published up front. Applications are reviewed by an admin before any file reaches you.
+          Help people in your district with government paperwork. We review every application before
+          assigning requests.
         </p>
 
         <div className="ca-agent__progress" aria-hidden="true">
@@ -310,7 +322,7 @@ const AgentForm = () => {
                   value={form.fullName}
                   onChange={setField('fullName')}
                   onBlur={blur('fullName')}
-                  placeholder="As it appears on your Aadhaar"
+                  placeholder="As shown on your Aadhaar"
                   autoComplete="name"
                   aria-invalid={Boolean(touched.fullName && errors.fullName)}
                 />
@@ -330,7 +342,7 @@ const AgentForm = () => {
                     value={form.mobile}
                     onChange={setField('mobile')}
                     onBlur={blur('mobile')}
-                    placeholder="10 digits"
+                    placeholder="98765 43210"
                     inputMode="numeric"
                     autoComplete="tel-national"
                     aria-invalid={Boolean(touched.mobile && errors.mobile)}
@@ -351,7 +363,7 @@ const AgentForm = () => {
                     value={form.district}
                     onChange={setField('district')}
                     onBlur={blur('district')}
-                    placeholder="Where you work"
+                    placeholder="Your district"
                     aria-invalid={Boolean(touched.district && errors.district)}
                   />
                   {touched.district && errors.district && (
@@ -362,7 +374,7 @@ const AgentForm = () => {
 
               <div className="ca-agent__field">
                 <label className="ca-agent__label" htmlFor="ca-agent-email">
-                  Google account email <span className="ca-agent__star">*</span>
+                  Email for Google sign-in <span className="ca-agent__star">*</span>
                 </label>
                 <input
                   id="ca-agent-email"
@@ -379,14 +391,14 @@ const AgentForm = () => {
                   <span className="ca-agent__error">{errors.email}</span>
                 ) : (
                   <span className="ca-agent__hint">
-                    Lets you sign in with Google as well as with your mobile number.
+                    Use a different email than your citizen account.
                   </span>
                 )}
               </div>
 
               <div className="ca-agent__field">
                 <label className="ca-agent__label" htmlFor="ca-agent-exp">
-                  Experience with documentation work <span className="ca-agent__star">*</span>
+                  Experience with paperwork <span className="ca-agent__star">*</span>
                 </label>
                 <select
                   id="ca-agent-exp"
@@ -456,7 +468,7 @@ const AgentForm = () => {
                   </span>
                 </div>
                 <div className="ca-agent__summary-row">
-                  <span className="ca-label ca-agent__summary-key">Google account</span>
+                  <span className="ca-label ca-agent__summary-key">Email</span>
                   <span className="ca-agent__summary-value">{form.email}</span>
                 </div>
                 <div className="ca-agent__summary-row">
@@ -483,8 +495,8 @@ const AgentForm = () => {
                   onChange={(event) => setConsent(event.target.checked)}
                 />
                 <span className="ca-agent__consent-text">
-                  Everything above is accurate, and I accept the four terms on the first step. I
-                  understand I cannot take any citizen’s file until an admin has verified me.
+                  I confirm these details are correct and agree to the terms above. I can take
+                  requests only after approval.
                 </span>
               </label>
             </>

@@ -80,8 +80,7 @@ const HowItWorks = () => {
           <h2 className="ca-hiw__title">From picking a service to holding the certificate</h2>
 
           <p className="ca-hiw__lede">
-            Five steps, and you can see where your file is at every one of them. Follow along below,
-            or pick a step to look at it directly.
+            Choose a service, send your details and documents, then follow each update.
           </p>
         </header>
 
@@ -92,7 +91,7 @@ const HowItWorks = () => {
           <div
             className="ca-hiw__steps"
             role="tablist"
-            aria-label="Stages of a service request"
+            aria-label="How to apply"
             aria-orientation="vertical"
             onKeyDown={onKeyDown}
           >

@@ -30,8 +30,8 @@
 export const STATUS_FLOW = [
   { id: 'pending', label: 'Request received', position: 1 },
   { id: 'assigned', label: 'Agent assigned', position: 2 },
-  { id: 'review', label: 'Documents under review', position: 3 },
-  { id: 'processing', label: 'With the government office', position: 4 },
+  { id: 'review', label: 'Documents being checked', position: 3 },
+  { id: 'processing', label: 'At the office', position: 4 },
   { id: 'completed', label: 'Completed', position: 5 },
 ];
 
@@ -40,8 +40,8 @@ export const STATUS_FLOW = [
  * has to infer meaning from the id.
  */
 export const STATUS_ASIDE = {
-  action: { id: 'action', label: 'Action needed from you', tone: 'warn' },
-  rejected: { id: 'rejected', label: 'Rejected by the office', tone: 'stop' },
+  action: { id: 'action', label: 'Waiting for your reply', tone: 'warn' },
+  rejected: { id: 'rejected', label: 'Not approved', tone: 'stop' },
   cancelled: { id: 'cancelled', label: 'Cancelled', tone: 'stop' },
 };
 
@@ -72,8 +72,8 @@ export const DEMO_REQUESTS = [
     createdAt: '12 Aug 2026',
     timeline: [
       { status: 'pending', at: '12 Aug, 10:20', note: 'Request received.' },
-      { status: 'assigned', at: '12 Aug, 15:40', note: 'R. Meena assigned. Charge confirmed at ₹650.' },
-      { status: 'review', at: '13 Aug, 09:05', note: 'Salary slip is unreadable — a clearer copy would help.' },
+      { status: 'assigned', at: '12 Aug, 15:40', note: 'Agent R. Meena assigned. Fee confirmed: ₹650.' },
+      { status: 'review', at: '13 Aug, 09:05', note: 'We could not read the salary slip. Please add a clearer copy.' },
     ],
   },
   {
@@ -87,9 +87,9 @@ export const DEMO_REQUESTS = [
     timeline: [
       { status: 'pending', at: '02 Aug, 11:00', note: 'Request received.' },
       { status: 'assigned', at: '02 Aug, 13:20', note: 'S. Prakash assigned.' },
-      { status: 'review', at: '03 Aug, 10:10', note: 'All documents checked.' },
-      { status: 'processing', at: '04 Aug, 09:30', note: 'Submitted to the Municipal Corporation.' },
-      { status: 'completed', at: '08 Aug, 16:45', note: 'Certificate issued and handed over.' },
+      { status: 'review', at: '03 Aug, 10:10', note: 'Documents checked.' },
+      { status: 'processing', at: '04 Aug, 09:30', note: 'Sent to the Municipal Corporation.' },
+      { status: 'completed', at: '08 Aug, 16:45', note: 'Certificate issued and sent to you.' },
     ],
   },
   {
@@ -103,7 +103,7 @@ export const DEMO_REQUESTS = [
     timeline: [
       { status: 'pending', at: '28 Jul, 18:05', note: 'Request received.' },
       { status: 'assigned', at: '29 Jul, 10:00', note: 'R. Meena assigned.' },
-      { status: 'action', at: '30 Jul, 12:15', note: 'Name on Aadhaar does not match the application. Confirm the spelling.' },
+      { status: 'action', at: '30 Jul, 12:15', note: 'The name on Aadhaar does not match your form. Check the spelling.' },
     ],
   },
 ];

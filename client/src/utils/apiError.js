@@ -1,11 +1,11 @@
-const FALLBACK_MESSAGE = "Something went wrong. Please try again.";
+const FALLBACK_MESSAGE = "Something went wrong. Try again.";
 
 const MESSAGES_BY_STATUS = {
-  400: "Please check the information and try again.",
+  400: "Check the information and try again.",
   401: "The phone number or PIN is not correct.",
-  403: "This account does not have permission to continue.",
+  403: "This account cannot do that.",
   409: "An account already exists for this phone number.",
-  429: "Too many failed PIN attempts. Please try again later.",
+  429: "Too many wrong PIN attempts. Try again later.",
 };
 
 export const getApiErrorMessage = (error) => {

@@ -36,22 +36,22 @@ export const EXPERIENCE_BANDS = [
 export const AGENT_TERMS = [
   {
     id: 'verify',
-    title: 'An admin checks you first',
-    text: 'Your application is reviewed by a person. You cannot receive any citizen’s file until that review passes.',
+    title: 'We review every application',
+    text: 'You can take requests only after we approve your application.',
   },
   {
     id: 'charges',
-    title: 'You work to published charges',
-    text: 'Each service has a stated range. You confirm the exact figure with the citizen before starting, and it does not move after that.',
+    title: 'Agree on the fee first',
+    text: 'We show a fee range. Confirm the exact fee with the citizen before work begins. It cannot change later.',
   },
   {
     id: 'documents',
-    title: 'You handle documents carefully',
-    text: 'You will see identity documents belonging to real people. They are used for the application and nothing else.',
+    title: 'Keep documents private',
+    text: 'Use a citizen’s documents only for their request.',
   },
   {
     id: 'honesty',
-    title: 'You never promise an outcome',
-    text: 'The certificate is issued by the government office. You assist with the process — you do not decide the result.',
+    title: 'The office makes the decision',
+    text: 'The government office issues the certificate. You help with the application.',
   },
 ];

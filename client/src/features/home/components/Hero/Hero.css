@@ -159,7 +159,7 @@
   .ca-hero__line,
   .ca-hero__lede,
   .ca-hero__actions {
-    animation: ca-hero-rise 1.05s var(--ease-out-expo) both;
+    animation: ca-hero-rise 0.72s var(--ease-out-expo) both;
   }
 
   .ca-hero__line--1 {
@@ -175,6 +175,17 @@
     animation-delay: 0.4s;
   }
 
+  :root.ca-home-intro-active .ca-hero__line,
+  :root.ca-home-intro-active .ca-hero__lede,
+  :root.ca-home-intro-active .ca-hero__actions,
+  :root.ca-home-intro-active .ca-hero__capsule,
+  :root.ca-home-refresh-active .ca-hero__line,
+  :root.ca-home-refresh-active .ca-hero__lede,
+  :root.ca-home-refresh-active .ca-hero__actions,
+  :root.ca-home-refresh-active .ca-hero__capsule {
+    animation-play-state: paused;
+  }
+
   /* The signature: the capsule opens from a sliver at the centre of the
      sentence, a fraction after the words around it have settled. */
   .ca-hero__capsule {
@@ -185,7 +196,6 @@
     from {
       opacity: 0;
       transform: translateY(0.42em);
-      filter: blur(7px);
     }
   }
 

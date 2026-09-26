@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Stats, Stat } from '../../../../components/ui/DataKit/DataKit';
 import { getMyRequests } from '../../../request/requestApi';
+import { StatsLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 
 /**
  * Citizen dashboard home - simple overview
@@ -27,36 +28,26 @@ const CitizenHome = () => {
     return () => { current = false; };
   }, []);
 
-  const values = stats || { totalRequests: '—', pending: '—', completed: '—' };
-
   return (
     <>
-      <Stats>
-        <Stat
-          icon="document"
-          label="Total Requests"
-          value={values.totalRequests}
-          note={hasError ? 'Could not load' : stats ? 'All time' : 'Loading'}
-        />
-        <Stat
-          icon="track"
-          label="Pending"
-          value={values.pending}
-          note={hasError ? 'Could not load' : stats ? 'In progress' : 'Loading'}
-          attention={Boolean(stats?.pending)}
-        />
-        <Stat
-          icon="check"
-          label="Completed"
-          value={values.completed}
-          note={hasError ? 'Could not load' : stats ? 'Successfully processed' : 'Loading'}
-        />
-      </Stats>
+      {stats ? (
+        <Stats>
+          <Stat icon="document" label="Requests" value={stats.totalRequests} note="All time" />
+          <Stat icon="track" label="Pending" value={stats.pending} note="In progress" attention={Boolean(stats.pending)} />
+          <Stat icon="check" label="Completed" value={stats.completed} note="All time" />
+        </Stats>
+      ) : hasError ? (
+        <Stats>
+          <Stat icon="document" label="Requests" value="—" note="Could not load" />
+          <Stat icon="track" label="Pending" value="—" note="Could not load" />
+          <Stat icon="check" label="Completed" value="—" note="Could not load" />
+        </Stats>
+      ) : <StatsLoading count={3} />}
 
       <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--color-paper)', borderRadius: '12px', border: '1px solid var(--color-line)' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>Quick Actions</h2>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.75rem' }}>What would you like to do?</h2>
         <p style={{ color: 'var(--color-ink-muted)', marginBottom: '1rem' }}>
-          Request a new service or track your existing requests from the sidebar.
+          Start a request or check its updates from the menu.
         </p>
       </div>
     </>

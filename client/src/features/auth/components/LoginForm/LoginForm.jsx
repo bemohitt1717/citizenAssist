@@ -187,13 +187,13 @@ const LoginForm = ({ role, onChangeRole }) => {
 
         if (mode === "signin") {
           if (!exists) {
-            setError("No account found. Switch to sign up to create one.");
+            setError('We could not find an account. Choose “Create one” to sign up.');
             return;
           }
 
           if (!hasPin) {
             setError(
-              "This account does not have a PIN yet. Switch to sign up.",
+              'This account has no PIN yet. Choose “Create one” to set it.',
             );
             return;
           }
@@ -203,7 +203,7 @@ const LoginForm = ({ role, onChangeRole }) => {
         }
 
         if (exists) {
-          setError("An account already exists. Switch to sign in instead.");
+          setError('This number already has an account. Sign in instead.');
           return;
         }
 
@@ -258,7 +258,7 @@ const LoginForm = ({ role, onChangeRole }) => {
       return;
     }
 
-    setError("For your account safety, PIN recovery needs verified phone ownership. Please contact the support team to recover access.");
+    setError('To reset your PIN, contact Citizen Assist. We will check that this number is yours.');
   };
 
   const submitConfirm = (event) => {
@@ -340,7 +340,7 @@ const LoginForm = ({ role, onChangeRole }) => {
       console.log('✅ [GOOGLE-LOGIN] Backend authentication successful');
 
       if (response.data.user.role !== role.id) {
-        setError(`This Google account is registered as ${response.data.user.role}. Choose that role to continue.`);
+        setError('This Google account is for a different account type. Go back and choose the right one.');
         setIsBusy(false);
         return;
       }
@@ -355,7 +355,7 @@ const LoginForm = ({ role, onChangeRole }) => {
 
   const handleGoogleError = () => {
     console.error('❌ [GOOGLE-LOGIN] Google authentication failed');
-    setError('Google sign-in failed. Please try again.');
+    setError('Google sign-in failed. Try again.');
     setIsBusy(false);
   };
 
@@ -388,19 +388,19 @@ const LoginForm = ({ role, onChangeRole }) => {
   const enterNote = noteFor({
     problem: error,
     isSettled: isPinComplete,
-    settled: "All four in.",
-    waiting: "The four digits you chose for this number.",
+    settled: "4 digits entered.",
+    waiting: "Enter the 4-digit PIN for this number.",
   });
 
   const pinNote = noteFor({
     problem:
       error ||
       (isPinWeak
-        ? "Too easy to guess. No repeats like 1111, no runs like 1234."
+        ? "Choose a harder PIN. Avoid repeats like 1111 or runs like 1234."
         : ""),
     isSettled: isPinReady,
-    settled: "That works. Confirm it next.",
-    waiting: "Skip birth years and anything printed on a card you carry.",
+    settled: "PIN ready. Confirm it next.",
+    waiting: "Avoid birthdays or numbers printed on your cards.",
   });
 
   const confirmNote = noteFor({
@@ -410,8 +410,8 @@ const LoginForm = ({ role, onChangeRole }) => {
         ? "Not the same as the PIN you chose."
         : ""),
     isSettled: isConfirmMatched,
-    settled: "Both entries match.",
-    waiting: "It has to match the PIN you just chose.",
+    settled: "PINs match.",
+    waiting: "Enter the same PIN again.",
   });
 
   const phoneStatus = error ? "invalid" : isPhoneValid ? "valid" : "idle";
@@ -465,8 +465,7 @@ const LoginForm = ({ role, onChangeRole }) => {
             onClick={onChangeRole}
           >
             <Icon name="arrowRight" size={13} />
-            {mode === "signin" ? "Signing in" : "Signing up"} as{" "}
-            {role.label.toLowerCase()}
+            Choose another account
           </button>
 
           {/* Where you are in the steps this mode has. Decorative for a screen

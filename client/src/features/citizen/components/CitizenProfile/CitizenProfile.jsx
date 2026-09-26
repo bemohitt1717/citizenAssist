@@ -6,6 +6,7 @@ import { getProfile, linkGoogle, linkMobile, updateProfile } from '../../../auth
 import PinInput from '../../../auth/components/PinInput/PinInput';
 import { GOOGLE_CLIENT_ID } from '../../../../config/google';
 import './CitizenProfile.css';
+import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 
 /**
  * Citizen profile - manage the stored user details in MongoDB.
@@ -47,7 +48,7 @@ const CitizenProfileContent = () => {
         }
       } catch (requestError) {
         console.error('[citizen] profile load failed', requestError);
-        setError(requestError.response?.data?.message || 'Could not load profile.');
+        setError(requestError.response?.data?.message || 'Could not load your profile. Try again.');
       } finally {
         setIsLoading(false);
       }
@@ -79,7 +80,7 @@ const CitizenProfileContent = () => {
       setTimeout(() => setIsSaved(false), 2000);
     } catch (requestError) {
       console.error('[citizen] profile save failed', requestError);
-      setError(requestError.response?.data?.message || 'Could not save profile.');
+      setError(requestError.response?.data?.message || 'Could not save your profile. Try again.');
     }
   };
 
@@ -131,7 +132,7 @@ const CitizenProfileContent = () => {
         setLinkStep('phone');
       } catch (requestError) {
         console.error('❌ [LINK-MOBILE] Failed:', requestError);
-        setLinkError(requestError.response?.data?.message || 'Failed to link mobile number');
+        setLinkError(requestError.response?.data?.message || 'Could not add your phone number. Try again.');
       } finally {
         setIsLinkingMobile(false);
       }
@@ -169,7 +170,7 @@ const CitizenProfileContent = () => {
       setShowGoogleButton(false); // Hide button after success
     } catch (requestError) {
       console.error('❌ [LINK-GOOGLE] Failed:', requestError);
-      setError(requestError.response?.data?.message || 'Failed to link Google account');
+      setError(requestError.response?.data?.message || 'Could not add Google sign-in. Try again.');
     } finally {
       setIsLinkingGoogle(false);
     }
@@ -177,12 +178,12 @@ const CitizenProfileContent = () => {
 
   const handleGoogleLinkError = () => {
     console.error('❌ [LINK-GOOGLE] Google authentication failed');
-    setError('Google authentication failed. Please try again.');
+    setError('Google sign-in failed. Try again.');
     setShowGoogleButton(false);
   };
 
   if (isLoading) {
-    return <div style={{ padding: '2rem' }}>Loading profile...</div>;
+    return <SectionLoading variant="profile" />;
   }
 
   return (
@@ -197,7 +198,7 @@ const CitizenProfileContent = () => {
               setName(e.target.value);
               setIsSaved(false);
             }}
-            hint="Shown in your dashboard and communications."
+            hint="Your name on this account."
           />
 
           <div className="ca-form__row">
@@ -206,19 +207,19 @@ const CitizenProfileContent = () => {
               label="Mobile number"
               value={user?.phone || 'Not set'}
               disabled
-              hint="Your primary sign-in method."
+              hint="Used to sign in."
               data-numeric
             />
 
             <Field
               id="citizen-email"
-              label="Google account"
+              label="Email"
               value={email || 'Not set'}
               onChange={(e) => {
                 setEmail(e.target.value);
                 setIsSaved(false);
               }}
-              hint="Optional sign-in method."
+              hint="Optional. You can use it to sign in."
             />
           </div>
 
@@ -228,9 +229,9 @@ const CitizenProfileContent = () => {
         </div>
       </Panel>
 
-      <Panel title="Link accounts">
+      <Panel title="Sign-in methods">
         <p style={{ marginBottom: '1.5rem', color: 'var(--color-ink-muted)', lineHeight: '1.6' }}>
-          Link your Google account for easier sign-in.
+          Add Google sign-in to your account.
         </p>
 
         {/* Hidden Google Login button - only mount when needed */}
@@ -259,7 +260,7 @@ const CitizenProfileContent = () => {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            {isLinkingGoogle ? 'Linking...' : 'Link Google Account'}
+            {isLinkingGoogle ? 'Adding…' : 'Add Google sign-in'}
           </button>
         )}
 
@@ -270,7 +271,7 @@ const CitizenProfileContent = () => {
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
-            <span>Google account linked: {user?.email}</span>
+            <span>Google sign-in is on: {user?.email}</span>
           </div>
         )}
 
@@ -279,7 +280,7 @@ const CitizenProfileContent = () => {
           <>
             <div style={{ height: '1rem' }} />
             <p style={{ marginBottom: '1rem', color: 'var(--color-ink-muted)', lineHeight: '1.6' }}>
-              Add a mobile number and PIN to enable SMS notifications and alternative sign-in.
+              Add a mobile number and PIN to sign in by phone and get text updates.
             </p>
 
             {!showLinkMobile ? (
@@ -292,12 +293,12 @@ const CitizenProfileContent = () => {
                   <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                   <line x1="12" y1="18" x2="12.01" y2="18" />
                 </svg>
-                Add Mobile Number
+                Add phone number
               </button>
             ) : (
               <div className="ca-profile-link-form">
                 <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, marginBottom: '1rem' }}>
-                  {linkStep === 'phone' && 'Enter your mobile number'}
+                  {linkStep === 'phone' && 'Add your phone number'}
                   {linkStep === 'pin' && 'Create a 4-digit PIN'}
                   {linkStep === 'confirm' && 'Confirm your PIN'}
                 </h4>
@@ -381,7 +382,7 @@ const CitizenProfileContent = () => {
                     onClick={handleLinkMobile}
                     disabled={isLinkingMobile || (linkStep === 'phone' && linkPhone.length !== 10) || (linkStep === 'pin' && linkPin.length !== 4) || (linkStep === 'confirm' && linkConfirmPin.length !== 4)}
                   >
-                    {isLinkingMobile ? 'Linking...' : linkStep === 'confirm' ? 'Link Mobile' : 'Continue'}
+                    {isLinkingMobile ? 'Adding…' : linkStep === 'confirm' ? 'Save phone number' : 'Continue'}
                   </button>
                   <button
                     type="button"

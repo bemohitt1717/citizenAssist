@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import AgentShell from '../features/agent/components/AgentShell/AgentShell';
 import { AGENT_SECTIONS } from '../features/agent/agentData';
+import { SectionLoading } from '../components/ui/LoadingStates/LoadingStates';
 
 const AgentHome = lazy(() => import('../features/agent/components/AgentHome/AgentHome'));
 const AgentRequests = lazy(() => import('../features/agent/components/AgentRequests/AgentRequests'));
@@ -31,7 +32,7 @@ const AgentDashboard = () => {
 
   return (
     <AgentShell activeId={activeId}>
-      <Suspense fallback={<p role="status" aria-live="polite">Loading section…</p>}>
+      <Suspense fallback={<SectionLoading variant={{ requests: 'list', earnings: 'earnings', profile: 'profile' }[activeId] || 'dashboard'} />}>
         <Section />
       </Suspense>
     </AgentShell>

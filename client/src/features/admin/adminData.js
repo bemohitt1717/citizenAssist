@@ -16,36 +16,36 @@
  */
 
 export const ADMIN_SECTIONS = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'track', blurb: 'The platform at a glance.' },
+  { id: 'dashboard', label: 'Dashboard', icon: 'track', blurb: 'See requests and applications to review.' },
   {
     id: 'requests',
     label: 'Requests',
     icon: 'document',
-    blurb: 'Every request on the platform. Reassign an agent where needed.',
+    blurb: 'See requests and choose an agent for each one.',
   },
   {
     id: 'agents',
     label: 'Agents',
     icon: 'shieldCheck',
-    blurb: 'Verify applications and see who is active.',
+    blurb: 'Check applications and manage agents.',
   },
   {
     id: 'services',
     label: 'Services',
     icon: 'caste',
-    blurb: 'The six services: charges, timelines and required documents.',
+    blurb: 'Change fees, wait times and document lists.',
   },
   {
     id: 'complaints',
     label: 'Complaints',
     icon: 'phone',
-    blurb: 'Citizen complaints and how they were resolved.',
+    blurb: 'Read and answer complaints.',
   },
   {
     id: 'profile',
     label: 'Profile',
     icon: 'income',
-    blurb: 'Your administrator account.',
+    blurb: 'Update your account details.',
   },
 ];
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Panel, Stat, Stats } from '../../../../components/ui/DataKit/DataKit';
 import { getServiceById } from '../../../../constants/services';
 import { getAgentEarnings } from '../../agentApi';
+import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 
 /**
  * Agent earnings.
@@ -21,45 +22,49 @@ const AgentEarnings = () => {
   }, []);
 
   if (error) return <p role="alert">{error}</p>;
-  if (!earnings) return <p>Loading earnings...</p>;
+  if (!earnings) return <SectionLoading variant="earnings" />;
 
   const completed = earnings.completedRequests;
 
   return (
     <>
       <Stats>
-        <Stat icon="income" label="This month" value={earnings.thisMonth} note="Completed requests" />
-        <Stat icon="check" label="All time" value={earnings.allTime} note="Completed requests" />
+        <Stat icon="income" label="This month" value={earnings.thisMonth} />
+        <Stat icon="check" label="All time" value={earnings.allTime} />
         <Stat
           icon="document"
           label="Completed this month"
           value={earnings.completedThisMonth}
-          note="Requests closed"
+          note="Requests completed"
         />
       </Stats>
 
       <div className="ca-panels">
         <Panel title={`Completed requests · ${completed.length}`}>
-          <ul className="ca-rows">
-            {completed.map((payout) => (
-              <li className="ca-row" key={payout.id}>
-                <span className="ca-row__body">
-                  <span className="ca-row__title">{getServiceById(payout.serviceId)?.name}</span>
-                  <span className="ca-row__meta">
-                    <span data-numeric>{payout.reference}</span>
-                    <span data-numeric>{payout.completedAt}</span>
+          {completed.length === 0 ? (
+            <p>No completed requests yet.</p>
+          ) : (
+            <ul className="ca-rows">
+              {completed.map((payout) => (
+                <li className="ca-row" key={payout.id}>
+                  <span className="ca-row__body">
+                    <span className="ca-row__title">{getServiceById(payout.serviceId)?.name}</span>
+                    <span className="ca-row__meta">
+                      <span data-numeric>{payout.reference}</span>
+                      <span data-numeric>{payout.completedAt}</span>
+                    </span>
                   </span>
-                </span>
 
-                <span className="ca-row__actions">
-                  <span className="ca-status ca-status--done">
-                    <span className="ca-status__dot" />
-                    <span data-numeric>{payout.amount}</span>
+                  <span className="ca-row__actions">
+                    <span className="ca-status ca-status--done">
+                      <span className="ca-status__dot" />
+                      <span data-numeric>{payout.amount}</span>
+                    </span>
                   </span>
-                </span>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          )}
         </Panel>
       </div>
     </>

@@ -16,27 +16,23 @@
 export const FRICTIONS = [
   {
     id: 'requirements',
-    problem: 'The requirement list changes, and nobody tells you which version is current.',
-    response:
-      'Your agent checks the file against the list the office is actually using before it goes in.',
+    problem: 'The list of required documents can change.',
+    response: 'Your agent checks the latest list before sending your documents.',
   },
   {
     id: 'queue',
-    problem: 'You find out a paper is missing after you have already spent the morning queueing.',
-    response:
-      'Every document is named on the service page up front, and checked off before submission.',
+    problem: 'A missing document can mean another trip to the office.',
+    response: 'See what you need before you apply.',
   },
   {
     id: 'charges',
-    problem: 'Nobody will tell you what the help costs until you are too far in to walk away.',
-    response:
-      'The assistance charge is published as a range, then confirmed with you before any work starts.',
+    problem: 'You should know the fee before work begins.',
+    response: 'We show a fee range. Your agent confirms the exact amount first.',
   },
   {
     id: 'status',
-    problem: 'Once the file is submitted, you have no way of knowing where it has got to.',
-    response:
-      'The request carries a status you can open at any time, and the agent moves it as it advances.',
+    problem: 'It can be hard to know what is happening with your request.',
+    response: 'Check its status and read updates from your agent at any time.',
   },
 ];
 
@@ -45,8 +41,8 @@ export const FRICTIONS = [
  * the next, which is why these carry numbers where the service cards do not.
  */
 export const VERIFICATION_STEPS = [
-  { id: 'register', label: 'Agent registers', detail: 'Applies with identity and work history.' },
-  { id: 'review', label: 'Admin reviews', detail: 'Documents are checked by a person, not a script.' },
-  { id: 'verify', label: 'Verified', detail: 'Approved and marked active on the platform.' },
-  { id: 'assign', label: 'Takes requests', detail: 'Only now can a citizen’s file reach them.' },
+  { id: 'register', label: 'Agent applies', detail: 'Shares their details and work experience.' },
+  { id: 'review', label: 'We check the application', detail: 'A person reviews the details.' },
+  { id: 'verify', label: 'Approved', detail: 'The agent can now help with requests.' },
+  { id: 'assign', label: 'Gets requests', detail: 'Citizens can now be matched with this agent.' },
 ];

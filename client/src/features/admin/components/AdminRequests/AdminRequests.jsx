@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { Empty, Panel, Tabs } from '../../../../components/ui/DataKit/DataKit';
+import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 import { getServiceById } from '../../../../constants/services';
 import { getStatus } from '../../../../constants/requests';
 import {
@@ -14,7 +15,7 @@ import './AdminRequests.css';
 const FILTERS = [
   { id: 'unassigned', label: 'Unassigned' },
   { id: 'live', label: 'In progress' },
-  { id: 'action', label: 'Stuck' },
+  { id: 'action', label: 'Waiting for citizen' },
   { id: 'completed', label: 'Completed' },
 ];
 
@@ -93,7 +94,7 @@ const AdminRequests = () => {
       setUploadFeedback({
         requestId,
         type: 'error',
-        text: error.response?.data?.message || 'Could not attach the final document. Try again.',
+        text: error.response?.data?.message || 'Could not add the final document. Try again.',
       });
     } finally {
       setUploadingRequestId(null);
@@ -108,19 +109,17 @@ const AdminRequests = () => {
     count: requests.filter((request) => matches(request, filter.id)).length,
   }));
 
-  if (isLoading) {
-    return <div style={{ padding: '2rem' }}>Loading requests...</div>;
-  }
+  if (isLoading) return <SectionLoading variant="list" />;
 
   return (
     <>
-      <Tabs tabs={tabs} activeId={filterId} onPick={setFilterId} label="Filter requests by state" />
+      <Tabs tabs={tabs} activeId={filterId} onPick={setFilterId} label="Filter requests" />
 
       <Panel title={`${FILTERS.find((f) => f.id === filterId)?.label} · ${rows.length}`}>
         {rows.length === 0 ? (
           <Empty
             title="Nothing here"
-            text="Requests appear in this list once they reach this state."
+            text="No requests in this group."
           />
         ) : (
           <ul className="ca-rows">
@@ -156,7 +155,7 @@ const AdminRequests = () => {
                         defaultValue=""
                         onChange={(e) => handleAssign(request.id, e.target.value)}
                       >
-                        <option value="">Assign agent...</option>
+                        <option value="">Choose an agent…</option>
                         {agents.map((agent) => (
                           <option key={agent.id} value={agent.id}>
                             {agent.name} · {agent.district}
@@ -168,7 +167,7 @@ const AdminRequests = () => {
 
                   {request.agentName && (
                     <span style={{ fontSize: '0.875rem', color: 'var(--color-ink-muted)' }}>
-                      Agent: {request.agentName}
+                      Agent {request.agentName}
                     </span>
                   )}
 
@@ -195,7 +194,7 @@ const AdminRequests = () => {
                             : 'Attach final document'}
                       </label>
                       {request.hasCompletedDocument && (
-                        <span className="ca-admin__document-ready">Available in citizen Track Request</span>
+                        <span className="ca-admin__document-ready">Citizen can download this from their request page</span>
                       )}
                       {uploadFeedback?.requestId === request.id && (
                         <span

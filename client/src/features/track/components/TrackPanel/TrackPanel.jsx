@@ -15,6 +15,7 @@ import {
   uploadRequestDocument,
 } from "../../../request/requestApi";
 import "./TrackPanel.css";
+import { SectionLoading } from "../../../../components/ui/LoadingStates/LoadingStates";
 
 /**
  * Maps a status to the tone its pill and progress bar use. Kept as a function
@@ -74,15 +75,14 @@ const EmptyState = () => (
     <h2 className="ca-track__empty-title">No requests yet</h2>
 
     <p className="ca-track__empty-text">
-      When you start a request, it will appear here with its status and
-      everything your agent has added to it.
+      Requests you send will appear here. Check this page for updates from your agent.
     </p>
 
     <Link
       className="ca-pill ca-pill--solid ca-track__empty-cta"
       to="/#services"
     >
-      Browse services
+      View services
       <span className="ca-pill__disc">
         <Icon name="arrowRight" size={15} />
       </span>
@@ -127,7 +127,7 @@ const TrackPanel = () => {
         setRequests(response.data.requests);
         setActiveId(response.data.requests[0]?._id || null);
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to load requests.");
+        setError(err.response?.data?.message || "Could not load your requests. Try again.");
       } finally {
         setIsLoading(false);
       }
@@ -200,7 +200,7 @@ const TrackPanel = () => {
       await createComplaint(active.id, complaintSubject, complaintDescription);
       setComplaintSubject("");
       setComplaintDescription("");
-      setComplaintMessage("Complaint submitted. An admin will review it.");
+      setComplaintMessage("Complaint sent. An admin will review it.");
       console.info("[citizen] complaint submitted", active.reference);
     } catch (requestError) {
       console.error("[citizen] complaint submission failed", requestError);
@@ -231,7 +231,7 @@ const TrackPanel = () => {
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
       setDownloadError(
-        "Could not download the completed document. Please try again.",
+        "Could not download the document. Try again.",
       );
     } finally {
       setIsDownloadingFinal(false);
@@ -243,8 +243,8 @@ const TrackPanel = () => {
       <div className="ca-track">
         <div className="ca-track__head">
           <h1 className="ca-track__title">Track a request</h1>
-          <p className="ca-track__lede">Loading your requests...</p>
         </div>
+        <SectionLoading variant="track" />
       </div>
     );
   }
@@ -268,8 +268,7 @@ const TrackPanel = () => {
         <h1 className="ca-track__title">Track a request</h1>
 
         <p className="ca-track__lede">
-          Every request you have placed, with where it has got to and what your
-          agent has said about it.
+          See updates from your agent and the government office.
         </p>
       </div>
 
@@ -326,7 +325,7 @@ const TrackPanel = () => {
 
             <dl className="ca-track__facts">
               <div className="ca-track__fact">
-                <dt className="ca-label ca-track__fact-key">Reference</dt>
+                <dt className="ca-label ca-track__fact-key">Request number</dt>
                 <dd className="ca-track__fact-value" data-numeric>
                   {active.reference}
                 </dd>
@@ -340,14 +339,14 @@ const TrackPanel = () => {
               </div>
 
               <div className="ca-track__fact">
-                <dt className="ca-label ca-track__fact-key">Charge</dt>
+                <dt className="ca-label ca-track__fact-key">Agent fee</dt>
                 <dd className="ca-track__fact-value" data-numeric>
                   {active.charge}
                 </dd>
               </div>
 
               <div className="ca-track__fact">
-                <dt className="ca-label ca-track__fact-key">Placed</dt>
+                <dt className="ca-label ca-track__fact-key">Request date</dt>
                 <dd className="ca-track__fact-value" data-numeric>
                   {active.createdAt}
                 </dd>
@@ -364,7 +363,7 @@ const TrackPanel = () => {
                     Your completed document is ready
                   </h3>
                   <p className="ca-track__edit-note">
-                    Download the file shared by your agent.
+                    Your agent has added the finished file.
                   </p>
                 </div>
                 <button
@@ -420,8 +419,7 @@ const TrackPanel = () => {
                       Need to correct something?
                     </h3>
                     <p className="ca-track__edit-note">
-                      Update your information or send the missing documents
-                      requested by your agent.
+                      Update your details or add documents your agent asked for.
                     </p>
                   </div>
                   <button
@@ -545,8 +543,8 @@ const TrackPanel = () => {
                 className="ca-field__input"
                 value={complaintSubject}
                 onChange={(event) => setComplaintSubject(event.target.value)}
-                placeholder="Complaint subject"
-                aria-label="Complaint subject"
+                placeholder="What do you need help with?"
+                aria-label="Complaint title"
               />
               <textarea
                 className="ca-field__area"
@@ -554,7 +552,7 @@ const TrackPanel = () => {
                 onChange={(event) =>
                   setComplaintDescription(event.target.value)
                 }
-                placeholder="Tell us what went wrong"
+                placeholder="Tell us what happened"
                 aria-label="Complaint details"
                 required
               />

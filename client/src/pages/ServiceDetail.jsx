@@ -6,6 +6,7 @@ import DetailPanel, {
 import { getAllServices } from '../features/services/servicesApi';
 import { SERVICES } from '../constants/services';
 import { DOCUMENTS } from '../constants/documents';
+import { SectionLoading } from '../components/ui/LoadingStates/LoadingStates';
 
 // Icon mapping for each service
 const SERVICE_ICONS = {
@@ -107,17 +108,7 @@ const ServiceDetail = () => {
   }, [serviceId]);
 
   if (isLoading) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'var(--color-ink-muted)',
-      }}>
-        Loading service...
-      </div>
-    );
+    return <SectionLoading variant="service-detail" />;
   }
 
   return service ? <DetailPanel service={service} /> : <ServiceMissing />;

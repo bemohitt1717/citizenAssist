@@ -4,6 +4,7 @@ import useReveal from '../../../../hooks/useReveal';
 import usePointerGlow from '../../../../hooks/usePointerGlow';
 import { getAllServices } from '../../../services/servicesApi';
 import { SERVICES } from '../../../../constants/services';
+import { ServiceCardsLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 import './Services.css';
 
 // Icon mapping for each service (matches database serviceId)
@@ -31,14 +32,16 @@ const STATIC_SERVICES = SERVICES.map((service) => ({
  * (charge, timeline, summary), changes reflect here immediately.
  */
 const Services = () => {
-  const [services, setServices] = useState(STATIC_SERVICES);
+  const [services, setServices] = useState([]);
   const [usingFallback, setUsingFallback] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [gridRef, isRevealed] = useReveal({ trigger: services.length });
   const glowRef = usePointerGlow();
 
   const fetchServices = async (signal) => {
     try {
       const response = await getAllServices({ signal });
+      if (signal?.aborted) return;
       // Backend returns { status: "success", count: X, data: [...] }
       const servicesData = response.data || [];
       // Convert backend data to match frontend format
@@ -63,7 +66,10 @@ const Services = () => {
       }
     } catch {
       if (signal?.aborted) return;
+      setServices(STATIC_SERVICES);
       setUsingFallback(true);
+    } finally {
+      if (!signal?.aborted) setIsLoading(false);
     }
   };
 
@@ -82,24 +88,25 @@ const Services = () => {
           </h2>
 
           <p className="ca-services__lede">
-            Pick the one you need. Each card tells you what the document is actually for, what our
-            assistance costs, how long it usually takes, and how many papers you will have to
-            gather — before you commit to anything.
+            Choose a service to see the documents, fee and usual time before you apply.
           </p>
         </header>
 
         {usingFallback && (
           <p className="ca-services__notice" role="status">
-            Live service information is temporarily unavailable. These standard prices and
-            timelines are indicative.
+            We could not load the latest details. The fees and times shown are estimates.
           </p>
         )}
 
-        <div ref={gridRef} className={`ca-grid ${isRevealed ? 'is-revealed' : ''}`.trim()}>
-          {services.map((service, index) => (
-            <ServiceCard key={service.id} service={service} index={index} />
-          ))}
-        </div>
+        {isLoading ? (
+          <ServiceCardsLoading />
+        ) : (
+          <div ref={gridRef} className={`ca-grid ${isRevealed ? 'is-revealed' : ''}`.trim()}>
+            {services.map((service, index) => (
+              <ServiceCard key={service.id} service={service} index={index} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

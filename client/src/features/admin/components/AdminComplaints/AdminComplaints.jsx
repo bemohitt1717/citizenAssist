@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { Empty, Panel, Tabs } from '../../../../components/ui/DataKit/DataKit';
 import { getComplaints, resolveComplaint } from '../../adminApi';
+import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 
 const FILTERS = [
   { id: 'open', label: 'Open' },
@@ -45,7 +46,7 @@ const AdminComplaints = () => {
     const resolution = drafts[id];
 
     if (!resolution || resolution.trim() === '') {
-      alert('Please enter what was done about this complaint.');
+      alert('Add a note about how you handled this complaint.');
       return;
     }
 
@@ -61,13 +62,11 @@ const AdminComplaints = () => {
       await fetchComplaints();
     } catch (error) {
       console.error('❌ [ADMIN-COMPLAINTS] Failed to resolve:', error);
-      alert('Failed to resolve complaint. Please try again.');
+      alert('Could not resolve the complaint. Try again.');
     }
   };
 
-  if (isLoading) {
-    return <div style={{ padding: '2rem' }}>Loading complaints...</div>;
-  }
+  if (isLoading) return <SectionLoading variant="list" />;
 
   return (
     <>
@@ -77,8 +76,8 @@ const AdminComplaints = () => {
         <Panel title={`${FILTERS.find((f) => f.id === filterId)?.label} · 0`}>
           <Empty
             icon="phone"
-            title="Nothing here"
-            text="Complaints raised by citizens against a request or an agent appear in this list."
+            title="No complaints here"
+            text="There are no complaints in this group."
           />
         </Panel>
       ) : (
@@ -125,7 +124,7 @@ const AdminComplaints = () => {
                     <textarea
                       id={`res-${complaint.id}`}
                       className="ca-field__area"
-                      placeholder="Record the action taken, so the outcome can be checked later."
+                      placeholder="What did you do to resolve this?"
                       value={drafts[complaint.id] ?? ''}
                       onChange={(event) =>
                         setDrafts((current) => ({
@@ -149,7 +148,7 @@ const AdminComplaints = () => {
                     </button>
 
                     <span className="ca-field__hint">
-                      A resolution note is required — closing without one leaves no record.
+                      Add a note before marking this resolved.
                     </span>
                   </div>
                 </div>

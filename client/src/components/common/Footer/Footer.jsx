@@ -34,8 +34,7 @@ const Footer = () => {
         <Logo className="ca-footer__logo" />
 
         <p className="ca-footer__blurb">
-          Assistance with government certificates and documentation, through agents an
-          administrator has verified. Charges stated before the work begins.
+          We help with applications through checked agents. Government offices issue certificates.
         </p>
       </div>
 

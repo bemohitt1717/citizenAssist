@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Icon from '../../../../components/ui/Icon/Icon';
 import ConfirmDialog from '../../../../components/ui/ConfirmDialog/ConfirmDialog';
 import { Empty, Panel, Readiness, Tabs } from '../../../../components/ui/DataKit/DataKit';
+import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 import { getServiceById } from '../../../../constants/services';
 import { getStatus } from '../../../../constants/requests';
 import { AGENT_NEXT_STATUS } from '../../agentData';
@@ -68,7 +69,7 @@ const AgentRequests = () => {
       console.info('[agent] requests loaded', response.count);
     } catch (requestError) {
       console.error('[agent] requests load failed', requestError);
-      setError(requestError.response?.data?.message || 'Could not load assigned requests.');
+      setError(requestError.response?.data?.message || 'Could not load requests. Try again.');
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +87,7 @@ const AgentRequests = () => {
       } catch (requestError) {
         if (!isCurrent) return;
         console.error('[agent] requests load failed', requestError);
-        setError(requestError.response?.data?.message || 'Could not load assigned requests.');
+        setError(requestError.response?.data?.message || 'Could not load requests. Try again.');
       } finally {
         if (isCurrent) setIsLoading(false);
       }
@@ -114,7 +115,7 @@ const AgentRequests = () => {
       await fetchRequests();
     } catch (requestError) {
       console.error('[agent] request decision failed', requestError);
-      setError(requestError.response?.data?.message || 'Could not update this request.');
+      setError(requestError.response?.data?.message || 'Could not update this request. Try again.');
     } finally {
       setBusyId(null);
     }
@@ -134,7 +135,7 @@ const AgentRequests = () => {
       await fetchRequests();
     } catch (requestError) {
       console.error('[agent] request status failed', requestError);
-      setError(requestError.response?.data?.message || 'Could not change request status.');
+      setError(requestError.response?.data?.message || 'Could not update this request. Try again.');
     } finally {
       setBusyId(null);
     }
@@ -153,7 +154,7 @@ const AgentRequests = () => {
       return true;
     } catch (requestError) {
       console.error('[agent] request note failed', requestError);
-      setError(requestError.response?.data?.message || 'Could not send note.');
+      setError(requestError.response?.data?.message || 'Could not send the note. Try again.');
       return false;
     } finally {
       setBusyId(null);
@@ -176,7 +177,7 @@ const AgentRequests = () => {
       link.remove();
       URL.revokeObjectURL(url);
     } catch {
-      setDownloadError('Could not open this document. Refresh the request and try again.');
+      setDownloadError('Could not open this document. Try again.');
     } finally {
       setDownloadingDocument('');
     }
@@ -201,7 +202,7 @@ const AgentRequests = () => {
         ...current,
         [requestId]: {
           type: 'success',
-          text: 'Attached. The citizen can download it from Track Request.',
+          text: 'File added. The citizen can download it from their request page.',
         },
       }));
     } catch (requestError) {
@@ -220,7 +221,7 @@ const AgentRequests = () => {
     }
   };
 
-  if (isLoading) return <Panel title="Requests"><p>Loading assigned requests...</p></Panel>;
+  if (isLoading) return <SectionLoading variant="list" />;
 
   return (
     <>
@@ -231,7 +232,7 @@ const AgentRequests = () => {
         {rows.length === 0 ? (
           <Empty
             title="Nothing here"
-            text="When a request reaches this stage it will show up in this list."
+            text="New requests will appear here."
           />
         ) : (
           <ul className="ca-rows">
@@ -275,7 +276,7 @@ const AgentRequests = () => {
                         disabled={busyId === request.id}
                       >
                         <Icon name="document" size={13} />
-                        See request
+                        Review
                       </button>
                     ) : (
                       <button
@@ -284,7 +285,7 @@ const AgentRequests = () => {
                         onClick={() => setOpenId(isOpen ? null : request.id)}
                         aria-expanded={isOpen}
                       >
-                        {isOpen ? 'Close' : 'Open'}
+                        {isOpen ? 'Close' : 'Details'}
                         <Icon name="arrowDown" size={13} />
                       </button>
                     )}
@@ -302,7 +303,7 @@ const AgentRequests = () => {
                       </section>
 
                       <section className="ca-areq__work" aria-label="Request actions">
-                        <h3 className="ca-areq__section-title">Move the request forward</h3>
+                        <h3 className="ca-areq__section-title">Update this request</h3>
                         <div className="ca-areq__controls">
                           <div className="ca-field ca-areq__control">
                             <label className="ca-field__label" htmlFor={`status-${request.id}`}>
@@ -330,7 +331,7 @@ const AgentRequests = () => {
                             <textarea
                               id={`note-${request.id}`}
                               className="ca-field__area ca-areq__note"
-                              placeholder="Say what is needed, and why."
+                              placeholder="What does the citizen need to do?"
                               value={noteDrafts[request.id] ?? ''}
                               onChange={(event) =>
                                 setNoteDrafts((current) => ({
@@ -341,7 +342,7 @@ const AgentRequests = () => {
                               disabled={busyId === request.id}
                             />
                             <span className="ca-field__hint">
-                              A note appears on their tracking page and asks them to take action.
+                              The citizen will see this note on their request page.
                             </span>
                           </div>
                         </div>
@@ -362,8 +363,8 @@ const AgentRequests = () => {
                       <section className="ca-areq__delivery" aria-label="Final document">
                         <div className="ca-areq__delivery-copy">
                           <h3 className="ca-areq__section-title">Final document</h3>
-                          <p>Attach the finished file the citizen should receive.</p>
-                          <span className="ca-field__hint">PDF, JPG or PNG · up to 10 MB</span>
+                          <p>Add the file the citizen should receive.</p>
+                          <span className="ca-field__hint">PDF, JPG or PNG. Up to 10 MB.</span>
                           {request.completedDocument && (
                             <span className="ca-areq__attached-file">
                               Current file: {request.completedDocument.split('/').pop().replace(/^\d+-/, '')}
@@ -414,7 +415,7 @@ const AgentRequests = () => {
           <div className="ca-areq-modal" role="dialog" aria-modal="true" aria-labelledby="request-dialog-title">
             <div className="ca-areq-modal__head">
               <div>
-                <span className="ca-label">Incoming service request</span>
+                <span className="ca-label">New request</span>
                 <h2 id="request-dialog-title">{getServiceById(selectedRequest.serviceId)?.name}</h2>
                 <span className="ca-areq-modal__reference" data-numeric>{selectedRequest.reference}</span>
               </div>
@@ -436,7 +437,7 @@ const AgentRequests = () => {
               </section>
 
               <section>
-                <span className="ca-label">Documents provided</span>
+                <span className="ca-label">Documents</span>
                 {selectedRequest.documents?.length ? (
                   <ul className="ca-areq-modal__docs">
                     {selectedRequest.documents.map((document) => {
@@ -452,12 +453,12 @@ const AgentRequests = () => {
                       );
                     })}
                   </ul>
-                ) : <p className="ca-areq-modal__muted">No documents attached yet.</p>}
+                ) : <p className="ca-areq-modal__muted">No documents added yet.</p>}
                 {downloadError && <p className="ca-areq-modal__muted" role="alert">{downloadError}</p>}
               </section>
 
               <section>
-                <span className="ca-label">Request history</span>
+                <span className="ca-label">Updates</span>
                 <ul className="ca-areq-modal__timeline">
                   {(selectedRequest.timeline || []).map((entry, index) => (
                     <li key={entry._id || `${entry.status}-${entry.at}-${index}`}>
@@ -475,7 +476,7 @@ const AgentRequests = () => {
                 <textarea
                   id={`incoming-note-${selectedRequest.id}`}
                   className="ca-field__area"
-                  placeholder="Ask for a missing document or clarify something in the request."
+                  placeholder="Ask for a document or explain what needs fixing."
                   value={noteDrafts[selectedRequest.id] ?? ''}
                   onChange={(event) => setNoteDrafts((current) => ({
                     ...current,
@@ -495,7 +496,7 @@ const AgentRequests = () => {
                   {busyId === selectedRequest.id ? 'Sending...' : 'Send note'}
                 </button>
                 <span className="ca-field__hint">
-                  Sending a note marks the request as waiting on the citizen.
+                  The request will show as waiting for the citizen.
                 </span>
               </section>
             </div>
@@ -518,7 +519,7 @@ const AgentRequests = () => {
           destructive
           icon="document"
           title={`Decline ${declining.reference}?`}
-          text={`This ${getServiceById(declining.serviceId)?.name} request goes back to the admin pool to be reassigned. ${declining.citizen} will wait longer as a result.`}
+          text="This request will go back to the admin to find another agent. The citizen may wait longer."
           confirmLabel="Decline it"
           onConfirm={confirmDecline}
           onCancel={() => setDeclining(null)}

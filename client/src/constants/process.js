@@ -10,31 +10,26 @@ export const PROCESS_STEPS = [
   {
     id: 'choose',
     label: 'Pick the service',
-    detail:
-      'Six to choose from. The documents, the charge and the timeline are all on the card before you commit to anything.',
+    detail: 'See the documents, fee and usual time before you apply.',
   },
   {
     id: 'submit',
-    label: 'Send us the basics',
-    detail:
-      'A short form and your documents, uploaded once. Nothing to queue for, and no office visit to get started.',
+    label: 'Add your details',
+    detail: 'Fill in a short form and upload your documents online.',
   },
   {
     id: 'assign',
-    label: 'A verified agent takes it',
-    detail:
-      'Your file goes to an agent an administrator has already checked. They confirm the exact charge with you before starting.',
+    label: 'An agent helps you',
+    detail: 'An approved agent contacts you and confirms the fee before starting.',
   },
   {
     id: 'review',
-    label: 'Your file gets checked',
-    detail:
-      'Every document is matched against the list the office is currently using, so nothing bounces back for a missing page.',
+    label: 'Your documents are checked',
+    detail: 'Your agent checks the documents before sending them to the office.',
   },
   {
     id: 'issue',
-    label: 'The authority issues it',
-    detail:
-      'You watch the status the whole way. The certificate is issued and signed by the government office, then reaches you.',
+    label: 'Get your certificate',
+    detail: 'Follow updates until the government office issues your certificate.',
   },
 ];

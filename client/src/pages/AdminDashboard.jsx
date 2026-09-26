@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import AdminShell from '../features/admin/components/AdminShell/AdminShell';
 import { ADMIN_SECTIONS } from '../features/admin/adminData';
+import { SectionLoading } from '../components/ui/LoadingStates/LoadingStates';
 
 const AdminHome = lazy(() => import('../features/admin/components/AdminHome/AdminHome'));
 const AdminRequests = lazy(() => import('../features/admin/components/AdminRequests/AdminRequests'));
@@ -35,7 +36,7 @@ const AdminDashboard = () => {
 
   return (
     <AdminShell activeId={activeId}>
-      <Suspense fallback={<p role="status" aria-live="polite">Loading section…</p>}>
+      <Suspense fallback={<SectionLoading variant={{ requests: 'list', agents: 'list', complaints: 'list', services: 'services', profile: 'profile' }[activeId] || 'dashboard'} />}>
         <Section />
       </Suspense>
     </AdminShell>

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import CitizenShell from '../features/citizen/components/CitizenShell/CitizenShell';
+import { SectionLoading } from '../components/ui/LoadingStates/LoadingStates';
 
 const CitizenHome = lazy(() => import('../features/citizen/components/CitizenHome/CitizenHome'));
 const CitizenProfile = lazy(() => import('../features/citizen/components/CitizenProfile/CitizenProfile'));
@@ -26,9 +27,11 @@ const CitizenDashboard = () => {
     }
   };
 
+  const loadingVariant = section === 'profile' ? 'profile' : section === 'track' ? 'track' : 'dashboard';
+
   return (
     <CitizenShell activeId={section}>
-      <Suspense fallback={<p role="status" aria-live="polite">Loading section…</p>}>
+      <Suspense fallback={<SectionLoading variant={loadingVariant} />}>
         {renderSection()}
       </Suspense>
     </CitizenShell>

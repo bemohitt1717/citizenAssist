@@ -53,13 +53,13 @@ const LoginPrompt = ({ isOpen, onClose, onLogin, requiresCitizen = false }) => {
         </div>
 
         <h2 className="ca-login-prompt__title" id={titleId}>
-          {requiresCitizen ? 'Citizen account required' : 'Sign in to continue'}
+          {requiresCitizen ? 'Sign in as a citizen' : 'Sign in to continue'}
         </h2>
         
         <p className="ca-login-prompt__message">
           {requiresCitizen
-            ? 'Service requests are available from a citizen account. Sign in with your citizen number to continue.'
-            : 'Sign in or create a citizen account to request this service. Your selected service will be ready when you return.'}
+            ? 'Sign in with your citizen account to continue.'
+            : 'Sign in or create a citizen account to apply. Your service will stay selected.'}
         </p>
 
         <div className="ca-login-prompt__actions">
@@ -68,7 +68,7 @@ const LoginPrompt = ({ isOpen, onClose, onLogin, requiresCitizen = false }) => {
             className="ca-login-prompt__button ca-login-prompt__button--primary"
             onClick={onLogin}
           >
-            {requiresCitizen ? 'Switch to citizen account' : 'Continue to sign in'}
+            {requiresCitizen ? 'Sign in as a citizen' : 'Continue'}
           </button>
           <button 
             type="button" 

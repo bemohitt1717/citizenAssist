@@ -1,0 +1,29 @@
+.ca-text-animate {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.ca-text-animate__character {
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ca-text-animate--blurInUp .ca-text-animate__character {
+    animation: ca-text-blur-in-up 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+    animation-delay: calc(var(--ca-character-index, 0) * var(--ca-character-stagger, 0.05s));
+  }
+}
+
+@keyframes ca-text-blur-in-up {
+  from {
+    filter: blur(10px);
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+
+  to {
+    filter: blur(0);
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}

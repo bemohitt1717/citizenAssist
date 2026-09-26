@@ -34,6 +34,44 @@
   padding: clamp(2rem, 6vw, 4rem) clamp(0.25rem, 1vw, 0.75rem);
 }
 
+.ca-oops__body--not-found {
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.9fr);
+  align-items: center;
+  gap: clamp(2rem, 7vw, 6rem);
+}
+
+.ca-oops__copy {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.ca-oops__art {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1.12;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: clamp(1.5rem, 4vw, 2.5rem);
+  background:
+    radial-gradient(ellipse at 50% 43%, var(--color-paper) 0%, rgb(255 255 255 / 0%) 63%),
+    linear-gradient(145deg, var(--color-shell), var(--color-cream-deep));
+}
+
+.ca-oops__cat {
+  display: block;
+  width: min(100%, 34rem);
+  aspect-ratio: 950 / 847;
+}
+
+.ca-oops__cat svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 /* The code, set as a label rather than as giant display type. A four-digit
    number at hero scale tells a citizen nothing they can act on. */
 .ca-oops__code {
@@ -91,6 +129,10 @@
   max-width: 44rem;
 }
 
+.ca-oops__body--not-found .ca-oops__links {
+  max-width: none;
+}
+
 .ca-oops__link {
   display: inline-flex;
   align-items: center;
@@ -130,5 +172,20 @@
 @media (prefers-reduced-motion: reduce) {
   .ca-oops__link {
     transition: none;
+  }
+}
+
+@media (max-width: 48rem) {
+  .ca-oops__body--not-found {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+  }
+
+  .ca-oops__copy { order: 0; }
+
+  .ca-oops__art {
+    order: 1;
+    width: min(100%, 23rem);
+    justify-self: center;
   }
 }

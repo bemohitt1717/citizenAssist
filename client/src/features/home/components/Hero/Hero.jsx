@@ -39,14 +39,13 @@ const Hero = () => {
       </h1>
 
       <p className="ca-hero__lede">
-        Six certificate and ID services, each with its documents, charges and timeline written down
-        before you begin. A verified agent does the running about — the certificate itself is still
-        issued by the government office that issues it.
+        See the documents, fee and usual time for each service before you start. An approved agent
+        helps with the paperwork. The government office issues your certificate.
       </p>
 
       <div className="ca-hero__actions">
         <a className="ca-pill ca-pill--solid ca-hero__action" href="#services">
-          Browse services
+          View services
           <span className="ca-pill__disc">
             <Icon name="arrowRight" size={16} />
           </span>
@@ -55,7 +54,7 @@ const Hero = () => {
         {/* Only show "Become an agent" button if user is NOT an agent */}
         {user?.role !== 'agent' && (
           <Link className="ca-pill ca-pill--outline ca-hero__action" to="/become-an-agent">
-            Become an agent
+            Apply as an agent
             <span className="ca-pill__disc">
               <Icon name="arrowUpRight" size={16} />
             </span>
