@@ -2,7 +2,7 @@
 
 A full-stack web platform that helps **citizens get assistance with government certificates and ID documents** — through verified agents, clear document checklists, published charge ranges, and live request tracking from submission to completion.
 
-**[Live Demo →](https://your-frontend-url.vercel.app)** *(add your deployed URL)*
+**[Live Demo →](https://citizen-assist-teal.vercel.app/)** *(add your deployed URL)*
 
 ---
 
@@ -528,8 +528,8 @@ MIT License — use and modify freely; add your own license file if you publish 
 ## Author
 
 **Your Name**  
-- GitHub: [@yourusername](https://github.com/yourusername)  
-- Live app: *(add Vercel URL)*  
+- GitHub: [@bemohitt1717](https://github.com/bemohitt1717)  
+- Live app: *(https://citizen-assist-teal.vercel.app/)*  
 
 ---
 
