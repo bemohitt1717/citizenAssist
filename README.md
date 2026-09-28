@@ -2,7 +2,7 @@
 
 A full-stack web platform that helps **citizens get assistance with government certificates and ID documents** — through verified agents, clear document checklists, published charge ranges, and live request tracking from submission to completion.
 
-**[Live Demo →](https://citizen-assist-teal.vercel.app/)** *(add your deployed URL)*
+**[Live Demo →](https://citizen-assist-teal.vercel.app/)**
 
 ---
 
