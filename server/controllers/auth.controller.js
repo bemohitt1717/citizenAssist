@@ -167,13 +167,11 @@ export const startAuth = async (req, res, next) => {
 */
 export const signUp = async (req, res, next) => {
   try {
-    console.log("🔐 [AUTH] Sign-up attempt:", { phone: req.body.phone });
 
     const phone = normalizePhone(req.body.phone);
     const pin = String(req.body.pin ?? "");
 
     if (!phone || !/^\+91[6-9]\d{9}$/.test(phone)) {
-      console.log("❌ [ERROR] Invalid phone:", phone);
       return res.status(400).json({
         status: "error",
         message: "Enter a valid Indian mobile number.",
@@ -181,7 +179,6 @@ export const signUp = async (req, res, next) => {
     }
 
     if (!isValidPin(pin)) {
-      console.log("❌ [ERROR] Invalid PIN format");
       return res.status(400).json({
         status: "error",
         message: "PIN must contain exactly 4 digits.",
@@ -189,7 +186,6 @@ export const signUp = async (req, res, next) => {
     }
 
     if (isWeakPin(pin)) {
-      console.log("❌ [ERROR] Weak PIN detected");
       return res.status(400).json({
         status: "error",
         message: "Choose a stronger PIN.",
@@ -199,14 +195,12 @@ export const signUp = async (req, res, next) => {
     const existingUser = await User.findOne({ phone }).select("+pinHash");
 
     if (existingUser) {
-      console.log("ℹ️  [INFO] User already exists:", existingUser._id);
 
       /*
         An agent/admin must never be able to claim their
         account through the citizen signup flow.
       */
       if (existingUser.role !== "citizen") {
-        console.log("❌ [ERROR] Non-citizen trying to sign up");
         return res.status(403).json({
           status: "error",
           message: "This account cannot be created through citizen sign-up.",
@@ -218,7 +212,6 @@ export const signUp = async (req, res, next) => {
         the initial PIN setup.
       */
       if (!existingUser.pinHash) {
-        console.log("✅ [SUCCESS] Setting PIN for existing user");
         existingUser.pinHash = await bcrypt.hash(pin, BCRYPT_ROUNDS);
         existingUser.status = "active";
         existingUser.failedPinAttempts = 0;
@@ -228,7 +221,6 @@ export const signUp = async (req, res, next) => {
         await existingUser.save();
 
         const token = createAccessToken(existingUser);
-        console.log("🎫 [TOKEN] Generated for user:", existingUser._id);
 
         return res.status(200).json({
           status: "success",
@@ -246,14 +238,12 @@ export const signUp = async (req, res, next) => {
         });
       }
 
-      console.log("❌ [ERROR] User already has PIN");
       return res.status(409).json({
         status: "error",
         message: "An account already exists. Please sign in.",
       });
     }
 
-    console.log("✅ [SUCCESS] Creating new citizen account");
     const pinHash = await bcrypt.hash(pin, BCRYPT_ROUNDS);
 
     const user = await User.create({
@@ -264,7 +254,6 @@ export const signUp = async (req, res, next) => {
     });
 
     const token = createAccessToken(user);
-    console.log("🎫 [TOKEN] Generated for new user:", user._id);
 
     return res.status(201).json({
       status: "success",
@@ -427,10 +416,6 @@ export const getProfile = async (req, res, next) => {
       });
     }
 
-    console.log("👤 [AUTH] Profile fetched for user:", {
-      userId: user._id,
-      role: user.role,
-    });
 
     return res.json({
       status: "success",
@@ -480,12 +465,6 @@ export const updateProfile = async (req, res, next) => {
 
     await user.save();
 
-    console.log("✅ [AUTH] Profile updated for user:", {
-      userId: user._id,
-      role: user.role,
-      name: user.name,
-      email: user.email,
-    });
 
     return res.json({
       status: "success",
@@ -543,7 +522,6 @@ export const googleAuth = async (req, res, next) => {
       });
     }
 
-    console.log("🔐 [GOOGLE-AUTH] Verifying Google token...");
 
     // Verify Google token
     const ticket = await client.verifyIdToken({
@@ -554,13 +532,11 @@ export const googleAuth = async (req, res, next) => {
     const payload = ticket.getPayload();
     const { sub: googleId, email, name, picture } = payload;
 
-    console.log("✅ [GOOGLE-AUTH] Token verified:", { email, name, googleId });
 
     // Check if user exists with this Google ID
     let user = await User.findOne({ googleId });
 
     if (user) {
-      console.log("👤 [GOOGLE-AUTH] Existing user found:", user._id);
 
       // User exists, log them in
       const token = createAccessToken(user);
@@ -587,10 +563,6 @@ export const googleAuth = async (req, res, next) => {
     user = await User.findOne({ email });
 
     if (user) {
-      console.log(
-        "📧 [GOOGLE-AUTH] User with email exists, linking Google account:",
-        user._id,
-      );
 
       // Link Google account to existing user
       user.googleId = googleId;
@@ -618,7 +590,6 @@ export const googleAuth = async (req, res, next) => {
     }
 
     // New user, create account with Google
-    console.log("🆕 [GOOGLE-AUTH] Creating new user with Google:", email);
 
     user = await User.create({
       googleId,
@@ -663,7 +634,6 @@ export const linkMobile = async (req, res, next) => {
     const { phone: rawPhone, pin } = req.body;
     const phone = normalizePhone(rawPhone);
 
-    console.log("📱 [LINK-MOBILE] Request:", { userId: req.user._id, phone });
 
     if (!phone || !/^\+91[6-9]\d{9}$/.test(phone)) {
       return res.status(400).json({
@@ -705,10 +675,6 @@ export const linkMobile = async (req, res, next) => {
     user.pinHash = await bcrypt.hash(pin, BCRYPT_ROUNDS);
     await user.save();
 
-    console.log(
-      "✅ [LINK-MOBILE] Mobile number linked successfully:",
-      user._id,
-    );
 
     return res.json({
       status: "success",
@@ -746,7 +712,6 @@ export const linkGoogle = async (req, res, next) => {
       });
     }
 
-    console.log("🔗 [LINK-GOOGLE] Verifying token for user:", req.user._id);
 
     // Verify Google token
     const ticket = await client.verifyIdToken({
@@ -777,10 +742,6 @@ export const linkGoogle = async (req, res, next) => {
     if (!user.name) user.name = name;
     await user.save();
 
-    console.log(
-      "✅ [LINK-GOOGLE] Google account linked successfully:",
-      user._id,
-    );
 
     return res.json({
       status: "success",

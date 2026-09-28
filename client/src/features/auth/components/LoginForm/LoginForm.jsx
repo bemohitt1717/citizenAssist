@@ -6,6 +6,7 @@ import { Button } from "../../../../components/ui/button";
 import { Spinner } from "../../../../components/ui/spinner";
 import GoogleMark from "../../../../components/ui/GoogleMark/GoogleMark";
 import PinInput from "../PinInput/PinInput";
+import LegalConsentDialog from "../LegalConsentDialog/LegalConsentDialog";
 import { googleLogin, startAuth, signIn, signUp } from "../../authApi";
 import { useAuth } from "../../../../context/useAuth";
 import { getApiErrorMessage } from "../../../../utils/apiError";
@@ -118,12 +119,17 @@ const LoginForm = ({ role, onChangeRole }) => {
   const [mode, setMode] = useState("signin");
   const [step, setStep] = useState("phone");
   const [phone, setPhone] = useState("");
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [isRevealed, setIsRevealed] = useState(false);
   const [error, setError] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const [consentDialog, setConsentDialog] = useState(null);
   const canSignUp = role.id === "citizen";
+  const needsSignupConsents = mode === "signup" && canSignUp;
+  const signupConsentsOk = privacyAccepted && termsAccepted;
 
   const copy = role[mode];
   const steps = STEPS[mode];
@@ -135,6 +141,7 @@ const LoginForm = ({ role, onChangeRole }) => {
 
   // Indian mobile numbers: ten digits, starting 6 to 9.
   const isPhoneValid = /^[6-9]\d{9}$/.test(phone);
+  const signupPhoneStepReady = signupConsentsOk && isPhoneValid;
 
   const isPinComplete = pin.length === PIN_LENGTH;
   const isPinWeak = isPinComplete && isPinTooObvious(pin);
@@ -175,8 +182,13 @@ const LoginForm = ({ role, onChangeRole }) => {
   const submitPhone = (event) => {
     event.preventDefault();
 
+    if (mode === "signup" && (!privacyAccepted || !termsAccepted)) {
+      setError("Please accept the Privacy Policy and Terms and Conditions to continue.");
+      return;
+    }
+
     if (!isPhoneValid) {
-      setError("Enter a 10-digit mobile number starting with 6, 7, 8 or 9.");
+      setError("Enter a valid 10-digit mobile number.");
       return;
     }
 
@@ -184,18 +196,15 @@ const LoginForm = ({ role, onChangeRole }) => {
       try {
         const response = await startAuth(phone, role.id);
         const { exists, hasPin } = response.data;
-        console.info("[auth debug] phone step", { mode, exists, hasPin });
 
         if (mode === "signin") {
           if (!exists) {
-            setError('We could not find an account. Choose “Create one” to sign up.');
+            setError("No account found for this number. You can create one below.");
             return;
           }
 
           if (!hasPin) {
-            setError(
-              'This account has no PIN yet. Choose “Create one” to set it.',
-            );
+            setError("This account needs a PIN. Use Create one to set it up.");
             return;
           }
 
@@ -204,16 +213,12 @@ const LoginForm = ({ role, onChangeRole }) => {
         }
 
         if (exists) {
-          setError('This number already has an account. Sign in instead.');
+          setError("This number is already registered. Sign in instead.");
           return;
         }
 
         goToStep("create");
       } catch (requestError) {
-        console.info(
-          "[auth debug] phone step failed",
-          requestError.response?.status,
-        );
         setError(getApiErrorMessage(requestError));
       } finally {
         setIsBusy(false);
@@ -232,13 +237,8 @@ const LoginForm = ({ role, onChangeRole }) => {
     const authenticate = async () => {
       try {
         const response = await signIn(phone, pin, role.id);
-        console.info("[auth debug] sign-in flow succeeded");
         finish(response.data.token, response.data.user);
       } catch (requestError) {
-        console.info(
-          "[auth debug] sign-in flow failed",
-          requestError.response?.status,
-        );
         setError(getApiErrorMessage(requestError));
         setIsBusy(false);
       }
@@ -257,11 +257,11 @@ const LoginForm = ({ role, onChangeRole }) => {
 
   const handleForgotPin = () => {
     if (!isPhoneValid) {
-      setError("Enter a valid mobile number first.");
+      setError("Enter your mobile number to continue.");
       return;
     }
 
-    setError('To reset your PIN, contact Citizen Assist. We will check that this number is yours.');
+    setError("PIN reset is handled by support. Contact Citizen Assist with this mobile number.");
   };
 
   const submitConfirm = (event) => {
@@ -272,15 +272,8 @@ const LoginForm = ({ role, onChangeRole }) => {
       try {
         const response = await signUp(phone, pin);
 
-        console.info(
-          "[auth debug] sign-up flow succeeded",
-        );
         finish(response.data.token, response.data.user);
       } catch (requestError) {
-        console.info(
-          "[auth debug] sign-up flow failed",
-          requestError.response?.status,
-        );
         setError(getApiErrorMessage(requestError));
         setIsBusy(false);
       }
@@ -298,6 +291,9 @@ const LoginForm = ({ role, onChangeRole }) => {
     const next = mode === "signin" ? "signup" : "signin";
 
     setMode(next);
+    setPrivacyAccepted(false);
+    setTermsAccepted(false);
+    setConsentDialog(null);
     setPin("");
     setConfirmPin("");
     setError("");
@@ -319,13 +315,17 @@ const LoginForm = ({ role, onChangeRole }) => {
   };
 
   const signInWithGoogle = () => {
+    if (mode === "signup" && (!privacyAccepted || !termsAccepted)) {
+      setError("Please accept the Privacy Policy and Terms and Conditions to continue.");
+      return;
+    }
+
     // Trigger hidden Google button click
     const googleButton = googleButtonRef.current?.querySelector('div[role="button"]');
     if (googleButton) {
       googleButton.click();
     } else {
-      console.warn('[GOOGLE-LOGIN] Google button not found, retrying...');
-      // Retry after a short delay if button not found
+      // Retry while the Google button finishes mounting.
       setTimeout(() => {
         const retryButton = googleButtonRef.current?.querySelector('div[role="button"]');
         if (retryButton) retryButton.click();
@@ -337,13 +337,11 @@ const LoginForm = ({ role, onChangeRole }) => {
     try {
       setIsBusy(true);
       setError("");
-      console.log('✅ [GOOGLE-LOGIN] Received credential');
 
       const response = await googleLogin(credentialResponse.credential);
-      console.log('✅ [GOOGLE-LOGIN] Backend authentication successful');
 
       if (response.data.user.role !== role.id) {
-        setError('This Google account is for a different account type. Go back and choose the right one.');
+        setError("This Google account doesn't match the selected role. Choose the correct account type and try again.");
         setIsBusy(false);
         return;
       }
@@ -358,7 +356,7 @@ const LoginForm = ({ role, onChangeRole }) => {
 
   const handleGoogleError = () => {
     console.error('❌ [GOOGLE-LOGIN] Google authentication failed');
-    setError('Google sign-in failed. Try again.');
+    setError("Couldn't sign in with Google. Please try again.");
     setIsBusy(false);
   };
 
@@ -370,51 +368,33 @@ const LoginForm = ({ role, onChangeRole }) => {
   }[step];
 
   const lede = {
-    phone: copy.lede,
-    enter: `The 4-digit PIN you set for +91 ${phone}.`,
-    create: `Four digits, entered every time you sign in with +91 ${phone}.`,
-    confirm: "Type the same four digits again so a slip cannot lock you out.",
+    enter: `Enter the PIN for +91 ${phone}.`,
+    create: `Choose a PIN for +91 ${phone}.`,
+    confirm: "Enter the same PIN again to confirm.",
   }[step];
 
-  /* The number is only marked wrong once it has been submitted — going red on the
-     second digit of ten would be nagging, not helping. A PIN is judged as soon as
-     all four are in, which is the first moment there is anything to judge. */
-  const phoneNote = noteFor({
-    problem: error,
-    isSettled: false,
-    waiting: "We use this to sign you in, nothing else.",
-  });
+  const phoneNote = error ? { tone: "error", text: error } : null;
 
-  /* Signing in, the only thing this side can tell is whether four digits are
-     there. Whether they are the right four is the server's answer, and the copy
-     stays careful not to promise otherwise. */
   const enterNote = noteFor({
     problem: error,
-    isSettled: isPinComplete,
-    settled: "4 digits entered.",
-    waiting: "Enter the 4-digit PIN for this number.",
+    isSettled: false,
+    waiting: "",
   });
 
   const pinNote = noteFor({
     problem:
       error ||
-      (isPinWeak
-        ? "Choose a harder PIN. Avoid repeats like 1111 or runs like 1234."
-        : ""),
-    isSettled: isPinReady,
-    settled: "PIN ready. Confirm it next.",
-    waiting: "Avoid birthdays or numbers printed on your cards.",
+      (isPinWeak ? "This PIN is too easy to guess. Try a different combination." : ""),
+    isSettled: false,
+    waiting: "",
   });
 
   const confirmNote = noteFor({
     problem:
       error ||
-      (isConfirmComplete && !isConfirmMatched
-        ? "Not the same as the PIN you chose."
-        : ""),
-    isSettled: isConfirmMatched,
-    settled: "PINs match.",
-    waiting: "Enter the same PIN again.",
+      (isConfirmComplete && !isConfirmMatched ? "PINs don't match. Try again." : ""),
+    isSettled: false,
+    waiting: "",
   });
 
   const phoneStatus = error ? "invalid" : isPhoneValid ? "valid" : "idle";
@@ -496,7 +476,7 @@ const LoginForm = ({ role, onChangeRole }) => {
 
         <h1 className="ca-login__title">{heading}</h1>
 
-        <p className="ca-login__lede">{lede}</p>
+        {lede ? <p className="ca-login__lede">{lede}</p> : null}
 
         {/* ── Mobile number, both modes ──────────────────────────────────── */}
         {step === "phone" && (
@@ -520,18 +500,61 @@ const LoginForm = ({ role, onChangeRole }) => {
                   value={phone}
                   onChange={onPhoneChange}
                   aria-invalid={Boolean(error)}
-                  aria-describedby="ca-phone-note"
+                  aria-describedby={phoneNote ? "ca-phone-note" : undefined}
                   data-numeric
                 />
               </div>
             </div>
 
-            <Note note={phoneNote} id="ca-phone-note" />
+            {phoneNote ? <Note note={phoneNote} id="ca-phone-note" /> : null}
+
+            {mode === "signup" && canSignUp && (
+              <div className="ca-login__consents" aria-label="Account agreements">
+                <div className="ca-login__consent-row">
+                  <input
+                    id="ca-privacy-consent"
+                    type="checkbox"
+                    checked={privacyAccepted}
+                    onChange={(event) => {
+                      setPrivacyAccepted(event.target.checked);
+                      setError("");
+                    }}
+                  />
+                  <label htmlFor="ca-privacy-consent">I accept the Privacy Policy</label>
+                  <button
+                    type="button"
+                    className="ca-login__consent-more"
+                    onClick={() => setConsentDialog("privacy")}
+                  >
+                    See more
+                  </button>
+                </div>
+                <div className="ca-login__consent-row">
+                  <input
+                    id="ca-terms-consent"
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(event) => {
+                      setTermsAccepted(event.target.checked);
+                      setError("");
+                    }}
+                  />
+                  <label htmlFor="ca-terms-consent">I agree to the Terms and Conditions</label>
+                  <button
+                    type="button"
+                    className="ca-login__consent-more"
+                    onClick={() => setConsentDialog("terms")}
+                  >
+                    See more
+                  </button>
+                </div>
+              </div>
+            )}
 
             <button
               type="submit"
               className="ca-pill ca-pill--solid ca-login__submit"
-              disabled={isBusy}
+              disabled={isBusy || (needsSignupConsents && !signupPhoneStepReady)}
             >
               {isBusy ? "Checking…" : "Continue"}
               <span className="ca-pill__disc">
@@ -565,7 +588,7 @@ const LoginForm = ({ role, onChangeRole }) => {
               />
             </div>
 
-            <Note note={enterNote} id="ca-enter-note" />
+            {enterNote.text ? <Note note={enterNote} id="ca-enter-note" /> : null}
 
             <Button
               type="submit"
@@ -618,7 +641,7 @@ const LoginForm = ({ role, onChangeRole }) => {
               />
             </div>
 
-            <Note note={pinNote} id="ca-pin-note" />
+            {pinNote.text ? <Note note={pinNote} id="ca-pin-note" /> : null}
 
             <button
               type="submit"
@@ -659,7 +682,7 @@ const LoginForm = ({ role, onChangeRole }) => {
               />
             </div>
 
-            <Note note={confirmNote} id="ca-confirm-note" />
+            {confirmNote.text ? <Note note={confirmNote} id="ca-confirm-note" /> : null}
 
             <button
               type="submit"
@@ -708,7 +731,7 @@ const LoginForm = ({ role, onChangeRole }) => {
               type="button"
               className="ca-login__google"
               onClick={signInWithGoogle}
-              disabled={isBusy}
+              disabled={isBusy || (needsSignupConsents && !signupPhoneStepReady)}
             >
               <GoogleMark size={20} />
               {mode === 'signup' ? 'Sign up with Google' : 'Sign in with Google'}
@@ -741,6 +764,23 @@ const LoginForm = ({ role, onChangeRole }) => {
           </p>
         )}
       </div>
+
+      {consentDialog && (
+        <LegalConsentDialog
+          policyKey={consentDialog}
+          onAccept={() => {
+            if (consentDialog === "privacy") setPrivacyAccepted(true);
+            if (consentDialog === "terms") setTermsAccepted(true);
+            setConsentDialog(null);
+            setError("");
+          }}
+          onDecline={() => {
+            if (consentDialog === "privacy") setPrivacyAccepted(false);
+            if (consentDialog === "terms") setTermsAccepted(false);
+            setConsentDialog(null);
+          }}
+        />
+      )}
     </div>
   );
 };

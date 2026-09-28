@@ -51,59 +51,55 @@ const resolveServiceDocuments = (requiredDocuments, fallbackDocuments = []) => {
  * Fetches service from database to show latest info updated by admin.
  * Falls back to constants for fields not in database (usedFor, issuedBy, validity).
  */
+const mergeService = (serviceId, foundService) => {
+  const constantService = SERVICES.find((service) => service.id === serviceId);
+  const documents = resolveServiceDocuments(
+    foundService.requiredDocuments,
+    constantService?.documents || [],
+  );
+
+  return {
+    id: foundService.serviceId,
+    name: foundService.name,
+    icon: SERVICE_ICONS[foundService.serviceId] || 'document',
+    description: foundService.description,
+    charge: foundService.charge,
+    timeline: foundService.timeline,
+    summary: foundService.summary,
+    documents,
+    documentCount: documents.length,
+    usedFor: constantService?.usedFor || [],
+    issuedBy: constantService?.issuedBy || 'Government Office',
+    validity: constantService?.validity || 'As per government rules',
+    tone: constantService?.tone || 'paper',
+  };
+};
+
 const ServiceDetail = () => {
   const { serviceId } = useParams();
-  const [service, setService] = useState(() => fromStaticService(serviceId));
-  const [isLoading, setIsLoading] = useState(() => !fromStaticService(serviceId));
+  const [loadedService, setLoadedService] = useState(null);
+  const fallbackService = fromStaticService(serviceId);
+  const currentResult = loadedService?.serviceId === serviceId ? loadedService : null;
+  const service = currentResult ? currentResult.service : fallbackService;
+  const isLoading = !currentResult && !fallbackService;
 
   useEffect(() => {
     const controller = new AbortController();
     const fallbackService = fromStaticService(serviceId);
-    setService(fallbackService);
-    setIsLoading(!fallbackService);
-
-    const fetchService = async () => {
-      try {
-        const response = await getAllServices({ signal: controller.signal });
+    getAllServices({ signal: controller.signal })
+      .then((response) => {
         if (controller.signal.aborted) return;
-        const foundService = response.data?.find((s) => s.serviceId === serviceId);
+        const services = response.data || [];
+        const foundService = services.find((item) => item.serviceId === serviceId);
+        setLoadedService({
+          serviceId,
+          service: foundService ? mergeService(serviceId, foundService) : services.length ? null : fallbackService,
+        });
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setLoadedService({ serviceId, service: fallbackService });
+      });
 
-        if (foundService) {
-          // Get constant data for fields not in database
-          const constantService = SERVICES.find((s) => s.id === serviceId);
-          const documents = resolveServiceDocuments(
-            foundService.requiredDocuments,
-            constantService?.documents || [],
-          );
-
-          // Merge database + constant data
-          setService({
-            id: foundService.serviceId,
-            name: foundService.name,
-            icon: SERVICE_ICONS[foundService.serviceId] || 'document',
-            description: foundService.description,
-            charge: foundService.charge,
-            timeline: foundService.timeline,
-            summary: foundService.summary,
-            documents,
-            documentCount: documents.length,
-            // Fields from constants (not in database)
-            usedFor: constantService?.usedFor || [],
-            issuedBy: constantService?.issuedBy || 'Government Office',
-            validity: constantService?.validity || 'As per government rules',
-            tone: constantService?.tone || 'paper',
-          });
-        } else {
-          setService(response.data?.length ? null : fallbackService);
-        }
-      } catch {
-        if (!controller.signal.aborted) setService(fallbackService);
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
-      }
-    };
-
-    fetchService();
     return () => controller.abort();
   }, [serviceId]);
 

@@ -27,15 +27,6 @@
   max-width: 14ch;
 }
 
-.ca-roles__lede {
-  margin-top: 0.875rem;
-  max-width: 38ch;
-  font-size: 1rem;
-  line-height: 1.62;
-  font-weight: 500;
-  color: var(--color-ink-muted);
-}
-
 .ca-roles__list {
   display: grid;
   gap: 0.5rem;

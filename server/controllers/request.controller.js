@@ -5,16 +5,11 @@ import { getNextReference } from "../utils/counter.js";
 // Submit a new service request (citizen only)
 export const createServiceRequest = async (req, res, next) => {
   try {
-    console.log('📝 [REQUEST] Creating service request:', {
-      user: req.user._id,
-      body: req.body,
-    });
 
     const { serviceId, applicantDetails, documents } = req.body;
 
     // Check required fields
     if (!serviceId || !applicantDetails) {
-      console.log('❌ [ERROR] Missing required fields');
       return res.status(400).json({
         status: "error",
         message: "Service ID and applicant details are required.",
@@ -24,7 +19,6 @@ export const createServiceRequest = async (req, res, next) => {
     const { fullName, phone, district } = applicantDetails;
 
     if (!fullName || !phone || !district) {
-      console.log('❌ [ERROR] Missing applicant details');
       return res.status(400).json({
         status: "error",
         message: "Full name, phone, and district are required.",
@@ -43,7 +37,6 @@ export const createServiceRequest = async (req, res, next) => {
     ];
 
     if (!validServiceIds.includes(serviceId)) {
-      console.log('❌ [ERROR] Invalid service ID:', serviceId);
       return res.status(404).json({
         status: "error",
         message: "Invalid service ID.",
@@ -62,7 +55,6 @@ export const createServiceRequest = async (req, res, next) => {
 
     // Generate unique reference like CA-4821
     const reference = await getNextReference();
-    console.log('🔢 [GENERATED] Reference number:', reference);
 
     // Create first timeline entry
     const now = new Date();
@@ -102,11 +94,6 @@ export const createServiceRequest = async (req, res, next) => {
       charge: null,
     });
 
-    console.log('✅ [SUCCESS] Request created:', {
-      id: serviceRequest._id,
-      reference: serviceRequest.reference,
-      serviceId: serviceRequest.serviceId,
-    });
 
     return res.status(201).json({
       status: "success",
@@ -130,13 +117,11 @@ export const createServiceRequest = async (req, res, next) => {
 // Get all requests for logged-in citizen
 export const getCitizenRequests = async (req, res, next) => {
   try {
-    console.log('📋 [REQUEST] Fetching requests for citizen:', req.user._id);
 
     const requests = await ServiceRequest.find({
       citizen: req.user._id,
     }).sort({ createdAt: -1 });
 
-    console.log(`✅ [SUCCESS] Found ${requests.length} requests`);
 
     // Format for frontend (match DEMO_REQUESTS shape)
     const formattedRequests = requests.map((request) => ({
@@ -196,7 +181,6 @@ export const updateCitizenRequest = async (req, res, next) => {
     });
     await request.save();
 
-    console.log('✏️ [REQUEST] Citizen updated request:', request.reference);
     return res.json({ status: 'success', message: 'Request updated successfully.' });
   } catch (error) {
     next(error);
@@ -221,7 +205,6 @@ export const uploadCitizenRequestDocument = async (req, res, next) => {
     });
     await request.save();
 
-    console.log('📎 [REQUEST] Citizen uploaded document:', { reference: request.reference, file: req.file.filename });
     return res.json({ status: 'success', message: 'Document uploaded successfully.' });
   } catch (error) {
     next(error);

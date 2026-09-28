@@ -1,282 +1,546 @@
-<div align="center">
-
 # Citizen Assist
 
-**Government paperwork, handled with you.**
+A full-stack web platform that helps **citizens get assistance with government certificates and ID documents** — through verified agents, clear document checklists, published charge ranges, and live request tracking from submission to completion.
 
-A citizen-facing platform for getting help with government certificates and ID
-documents — through agents an administrator has verified, at charges published
-before you commit.
-
-<br />
-
-![React](https://img.shields.io/badge/React-19-16170F?style=flat-square)
-![Vite](https://img.shields.io/badge/Vite-8-16170F?style=flat-square)
-![Tailwind](https://img.shields.io/badge/Tailwind-4-16170F?style=flat-square)
-![Express](https://img.shields.io/badge/Express-5-16170F?style=flat-square)
-![MongoDB](https://img.shields.io/badge/MongoDB-planned-9E4E12?style=flat-square)
-
-</div>
+**[Live Demo →](https://your-frontend-url.vercel.app)** *(add your deployed URL)*
 
 ---
 
-> [!IMPORTANT]
-> **Citizen Assist is not a government body.** It is an independent assistance
-> service, not affiliated with, endorsed by, or acting on behalf of any government
-> department or portal. Certificates and official documents are issued solely by
-> the competent authority. Charges shown are for assistance and are separate from
-> any statutory government fee.
->
-> This repository is a **college project prototype**. All data on screen is
-> invented, no backend is connected, and nothing submitted through it reaches a
-> real office.
+## What It Does
+
+- **Browse government-style services** — Income, Caste, Domicile, Birth certificates, PAN & Aadhaar assistance  
+- **See exact document requirements** — What to upload, which page to photograph, accepted formats  
+- **Submit requests in-app** — 4-step flow: requirements → details → uploads → review  
+- **Track every request** — Status timeline with notes (pending → assigned → processing → completed)  
+- **Sign in your way** — Indian mobile + 4-digit PIN, or Google OAuth  
+- **Become an agent** — Citizens can apply; admins verify before they take work  
+- **Role-based dashboards** — Separate experiences for Citizen, Agent, and Admin  
+- **File uploads** — PDF, JPG, PNG (up to 10 MB) stored on the server  
+- **Raise complaints** — Citizens can report issues; admins resolve with a written outcome  
+- **Legal & cookies** — Terms, privacy, cookie policy pages + consent banner  
+- **Responsive UI** — Works on mobile, tablet, and desktop  
+
+> **Important:** Citizen Assist is **not** a government body. Certificates are issued only by the competent authority. Shown charges are for **assistance**, separate from statutory government fees.
 
 ---
 
-## The problem
+## How It Works
 
-Getting a certificate in India is rarely about the certificate. It is about not
-knowing which documents are needed, finding out a page is missing *after* queueing
-for a morning, not knowing what help will cost until you are too far in to walk
-away, and having no idea where your file is once it is submitted.
-
-Citizen Assist answers those four things directly:
-
-| What goes wrong | What the platform does |
-| --- | --- |
-| The requirement list changes and nobody says which version is current | The agent checks your file against the list the office is actually using |
-| A missing page surfaces only after you have queued | Every document is named on the service page, and checked before submission |
-| Nobody quotes the cost until you are committed | The charge is published as a range, then confirmed before any work starts |
-| Once submitted, the file disappears | The request carries a status you can open at any time |
+1. **Explore** — Open the landing page and pick one of six services  
+2. **Understand** — Read summaries, issuing office, validity, and document schematics on the service detail page  
+3. **Sign in** — Choose Citizen / Agent / Admin at login, then PIN or Google  
+4. **Start request** — Confirm requirements, fill applicant details, attach documents, review  
+5. **Admin assigns** — An administrator assigns a verified agent to your request  
+6. **Agent works** — Agent accepts, updates status, adds notes, uploads the finished document  
+7. **Track & finish** — Citizen follows the timeline on `/track` until the request is completed  
 
 ---
 
-## Roles
+## Built With
 
-| Role | Can do |
-| --- | --- |
-| **Citizen** | Browse six services, read the requirements, start a request, track it |
-| **Service agent** | Accept or decline assigned requests, move them along, add notes, see earnings |
-| **Administrator** | Verify agents, assign and oversee requests, manage services, resolve complaints |
+### Frontend
+- **React 19** — UI with React Compiler (Babel plugin)  
+- **Vite 8** — Dev server and production builds  
+- **Tailwind CSS v4** — Styling with PostCSS  
+- **React Router v7** — Routing, lazy-loaded pages, protected & role routes  
+- **Axios** — API client (`withCredentials` for cookies)  
+- **@react-oauth/google** — Google sign-in button  
+- **Lottie** — Loading / intro animations  
 
-All three sign in the same two ways — a one-time code to a mobile number, or a
-Google account. Role is a field on the user, not a separate system.
-
----
-
-## Services at launch
-
-Income Certificate · Caste Certificate · Domicile Certificate · Birth Certificate
-· PAN Services · Aadhaar Services
-
-Each carries a description, an assistance charge, an estimated timeline, and the
-documents required — including **what part of each document to photograph**, which
-is the detail that actually stops a submission bouncing back.
+### Backend
+- **Node.js + Express 5** — REST API  
+- **MongoDB + Mongoose** — Database and schemas  
+- **JWT** — Access tokens (Bearer) + refresh tokens (httpOnly cookies)  
+- **Bcrypt** — PIN hashing  
+- **Google Auth Library** — Verify Google ID tokens  
+- **Multer** — Multipart uploads to `server/uploads/`  
+- **CORS + cookie-parser** — Cross-origin setup for Vercel ↔ Render  
 
 ---
 
-## Screens
-
-<details open>
-<summary><b>Citizen</b></summary>
-
-| Route | What it is |
-| --- | --- |
-| `/` | Landing page — hero, the six services, an animated walk-through of the process, and what the platform does and does not do |
-| `/services/:serviceId` | Single-viewport detail surface. Pick a document to see its layout, capture guidance and accepted file formats |
-| `/track` | Requests with their status timeline |
-| `/become-an-agent` | Three-step agent application |
-| `/login` | Role picker, then a one-time code or Google |
-
-Starting a request opens a four-step dialog in place: confirm what is needed →
-your details → attach documents → review and submit.
-
-</details>
-
-<details>
-<summary><b>Service agent</b> — <code>/agent/:section</code></summary>
-
-| Section | What it is |
-| --- | --- |
-| `dashboard` | What needs a decision today, plus earnings at a glance |
-| `requests` | Everything assigned, filtered by status. Expand a row to update status, send a note, or attach the finished document |
-| `earnings` | Settled and unsettled, per request |
-| `profile` | Editable details and verification standing |
-
-</details>
-
-<details>
-<summary><b>Administrator</b> — <code>/admin/:section</code></summary>
-
-| Section | What it is |
-| --- | --- |
-| `dashboard` | Verification queue first, then platform figures and service demand |
-| `requests` | Every request; assign or reassign an agent |
-| `agents` | Verify, reject or suspend |
-| `services` | Charges, timelines and the citizen-facing summary |
-| `complaints` | Resolve, with a required written outcome |
-| `profile` | The administrator account |
-
-</details>
-
----
-
-## Running it
-
-**Requirements:** Node 20 or newer.
-
-```bash
-git clone <your-repo-url>
-cd citizenAssist
-```
-
-<table>
-<tr><th align="left">Frontend</th><th align="left">Backend</th></tr>
-<tr valign="top">
-<td>
-
-```bash
-cd client
-npm install
-npm run dev
-```
-
-→ `http://localhost:5173`
-
-</td>
-<td>
-
-```bash
-cd server
-npm install
-npm run dev
-```
-
-→ `http://localhost:5000`
-
-</td>
-</tr>
-</table>
-
-The frontend runs entirely standalone. The backend is currently a minimal Express
-foundation and is not required to view any screen.
-
-### Signing in
-
-There is no server to verify against yet, so **any** well-formed mobile number and
-six-digit code gets through. Pick a role at `/login`, enter a 10-digit number
-starting 6–9, then any six digits.
-
-| Role | Lands on |
-| --- | --- |
-| Citizen | `/track` |
-| Service agent | `/agent/dashboard` |
-| Administrator | `/admin/dashboard` |
-
-> [!WARNING]
-> **Sign-in is not a login.** While `IS_DEMO_AUTH` is true in
-> `client/src/constants/demoAuth.js` it guards nothing, and there are no route
-> guards either — `/agent/…` and `/admin/…` open by typing the URL whether you sign
-> in or not.
->
-> That is fine for a prototype whose data is invented. It stops being fine the
-> moment anything real sits behind it. Delete that file when the API lands and add
-> the route guards at the same time; the flag is the single switch every use sits
-> behind, so removing it turns each one into a build error rather than a silent
-> hole.
-
----
-
-## Project layout
+## Project Structure
 
 ```
 citizenAssist/
-├── client/                     React + Vite frontend
+│
+├── client/                              # Frontend (React + Vite)
 │   ├── public/
-│   │   └── logos/              Portal logos go here (falls back to text)
+│   │   └── logos/                       # Portal logos (optional)
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── common/         Navbar, Footer, Logo, UserMenu, PageShell
-│   │   │   └── ui/             Icon, DataKit, ConfirmDialog, DocumentSchematic
-│   │   ├── constants/          Services, documents, roles, request statuses
+│   │   │   ├── common/                  # Navbar, Footer, Logo, CookieConsent, …
+│   │   │   └── ui/                      # Buttons, DataKit, ConfirmDialog, loaders
+│   │   ├── config/
+│   │   │   └── api.js                   # Axios base URL + credentials
+│   │   ├── constants/                   # Services, documents, statuses, legal copy
+│   │   ├── context/                     # AuthContext
 │   │   ├── features/
-│   │   │   ├── admin/          Admin dashboard — own shell, sections, data
-│   │   │   ├── agent/          Agent application + dashboard
-│   │   │   ├── auth/           Sign-in form, role picker, showcase
-│   │   │   ├── home/           Landing page sections
-│   │   │   ├── request/        The four-step request dialog
-│   │   │   ├── serviceDetail/  Service detail surface
-│   │   │   └── track/          Request tracking
-│   │   ├── hooks/              useReveal, usePointerGlow, useAutoHeight
-│   │   └── pages/              One file per route
-│   └── vercel.json
-└── server/                     Express foundation
+│   │   │   ├── admin/                   # Admin shell, dashboard, agents, complaints…
+│   │   │   ├── agent/                   # Agent apply form, requests, earnings
+│   │   │   ├── auth/                    # Login, role chooser, PIN, legal consent
+│   │   │   ├── citizen/                 # Citizen dashboard & profile
+│   │   │   ├── home/                    # Hero, services grid, how-it-works, about
+│   │   │   ├── request/                 # 4-step request modal + provider
+│   │   │   ├── serviceDetail/           # Single-viewport service page
+│   │   │   ├── services/                # servicesApi
+│   │   │   └── track/                   # Request tracking panel
+│   │   ├── hooks/                       # useReveal, usePointerGlow, useAutoHeight
+│   │   ├── pages/                       # Home, Login, dashboards, LegalPage, …
+│   │   ├── routes/                      # ProtectedRoute, RoleRoute, ScrollToHash
+│   │   └── utils/                       # storage, apiError, cookieConsent
+│   ├── vercel.json                      # SPA rewrite, cache, security headers
+│   └── package.json
+│
+├── server/                              # Backend API
+│   ├── config/
+│   │   └── db.js                        # MongoDB connection
+│   ├── controllers/                     # auth, request, agent, admin, service, complaint, upload
+│   ├── middleware/
+│   │   ├── auth.midleware.js            # protect + authorize(roles)
+│   │   └── documentUpload.middleware.js
+│   ├── model/                           # User, Agent, Service, ServiceRequest, Complaint, Document
+│   ├── routes/                          # Mounted under /api
+│   ├── scripts/
+│   │   └── createAdmin.js               # Seed first admin user
+│   ├── uploads/                         # Uploaded files (created at runtime)
+│   ├── app.js                           # Express app, CORS, error handler
+│   ├── server.js                        # Entry + connectDB
+│   ├── render.yaml                      # Render deploy blueprint
+│   └── package.json
+│
+└── README.md
 ```
 
-The agent and admin dashboards are **deliberately separate features** — their own
-shells, sections and data files, with nothing branching on a role. Only
-design-system atoms are shared.
+Agent and admin areas are **separate feature folders** (own shells and APIs), not one dashboard with `if (role)` everywhere.
 
 ---
 
-## Deploying the frontend
+## Getting Started
 
-Vercel, with **Root Directory set to `client`**. `client/vercel.json` supplies the
-build command, the SPA rewrite (without it, refreshing `/agent/dashboard` returns
-404), long-lived caching for hashed assets, and a small set of security headers.
+### Prerequisites
+- **Node.js** 20 or higher  
+- **npm**  
+- **MongoDB** (local or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas))  
+- **Google OAuth credentials** (optional but needed for “Continue with Google”)  
 
+### Installation
+
+**1. Clone the repository**
+```bash
+git clone https://github.com/yourusername/citizenAssist.git
+cd citizenAssist
 ```
-Root Directory     client
-Framework          Vite        (detected)
-Build Command      npm run build
-Output Directory   dist
+
+**2. Setup backend**
+```bash
+cd server
+npm install
+cp .env.example .env
 ```
 
+Edit `server/.env` (see [Environment variables](#-environment-variables-reference) below), then:
+```bash
+npm run dev
+```
+Backend runs at **`http://localhost:5000`**  
+Health check: **`GET http://localhost:5000/api/health`**
+
+**Create admin (first time):**
+```bash
+node scripts/createAdmin.js
+```
+Default phone/PIN are in that script — change them before any real deployment.
+
+**3. Setup frontend**
+```bash
+cd client
+npm install
+cp .env.example .env
+```
+
+Edit `client/.env`, then:
+```bash
+npm run dev
+```
+Frontend runs at **`http://localhost:5173`**
+
+**4. Try the app**
+- Open `/login` → pick **Citizen**, **Agent**, or **Admin**  
+- New citizen: enter mobile → sign up with a 4-digit PIN (weak PINs like `1234` are rejected on signup)  
+- Admin: use the account from `createAdmin.js`  
+- Agent: apply at `/become-an-agent` (citizen role), then admin verifies in `/admin/agents`  
+
 ---
 
-## Conventions worth knowing
+## Key Features
 
-A few decisions are load-bearing and easy to undo by accident:
+### Four-step request flow
+The main citizen journey lives in a modal (survives route changes via `RequestFlowHost`):
 
-- **Colour never carries meaning alone.** Every status pill has a label, cleared
-  checkboxes are filled *and* ticked while open ones are outlined and empty. This
-  survives greyscale and colour-blind vision.
-- **Contrast is verified, not eyeballed.** Every text-on-surface pairing sits above
-  4.5:1, and the ratio is written in a comment next to the colour.
-- **Two primaries only** — indigo `#232A5C` and clay `#9E4E12` — on a warm paper
-  ground. The one exception is the sign-in showcase, whose four-hue illustration
-  palette is scoped to that panel so it cannot leak into UI chrome.
-- **Motion is optional.** Everything animates from an already-visible state, and
-  `prefers-reduced-motion: reduce` is honoured throughout.
-- **Shared CSS goes in the design system.** A component stylesheet only loads once
-  that component mounts, so a class used by two features must not live inside one
-  of them.
-- **Document schematics, not photographs.** Required documents are shown as
-  abstract layout diagrams. Real scans carry real people's data, and convincing
-  reproductions of certificates would invite exactly the confusion this product
-  exists to prevent.
+- **Step 1** — Confirm you have the listed documents  
+- **Step 2** — Applicant name, phone, email, district, address  
+- **Step 3** — Upload required files (validated type & size)  
+- **Step 4** — Review and submit → creates `ServiceRequest` with reference (e.g. `CA-4821`)  
 
----
+If a guest clicks “Start request”, a login prompt appears instead.
 
-## Not built, on purpose
+### Authentication
+- **`POST /auth/start`** — Checks if phone exists and matches selected role  
+- **Sign-up / sign-in** — 4-digit PIN, bcrypt-hashed, lockout after failed attempts  
+- **Google OAuth** — Creates or logs in users; link mobile/PIN later if needed  
+- **JWT access token** — Stored client-side for `Authorization: Bearer`  
+- **Refresh cookies** — httpOnly cookies for session refresh in production  
+- **Protected routes** — `ProtectedRoute` + `RoleRoute` on the frontend; `protect` + `authorize` on the API  
 
-No payment gateway, no government API integration, no live chat, no notifications,
-no file previews, no analytics platform, no AI features. Scope is a one-month
-project, and the product has one job.
+### Citizen experience
+- Landing page with services, process animation, and disclaimers  
+- Full-screen **service detail** with document schematics (not real certificate photos)  
+- **`/track`** and **`/citizen/track`** — List requests and expandable timelines  
+- **Profile** — Update details via API  
+- **Complaints** — Submit subject + description (optionally tied to a request)  
 
----
-
-## Status
-
-| Area | State |
+### Agent workspace (`/agent/:section`)
+| Section | Purpose |
 | --- | --- |
-| Citizen screens | Complete |
-| Agent dashboard | Complete, demo data |
-| Admin dashboard | Complete, demo data |
-| Authentication | Demo only — flag-gated |
-| Backend API | Not started |
-| Database | Not started |
+| `dashboard` | Today’s decisions, quick stats |
+| `requests` | Assigned work — accept/decline, status, notes, upload completed doc |
+| `earnings` | Settled vs pending per request |
+| `profile` | Agent details and verification status |
 
-Every place an API call belongs is marked `TODO(api)` with the route and body
-already written next to it. Collection shapes are documented at the top of each
-constants file — three collections, no joins.
+### Admin panel (`/admin/:section`)
+| Section | Purpose |
+| --- | --- |
+| `dashboard` | Verification queue + platform overview |
+| `requests` | All requests — assign or reassign agents |
+| `agents` | Verify, reject, or suspend applicants |
+| `services` | Edit charges, timelines, summaries |
+| `complaints` | Resolve with mandatory admin response |
+| `profile` | Admin account settings |
+
+---
+
+## Frontend routes
+
+| Path | Access | Description |
+| --- | --- | --- |
+| `/` | Public | Landing page |
+| `/services/:serviceId` | Public | Service detail + start request |
+| `/login` | Public | Role chooser + auth |
+| `/become-an-agent` | Public (apply needs login) | Agent application |
+| `/track` | Citizen | Track requests |
+| `/citizen/:section?` | Citizen | `dashboard`, `track`, `profile` |
+| `/agent/:section?` | Agent | Agent workspace |
+| `/admin/:section?` | Admin | Admin panel |
+| `/terms-and-conditions` | Public | Legal |
+| `/privacy-policy` | Public | Legal |
+| `/cookie-policy` | Public | Legal |
+
+---
+
+## API endpoints
+
+Base URL: **`/api`** (e.g. `http://localhost:5000/api`)
+
+### Auth (`/api/auth`)
+
+| Method | Endpoint | Description | Auth |
+| --- | --- | --- | --- |
+| POST | `/auth/start` | Check phone + role for sign-in vs sign-up | No |
+| POST | `/auth/sign-up` | Create citizen account with PIN | No |
+| POST | `/auth/sign-in` | Login with phone, PIN, role | No |
+| POST | `/auth/forgot-pin` | Reset PIN flow | No |
+| POST | `/auth/google` | Google ID token login | No |
+| POST | `/auth/link-mobile` | Attach phone + PIN to Google account | Yes |
+| POST | `/auth/link-google` | Attach Google to mobile account | Yes |
+| GET | `/auth/me` | Current user | Yes |
+| GET | `/auth/profile` | Profile details | Yes |
+| PATCH | `/auth/profile` | Update profile | Yes |
+
+### Services (`/api/services`)
+
+| Method | Endpoint | Description | Auth |
+| --- | --- | --- | --- |
+| GET | `/services` | List active services | No |
+| GET | `/services/:id` | Service by Mongo `_id` or logic in controller | No |
+| POST | `/services` | Create service | Admin |
+
+### Requests — citizen (`/api`)
+
+| Method | Endpoint | Description | Auth |
+| --- | --- | --- | --- |
+| POST | `/requests` | Create service request | Citizen |
+| GET | `/citizen/requests` | My requests | Citizen |
+| PATCH | `/citizen/requests/:id` | Update own request | Citizen |
+| POST | `/citizen/requests/:id/documents` | Upload document | Citizen |
+| GET | `/request-documents/:filename` | Download document | Yes |
+
+### Agent (`/api`)
+
+| Method | Endpoint | Description | Auth |
+| --- | --- | --- | --- |
+| POST | `/agents/apply` | Apply to become agent | Citizen |
+| GET | `/agent/profile` | Agent profile | Agent |
+| PATCH | `/agent/profile` | Update profile | Agent |
+| GET | `/agent/dashboard` | Dashboard stats | Agent |
+| GET | `/agent/earnings` | Earnings breakdown | Agent |
+| GET | `/agent/requests` | Assigned requests | Agent |
+| PATCH | `/agent/requests/:id/decision` | Accept or decline | Agent |
+| PATCH | `/agent/requests/:id/status` | Update status | Agent |
+| POST | `/agent/requests/:id/notes` | Add timeline note | Agent |
+| POST | `/agent/requests/:id/document` | Upload completed file | Agent |
+
+### Admin (`/api/admin/*`)
+
+All routes require **Admin** role.
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/admin/dashboard` | Overview |
+| GET/PATCH | `/admin/profile` | Admin profile |
+| GET | `/admin/agents` | List agents |
+| PATCH | `/admin/agents/:id` | Verify / reject / suspend |
+| GET | `/admin/requests` | All requests |
+| PATCH | `/admin/requests/:id/assign` | Assign agent |
+| POST | `/admin/requests/:id/document` | Upload on behalf of request |
+| GET | `/admin/complaints` | List complaints |
+| PATCH | `/admin/complaints/:id` | Resolve complaint |
+| GET | `/admin/services` | Services for admin UI |
+| PATCH | `/admin/services/:id` | Update service metadata |
+
+### Complaints
+
+| Method | Endpoint | Description | Auth |
+| --- | --- | --- | --- |
+| POST | `/complaints` | Create complaint | Citizen |
+
+### Health
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/api/health` | API status + timestamp |
+
+---
+
+## Database models
+
+### User
+```javascript
+{
+  name: String,
+  phone: String (unique, +91 format, sparse for Google-only),
+  pinHash: String (select: false),
+  email: String,
+  googleId: String,
+  role: 'citizen' | 'agent' | 'admin',
+  status: 'pending' | 'active' | 'rejected' | 'suspended',
+  failedPinAttempts: Number,
+  lockedUntil: Date,
+  refreshTokenVersion: Number,
+  createdAt, updatedAt
+}
+```
+
+### Agent
+```javascript
+{
+  user: ObjectId → User,
+  verificationStatus: 'pending' | 'active' | 'rejected' | 'suspended',
+  name, phone, email, district, experience: String,
+  services: [String],              // service IDs agent can handle
+  appliedAt, verifiedOn: Date,
+  totalRequests, completedRequests: Number,
+  rating: Number (0–5),
+  isAvailable: Boolean
+}
+```
+
+### ServiceRequest
+```javascript
+{
+  reference: String (unique, e.g. CA-4821),
+  citizen: ObjectId → User,
+  serviceId, serviceName: String,
+  agent: ObjectId → Agent,
+  agentName: String,
+  status: 'pending' | 'assigned' | 'review' | 'processing' |
+          'completed' | 'action' | 'rejected' | 'cancelled',
+  charge: String,
+  applicantDetails: { fullName, phone, email, district, address },
+  timeline: [{ status, at, note }],
+  documents: [String],
+  completedDocument: String,
+  completedAt: Date
+}
+```
+
+### Service (DB catalog)
+```javascript
+{
+  serviceId: String (unique, matches frontend ids),
+  name, description, summary, charge, timeline: String,
+  requiredDocuments: [String],
+  isActive: Boolean
+}
+```
+
+### Complaint
+```javascript
+{
+  citizen: ObjectId → User,
+  request: ObjectId → ServiceRequest (optional),
+  against: String,
+  subject, description: String,
+  status: 'open' | 'under-review' | 'resolved' | 'closed',
+  adminResponse: String
+}
+```
+
+### Document
+```javascript
+{
+  request: ObjectId → ServiceRequest,
+  name, fileUrl: String,
+  status: 'uploaded' | 'verified' | 'rejected',
+  rejectionReason: String
+}
+```
+
+---
+
+## Deployment guide
+
+### Frontend (Vercel)
+1. Push code to GitHub  
+2. Import project on [Vercel](https://vercel.com)  
+3. Set **Root Directory** to `client`  
+4. Environment variables:
+   ```
+   VITE_API_URL=https://your-api.onrender.com/api
+   VITE_GOOGLE_CLIENT_ID=your_google_client_id
+   ```
+5. Build: `npm run build` · Output: `dist`  
+6. `vercel.json` already configures SPA rewrites and security headers  
+
+### Backend (Render)
+1. Create a **Web Service** from the repo (or use `render.yaml`)  
+2. Root directory: `server`  
+3. Build: `npm install` · Start: `npm start`  
+4. Set all variables from `server/.env.example` in the Render dashboard  
+5. Health check path: `/api/health`  
+
+### CORS
+Set **`CLIENT_URL`** on the server to your Vercel URL(s), comma-separated for preview + production:
+
+```env
+CLIENT_URL=http://localhost:5173,https://your-app.vercel.app
+```
+
+In development, localhost origins are allowed automatically when `NODE_ENV !== production`.
+
+---
+
+## Environment variables reference
+
+### Backend (`server/.env`)
+```env
+PORT=5000
+NODE_ENV=development
+
+MONGODB_URI=mongodb+srv://...
+
+JWT_SECRET=long_random_string
+JWT_REFRESH_SECRET=another_long_random_string
+
+GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=xxx
+
+CLIENT_URL=http://localhost:5173,https://your-app.vercel.app
+COOKIE_DOMAIN=                          # optional; e.g. .yourdomain.com in prod
+```
+
+### Frontend (`client/.env`)
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_GOOGLE_CLIENT_ID=xxx.apps.googleusercontent.com
+```
+
+If `VITE_API_URL` is missing in production builds, the client falls back to `https://citizenassist.onrender.com/api` — update that in `client/src/config/api.js` if your API URL differs.
+
+---
+
+## Design & UX
+
+- **Warm paper + indigo/clay palette** — Readable, non-generic govtech feel  
+- **Status never relies on color alone** — Labels on pills; checkboxes use shape + fill  
+- **Document schematics** — Abstract layout diagrams instead of fake certificate scans  
+- **Reduced motion** — Animations respect `prefers-reduced-motion`  
+- **Lazy routes + intro gate** — Faster first paint on the home page  
+- **Cookie consent + legal pages** — Terms, privacy, and cookie policy linked from footer and signup  
+
+---
+
+## Scope & limitations (college project)
+
+This repo was built as a **learning / academic full-stack project** — real MERN patterns, three roles, and uploads — not a licensed govtech product.
+
+| Not included (by design) | Notes |
+| --- | --- |
+| SMS OTP | Phone auth uses a **PIN**, not SMS verification |
+| Payment gateway | Charges are indicative; no online payment |
+| Government APIs | No live integration with official portals |
+| Push / email notifications | Status is in-app only |
+| Cloud file CDN | Files live in `server/uploads/` (use S3/Cloudinary for scale) |
+
+Assistance prices on the UI are **ranges for demo**; an agent confirms the final amount before work proceeds.
+
+---
+
+## NPM scripts
+
+| Location | Command | Purpose |
+| --- | --- | --- |
+| `client/` | `npm run dev` | Vite dev server |
+| `client/` | `npm run build` | Production build |
+| `client/` | `npm run lint` | ESLint |
+| `client/` | `npm run preview` | Preview production build |
+| `server/` | `npm run dev` | Nodemon |
+| `server/` | `npm start` | Production server |
+
+---
+
+## Contributing
+
+Contributions welcome for learning and portfolio use:
+
+1. Fork the repository  
+2. Create a branch (`git checkout -b feature/my-change`)  
+3. Commit with a clear message  
+4. Push and open a Pull Request  
+
+---
+
+## License
+
+MIT License — use and modify freely; add your own license file if you publish formally.
+
+---
+
+## Author
+
+**Your Name**  
+- GitHub: [@yourusername](https://github.com/yourusername)  
+- Live app: *(add Vercel URL)*  
+
+---
+
+## Acknowledgments
+
+- [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) — Cloud database  
+- [Vercel](https://vercel.com) — Frontend hosting  
+- [Render](https://render.com) — Backend hosting  
+- [Google Cloud Console](https://console.cloud.google.com) — OAuth credentials  
+- React, Vite, and Express communities for docs and examples  
+
+---
+
+**Built as a student full-stack project — helping citizens understand paperwork before they stand in queue.**

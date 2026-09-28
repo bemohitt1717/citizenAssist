@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { Button } from '../../../../components/ui/button';
 import { Spinner } from '../../../../components/ui/spinner';
@@ -21,22 +21,20 @@ const AdminComplaints = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [busyComplaintId, setBusyComplaintId] = useState(null);
 
-  useEffect(() => {
-    fetchComplaints();
-  }, []);
-
-  const fetchComplaints = async () => {
+  const fetchComplaints = useCallback(async () => {
     try {
-      console.log('📞 [ADMIN-COMPLAINTS] Fetching complaints...');
       const response = await getComplaints();
       setComplaints(response.data.complaints);
-      console.log(`✅ [ADMIN-COMPLAINTS] Loaded ${response.data.complaints.length} complaints`);
     } catch (error) {
       console.error('❌ [ADMIN-COMPLAINTS] Failed to fetch:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchComplaints();
+  }, [fetchComplaints]);
 
   const rows = complaints.filter((complaint) => complaint.status === filterId);
 
@@ -56,9 +54,7 @@ const AdminComplaints = () => {
 
     try {
       setBusyComplaintId(id);
-      console.log('✅ [ADMIN-COMPLAINTS] Resolving complaint:', id);
       await resolveComplaint(id, resolution.trim());
-      console.log('✅ [ADMIN-COMPLAINTS] Complaint marked as resolved');
 
       // Clear draft
       setDrafts((current) => ({ ...current, [id]: '' }));

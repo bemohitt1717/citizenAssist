@@ -28,34 +28,45 @@ const AgentHome = () => {
   const [error, setError] = useState('');
   const [busyRequestId, setBusyRequestId] = useState(null);
 
-  const fetchDashboard = useCallback(async (isCurrent = () => true) => {
-    try {
-      const [dashboardResponse, requestsResponse, earningsResponse] = await Promise.all([
-        getAgentDashboard(),
-        getAgentRequests('offered'),
-        getAgentEarnings(),
-      ]);
-      if (!isCurrent()) return;
+  const applyDashboardData = useCallback(([dashboardResponse, requestsResponse, earningsResponse]) => {
       setCounts(dashboardResponse.data.counts);
       setOffered(requestsResponse.data.requests);
       setEarnings(earningsResponse.data);
-    } catch (requestError) {
-      if (!isCurrent()) return;
-      setError(requestError.response?.data?.message || 'Could not load your dashboard. Try again.');
-    } finally {
-      if (isCurrent()) setIsLoading(false);
-    }
   }, []);
 
   useEffect(() => {
     let isCurrent = true;
 
-    fetchDashboard(() => isCurrent);
+    Promise.all([
+      getAgentDashboard(),
+      getAgentRequests('offered'),
+      getAgentEarnings(),
+    ])
+      .then((data) => {
+        if (isCurrent) applyDashboardData(data);
+      })
+      .catch((requestError) => {
+        if (isCurrent) {
+          setError(requestError.response?.data?.message || 'Could not load your dashboard. Try again.');
+        }
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false);
+      });
 
     return () => {
       isCurrent = false;
     };
-  }, [fetchDashboard]);
+  }, [applyDashboardData]);
+
+  const refreshDashboard = async () => {
+    const data = await Promise.all([
+      getAgentDashboard(),
+      getAgentRequests('offered'),
+      getAgentEarnings(),
+    ]);
+    applyDashboardData(data);
+  };
 
   const decide = async (requestId, decision) => {
     if (busyRequestId) return;
@@ -63,8 +74,7 @@ const AgentHome = () => {
       setBusyRequestId(requestId);
       setError('');
       await decideAgentRequest(requestId, decision);
-      console.info('[agent] dashboard decision saved', { requestId, decision });
-      await fetchDashboard();
+      await refreshDashboard();
     } catch (requestError) {
       console.error('[agent] dashboard decision failed', requestError);
       setError(requestError.response?.data?.message || 'Could not update this request. Try again.');

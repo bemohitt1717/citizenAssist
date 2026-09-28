@@ -11,7 +11,8 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import { ProtectedRoute, RoleRoute } from "./routes/ProtectedRoute";
 import { useRequestFlow } from "./features/request/requestFlowContext";
 import { useAuth } from "./context/authContext";
-import HomeIntroGate, { useMarkHomeReady } from "./components/ui/LoadingStates/HomeIntroGate";
+import HomeIntroGate from "./components/ui/LoadingStates/HomeIntroGate";
+import { useMarkHomeReady } from "./components/ui/LoadingStates/homeReadyContext";
 import { RouteLoading } from "./components/ui/LoadingStates/LoadingStates";
 
 const Home = lazy(() => import("./pages/Home"));
@@ -23,20 +24,8 @@ const CitizenDashboard = lazy(() => import("./pages/CitizenDashboard"));
 const AgentDashboard = lazy(() => import("./pages/AgentDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-
-// Suppress Google OAuth warnings in production
-if (import.meta.env.PROD) {
-  const originalWarn = console.warn;
-  console.warn = (...args) => {
-    if (
-      args[0]?.includes?.("GSI_LOGGER") ||
-      args[0]?.includes?.("google.accounts.id")
-    ) {
-      return; // Suppress Google OAuth warnings
-    }
-    originalWarn.apply(console, args);
-  };
-}
+const LegalPage = lazy(() => import("./pages/LegalPage"));
+const CookieConsent = lazy(() => import("./components/common/CookieConsent/CookieConsent"));
 
 /**
  * Login prompt wrapper component - only shows when user tries to request without login
@@ -102,6 +91,9 @@ const App = () => (
             <Suspense fallback={<RouteLoading />}>
               <Routes>
                 <Route path="/" element={<HomeLayout />} />
+                <Route path="/terms-and-conditions" element={<LegalPage policy="terms" />} />
+                <Route path="/privacy-policy" element={<LegalPage policy="privacy" />} />
+                <Route path="/cookie-policy" element={<LegalPage policy="cookies" />} />
                 <Route path="/services/:serviceId" element={<ServiceDetail />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/become-an-agent" element={<BecomeAgent />} />
@@ -154,6 +146,7 @@ const App = () => (
             {/* Mounted once, above the routes, so the flow survives whichever surface
                 opened it. */}
             <RequestFlowHost />
+            <CookieConsent />
           </RequestFlowProvider>
         </AuthProvider>
       </HomeIntroGate>

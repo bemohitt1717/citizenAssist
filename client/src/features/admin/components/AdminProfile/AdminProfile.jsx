@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Field, Panel, Panels, SaveRow } from '../../../../components/ui/DataKit/DataKit';
 import { getAdminProfile, updateAdminProfile, getAdminDashboard } from '../../adminApi';
 import { useAuth } from '../../../../context/authContext';
@@ -16,13 +16,8 @@ const AdminProfile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { user, setUser } = useAuth(); // Get auth context to update navbar
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      console.log('👤 [ADMIN-PROFILE] Fetching profile...');
       const [profileData, dashboardData] = await Promise.all([
         getAdminProfile(),
         getAdminDashboard(),
@@ -31,13 +26,16 @@ const AdminProfile = () => {
       setProfile(profileData.data.profile);
       setName(profileData.data.profile.name);
       setCounts(dashboardData.data.counts);
-      console.log('✅ [ADMIN-PROFILE] Profile loaded');
     } catch (error) {
       console.error('❌ [ADMIN-PROFILE] Failed to fetch:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const save = async () => {
     if (isSaving) return;
@@ -48,7 +46,6 @@ const AdminProfile = () => {
 
     try {
       setIsSaving(true);
-      console.log('💾 [ADMIN-PROFILE] Updating name:', name);
       await updateAdminProfile(name.trim());
       setIsSaved(true);
 
@@ -60,7 +57,6 @@ const AdminProfile = () => {
       // Update local profile state so UI reflects change
       setProfile((prev) => ({ ...prev, name: name.trim() }));
 
-      console.log('✅ [ADMIN-PROFILE] Profile updated, UI synced');
 
       setTimeout(() => setIsSaved(false), 2000);
     } catch (error) {

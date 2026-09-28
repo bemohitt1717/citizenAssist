@@ -60,7 +60,12 @@ const RequestFlow = ({ service, onClose }) => {
   const { user } = useAuth();
   const [stepIndex, setStepIndex] = useState(0);
   const [direction, setDirection] = useState('forward');
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState(() => ({
+    ...EMPTY_FORM,
+    fullName: user?.name || '',
+    phone: user?.phone?.replace('+91', '') || '',
+    email: user?.email || '',
+  }));
   const [touched, setTouched] = useState({});
   const [uploads, setUploads] = useState({});
   const [fileErrors, setFileErrors] = useState({});
@@ -76,24 +81,6 @@ const RequestFlow = ({ service, onClose }) => {
   const closeRef = useRef(null);
   const fileInputsRef = useRef({});
   const headingId = useId();
-
-  // Auto-fill form with user data when component mounts
-  useEffect(() => {
-    if (user) {
-      console.log('👤 [REQUEST-FLOW] Auto-filling form with user data:', {
-        name: user.name,
-        phone: user.phone?.replace('+91', ''),
-        email: user.email,
-      });
-
-      setForm((current) => ({
-        ...current,
-        fullName: user.name || current.fullName,
-        phone: user.phone ? user.phone.replace('+91', '') : current.phone,
-        email: user.email || current.email,
-      }));
-    }
-  }, [user]);
 
   const step = STEPS[stepIndex];
   const copy = STEP_COPY[step];

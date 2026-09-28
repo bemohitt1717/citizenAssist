@@ -300,6 +300,50 @@
   color: var(--color-success);
 }
 
+.ca-login__consents {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: -0.25rem;
+}
+
+.ca-login__consent-row {
+  display: grid;
+  grid-template-columns: 1.125rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.ca-login__consent-row input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0.125rem 0 0;
+  accent-color: var(--color-indigo);
+}
+
+.ca-login__consent-row label {
+  color: var(--color-ink-muted);
+  cursor: pointer;
+}
+
+.ca-login__consent-more {
+  padding: 0;
+  color: var(--color-indigo);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.ca-login__consent-more:hover {
+  color: var(--color-clay);
+}
+
 /* ==========================================================================
    Buttons
    ========================================================================== */

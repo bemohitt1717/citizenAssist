@@ -164,6 +164,20 @@
   color: var(--color-ink);
 }
 
+.ca-footer__policies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+}
+
+.ca-footer__policies .ca-footer__link {
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  font-size: 0.8125rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ca-footer__link:hover {
     transform: none;
@@ -209,5 +223,9 @@
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 2rem;
+  }
+
+  .ca-footer__policies {
+    grid-column: 1 / -1;
   }
 }

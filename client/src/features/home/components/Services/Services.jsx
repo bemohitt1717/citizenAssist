@@ -25,6 +25,19 @@ const STATIC_SERVICES = SERVICES.map((service) => ({
   documents: service.documents,
 }));
 
+const formatServices = (services) => services.map((service, index) => ({
+  id: service.serviceId,
+  name: service.name,
+  description: service.description,
+  charge: service.charge,
+  timeline: service.timeline,
+  summary: service.summary,
+  documents: service.requiredDocuments,
+  documentCount: service.requiredDocuments?.length || 0,
+  icon: SERVICE_ICONS[service.serviceId] || 'document',
+  tone: SERVICE_TONES[index] || 'paper',
+}));
+
 /**
  * Services with real-time data from database.
  *
@@ -38,25 +51,15 @@ const Services = () => {
   const [gridRef, isRevealed] = useReveal({ trigger: services.length });
   const glowRef = usePointerGlow();
 
-  const fetchServices = async (signal) => {
-    try {
-      const response = await getAllServices({ signal });
-      if (signal?.aborted) return;
-      // Backend returns { status: "success", count: X, data: [...] }
-      const servicesData = response.data || [];
-      // Convert backend data to match frontend format
-      const formattedServices = servicesData.map((service, index) => ({
-        id: service.serviceId,
-        name: service.name,
-        description: service.description,
-        charge: service.charge,
-        timeline: service.timeline,
-        summary: service.summary,
-        documents: service.requiredDocuments,
-        documentCount: service.requiredDocuments?.length || 0,
-        icon: SERVICE_ICONS[service.serviceId] || 'document',
-        tone: SERVICE_TONES[index] || 'paper',
-      }));
+  useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    getAllServices({ signal })
+      .then((response) => {
+        if (signal.aborted) return;
+        const formattedServices = formatServices(response.data || []);
+
       if (formattedServices.length) {
         setServices(formattedServices);
         setUsingFallback(false);
@@ -64,18 +67,16 @@ const Services = () => {
         setServices(STATIC_SERVICES);
         setUsingFallback(true);
       }
-    } catch {
-      if (signal?.aborted) return;
-      setServices(STATIC_SERVICES);
-      setUsingFallback(true);
-    } finally {
-      if (!signal?.aborted) setIsLoading(false);
-    }
-  };
+      })
+      .catch(() => {
+        if (signal.aborted) return;
+        setServices(STATIC_SERVICES);
+        setUsingFallback(true);
+      })
+      .finally(() => {
+        if (!signal.aborted) setIsLoading(false);
+      });
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchServices(controller.signal);
     return () => controller.abort();
   }, []);
 

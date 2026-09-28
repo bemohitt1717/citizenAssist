@@ -1,0 +1,82 @@
+.ca-legal {
+  min-height: 60vh;
+  padding: clamp(3rem, 7vw, 6rem) 1.25rem clamp(4rem, 8vw, 7rem);
+  background: var(--color-cream);
+}
+
+.ca-legal__inner {
+  width: min(100%, 54rem);
+  margin-inline: auto;
+}
+
+.ca-legal__back {
+  display: inline-flex;
+  margin-bottom: 2.5rem;
+  color: var(--color-indigo);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.ca-legal h1 {
+  max-width: 16ch;
+  font-size: clamp(2.25rem, 6vw, 4rem);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+}
+
+.ca-legal__intro {
+  max-width: 62ch;
+  margin-top: 1rem;
+  color: var(--color-ink-muted);
+  font-size: 1.125rem;
+  line-height: 1.65;
+}
+
+.ca-legal__draft {
+  max-width: 68ch;
+  margin-top: 1.5rem;
+  padding-block: 0.875rem;
+  color: var(--color-clay);
+  border-block: 1px solid var(--color-line-strong);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.ca-legal__sections {
+  display: grid;
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.ca-legal__section {
+  display: grid;
+  gap: 0.75rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.ca-legal__section h2 {
+  font-size: 1.25rem;
+  line-height: 1.3;
+}
+
+.ca-legal__section p {
+  max-width: 72ch;
+  color: var(--color-ink-muted);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 40rem) {
+  .ca-legal__back {
+    margin-bottom: 1.75rem;
+  }
+
+  .ca-legal__sections {
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+}

@@ -49,10 +49,6 @@ const formatRequest = (request, requiredDocumentCounts) => ({
 // Apply to become an agent (citizen only)
 export const applyAsAgent = async (req, res, next) => {
   try {
-    console.log('👤 [AGENT] Application request:', {
-      user: req.user._id,
-      body: req.body,
-    });
 
     const { name, mobile, email, district, experience, services } = req.body;
     const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
@@ -67,7 +63,6 @@ export const applyAsAgent = async (req, res, next) => {
 
     // Validate required fields
     if (!name || !mobile || !district || !experience || !services || services.length === 0) {
-      console.log('❌ [ERROR] Missing required fields');
       return res.status(400).json({
         status: "error",
         message: "Name, mobile, district, experience, and at least one service are required.",
@@ -83,10 +78,6 @@ export const applyAsAgent = async (req, res, next) => {
 
     // Validate: mobile must be different from citizen's phone
     if (normalizedMobile === req.user.phone) {
-      console.log('❌ [ERROR] Agent mobile same as citizen phone:', { 
-        agentMobile: normalizedMobile, 
-        citizenPhone: req.user.phone 
-      });
       return res.status(400).json({
         status: "error",
         message: "You cannot use the same mobile number as your citizen account. Please use a different number.",
@@ -97,7 +88,6 @@ export const applyAsAgent = async (req, res, next) => {
     const existingAgent = await Agent.findOne({ user: req.user._id });
 
     if (existingAgent) {
-      console.log('❌ [ERROR] User already applied:', existingAgent._id);
       return res.status(409).json({
         status: "error",
         message: "You have already applied as an agent.",
@@ -113,7 +103,6 @@ export const applyAsAgent = async (req, res, next) => {
     const existingAgentWithMobile = await Agent.findOne({ phone: normalizedMobile });
     
     if (existingAgentWithMobile) {
-      console.log('❌ [ERROR] Mobile already used by another agent:', normalizedMobile);
       return res.status(409).json({
         status: "error",
         message: "This mobile number is already registered as an agent.",
@@ -133,12 +122,10 @@ export const applyAsAgent = async (req, res, next) => {
       appliedAt: new Date(),
     });
 
-    console.log('✅ [SUCCESS] Agent profile created:', agent._id);
 
     // Update user name if not set (don't change status here - agent is separate role)
     if (!req.user.name) {
       await User.findByIdAndUpdate(req.user._id, { name });
-      console.log('✅ [SUCCESS] User name updated');
     }
 
     return res.status(201).json({
@@ -163,7 +150,6 @@ export const getAgentProfile = async (req, res, next) => {
     const agent = await getAgentForUser(req.user._id);
     if (!agent) return res.status(404).json({ status: "error", message: "Agent profile not found." });
 
-    console.log("👤 [AGENT] Profile loaded:", agent._id.toString());
     return res.json({
       status: "success",
       data: {
@@ -203,7 +189,6 @@ export const updateAgentProfile = async (req, res, next) => {
     await agent.save();
     await User.findByIdAndUpdate(req.user._id, { name: agent.name });
 
-    console.log("✏️ [AGENT] Profile updated:", agent._id.toString());
     return res.json({ status: "success", message: "Profile updated successfully." });
   } catch (error) {
     next(error);
@@ -222,7 +207,6 @@ export const getAgentDashboard = async (req, res, next) => {
       ServiceRequest.countDocuments({ agent: agent._id, status: "completed" }),
     ]);
 
-    console.log("📊 [AGENT] Dashboard stats:", { agent: agent._id.toString(), pending, active, action, completed });
     return res.json({ status: "success", data: { counts: { pending, active, action, completed } } });
   } catch (error) {
     next(error);
@@ -247,7 +231,6 @@ export const getAgentRequests = async (req, res, next) => {
     const requiredDocumentCounts = new Map(
       services.map((service) => [service.serviceId, service.requiredDocuments?.length ?? 0])
     );
-    console.log(`📋 [AGENT] Loaded ${requests.length} requests for ${agent._id.toString()}`);
     return res.json({
       status: "success",
       count: requests.length,
@@ -282,11 +265,6 @@ export const getAgentEarnings = async (req, res, next) => {
       completedAt: formatDate(request.completedAt || request.updatedAt),
     }));
 
-    console.log('💰 [AGENT] Earnings calculated:', {
-      agent: agent._id.toString(),
-      completed: requests.length,
-      total,
-    });
     return res.json({
       status: 'success',
       data: {
@@ -324,7 +302,6 @@ export const decideAgentRequest = async (req, res, next) => {
     });
     await request.save();
 
-    console.log(`🔄 [AGENT] Request ${request.reference} ${decision}ed by ${agent.name}`);
     return res.json({ status: "success", message: `Request ${decision}ed successfully.` });
   } catch (error) {
     next(error);
@@ -350,7 +327,6 @@ export const updateAgentRequestStatus = async (req, res, next) => {
       await Agent.updateOne({ _id: agent._id }, { $inc: { completedRequests: 1 } });
     }
 
-    console.log(`🔄 [AGENT] Request ${request.reference} moved to ${status}`);
     return res.json({ status: "success", message: "Request status updated successfully." });
   } catch (error) {
     next(error);
@@ -370,7 +346,6 @@ export const addAgentRequestNote = async (req, res, next) => {
     request.timeline.push({ status: "action", at: formatDateTime(new Date()), note });
     await request.save();
 
-    console.log(`📝 [AGENT] Note added to ${request.reference} by ${agent.name}`);
     return res.json({ status: "success", message: "Note sent to citizen." });
   } catch (error) {
     next(error);
@@ -391,7 +366,6 @@ export const uploadAgentRequestDocument = async (req, res, next) => {
       at: formatDateTime(new Date()),
     });
 
-    console.log(`📎 [AGENT] Final document uploaded for ${request.reference}: ${filename}`);
     return res.json({
       status: "success",
       message: "Final document uploaded successfully.",

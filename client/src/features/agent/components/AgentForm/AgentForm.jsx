@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { AGENT_TERMS, EXPERIENCE_BANDS } from '../../../../constants/agent';
@@ -54,30 +54,17 @@ const AgentForm = () => {
   const { user } = useAuth();
   const [stepIndex, setStepIndex] = useState(0);
   const [direction, setDirection] = useState('forward');
-  const [form, setForm] = useState(EMPTY);
+  const [form, setForm] = useState(() => ({
+    ...EMPTY,
+    fullName: user?.name || '',
+    mobile: user?.phone?.replace('+91', '') || '',
+    email: user?.email || '',
+  }));
   const [touched, setTouched] = useState({});
   const [consent, setConsent] = useState(false);
   const [isSent, setIsSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-
-  // Auto-fill form with citizen profile data
-  useEffect(() => {
-    if (user) {
-      console.log('👤 [AGENT-FORM] Auto-filling form with user data:', { 
-        name: user.name, 
-        phone: user.phone?.replace('+91', ''), 
-        email: user.email 
-      });
-      
-      setForm((current) => ({
-        ...current,
-        fullName: user.name || current.fullName,
-        mobile: user.phone ? user.phone.replace('+91', '') : current.mobile,
-        email: user.email || current.email,
-      }));
-    }
-  }, [user]);
 
   const step = STEPS[stepIndex];
   const copy = STEP_COPY[step];
@@ -126,29 +113,20 @@ const AgentForm = () => {
 
     // Final validation: prevent same mobile as citizen account
     if (user?.phone && `+91${form.mobile}` === user.phone) {
-      console.log('❌ [AGENT-FORM] Validation failed: same mobile as citizen account');
       setSubmitError('Use a mobile number different from your citizen account.');
       setIsSubmitting(false);
       return;
     }
 
     if (isCitizenEmail(form.email, user?.email)) {
-      console.log('❌ [AGENT-FORM] Validation failed: same email as citizen account');
       setSubmitError('Use a different email than your citizen account.');
       setIsSubmitting(false);
       return;
     }
 
     try {
-      console.log('📝 [AGENT-FORM] Submitting agent application:', {
-        name: form.fullName,
-        mobile: form.mobile,
-        email: form.email,
-        district: form.district,
-      });
       
       await applyAsAgent(form);
-      console.log('✅ [AGENT-FORM] Application submitted successfully');
       setIsSent(true);
     } catch (error) {
       console.error('❌ [AGENT-FORM] Application submission failed:', error);

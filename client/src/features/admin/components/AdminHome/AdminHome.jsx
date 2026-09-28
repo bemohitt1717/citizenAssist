@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { Button } from '../../../../components/ui/button';
 import { Spinner } from '../../../../components/ui/spinner';
-import { Distribution, Panel, Panels, Stat, Stats } from '../../../../components/ui/DataKit/DataKit';
-import { getServiceById } from '../../../../constants/services';
+import { Panel, Panels, Stat, Stats } from '../../../../components/ui/DataKit/DataKit';
 import { getAdminDashboard, getAgents, updateAgentStatus } from '../../adminApi';
 import { SectionLoading } from '../../../../components/ui/LoadingStates/LoadingStates';
 

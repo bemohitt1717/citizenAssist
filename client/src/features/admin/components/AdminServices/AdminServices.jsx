@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Field, Panel, SaveRow } from '../../../../components/ui/DataKit/DataKit';
 import { DOCUMENTS } from '../../../../constants/documents';
 import { getAdminServices, updateService } from '../../../services/servicesApi';
@@ -20,13 +20,8 @@ const AdminServices = () => {
   const [savingId, setSavingId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchServices();
-  }, []);
-
-  const fetchServices = async () => {
+  const fetchServices = useCallback(async () => {
     try {
-      console.log('🛠️ [ADMIN-SERVICES] Fetching services...');
       const response = await getAdminServices();
       const servicesData = response.data.services;
 
@@ -43,13 +38,16 @@ const AdminServices = () => {
       });
       setDrafts(initialDrafts);
 
-      console.log(`✅ [ADMIN-SERVICES] Loaded ${servicesData.length} services`);
     } catch (error) {
       console.error('❌ [ADMIN-SERVICES] Failed to fetch:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchServices();
+  }, [fetchServices]);
 
   const setField = (serviceId, key) => (event) => {
     setDrafts((current) => ({
@@ -70,14 +68,12 @@ const AdminServices = () => {
 
     try {
       setSavingId(serviceId);
-      console.log('💾 [ADMIN-SERVICES] Updating service:', serviceId);
       await updateService(serviceId, {
         charge: draft.charge.trim(),
         timeline: draft.timeline.trim(),
         summary: draft.summary.trim(),
       });
 
-      console.log('✅ [ADMIN-SERVICES] Service updated successfully');
       setSavedId(serviceId);
 
       // Refresh data to sync with backend

@@ -15,10 +15,6 @@ const RoleChooser = ({ onPick }) => (
     <div className="ca-roles__main">
       <h1 className="ca-roles__title">Who is signing in?</h1>
 
-      <p className="ca-roles__lede">
-        Choose your account. Sign in with your mobile number and PIN, or with Google.
-      </p>
-
       <ul className="ca-roles__list">
         {ROLES.map((role) => (
           <li key={role.id}>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '../../../../components/ui/button';
 import { Spinner } from '../../../../components/ui/spinner';
 import { Empty, Panel, Tabs } from '../../../../components/ui/DataKit/DataKit';
@@ -45,13 +45,8 @@ const AdminRequests = () => {
   const [assigningRequestId, setAssigningRequestId] = useState(null);
   const [uploadFeedback, setUploadFeedback] = useState(null);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      console.log('📋 [ADMIN-REQUESTS] Fetching requests and agents...');
       const [requestsData, agentsData] = await Promise.all([
         getAdminRequests(),
         getAgents('active'), // Only active agents can be assigned
@@ -59,22 +54,23 @@ const AdminRequests = () => {
 
       setRequests(requestsData.data.requests);
       setAgents(agentsData.data.agents);
-      console.log(`✅ [ADMIN-REQUESTS] Loaded ${requestsData.data.requests.length} requests, ${agentsData.data.agents.length} active agents`);
     } catch (error) {
       console.error('❌ [ADMIN-REQUESTS] Failed to fetch data:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleAssign = async (requestId, agentId) => {
     if (!agentId || assigningRequestId || uploadingRequestId) return; // "Not assigned" selected
 
     try {
       setAssigningRequestId(requestId);
-      console.log('🔗 [ADMIN-REQUESTS] Assigning agent:', { requestId, agentId });
       await assignAgent(requestId, agentId);
-      console.log('✅ [ADMIN-REQUESTS] Agent assigned successfully');
       // Refresh requests
       await fetchData();
     } catch (error) {

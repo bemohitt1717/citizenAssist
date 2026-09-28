@@ -92,6 +92,14 @@ const EmptyState = () => (
   </div>
 );
 
+const EMPTY_APPLICANT_DETAILS = {
+  fullName: "",
+  phone: "",
+  email: "",
+  district: "",
+  address: "",
+};
+
 /**
  * Track a request.
  *
@@ -106,19 +114,10 @@ const TrackPanel = () => {
   const [complaintDescription, setComplaintDescription] = useState("");
   const [complaintMessage, setComplaintMessage] = useState("");
   const [isSubmittingComplaint, setIsSubmittingComplaint] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editDetails, setEditDetails] = useState({
-    fullName: "",
-    phone: "",
-    email: "",
-    district: "",
-    address: "",
-  });
-  const [editFiles, setEditFiles] = useState([]);
+  const [editDraft, setEditDraft] = useState(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isDownloadingFinal, setIsDownloadingFinal] = useState(false);
   const [downloadError, setDownloadError] = useState("");
-  const [editMessage, setEditMessage] = useState("");
   const fileInputRef = useRef(null);
 
   // Fetch requests on mount
@@ -140,22 +139,32 @@ const TrackPanel = () => {
 
   const active =
     requests.find((request) => request.id === activeId) ?? requests[0];
+  const editSession = active && editDraft?.requestId === active.id
+    ? editDraft
+    : {
+        requestId: active?.id,
+        details: active?.applicantDetails || EMPTY_APPLICANT_DETAILS,
+        files: [],
+        isEditing: false,
+        message: "",
+      };
+  const { details: editDetails, files: editFiles, isEditing, message: editMessage } = editSession;
 
-  useEffect(() => {
-    if (!active) return;
-    setEditDetails(
-      active.applicantDetails || {
-        fullName: "",
-        phone: "",
-        email: "",
-        district: "",
-        address: "",
-      },
-    );
-    setIsEditing(false);
-    setEditFiles([]);
-    setEditMessage("");
-  }, [active?.id]);
+  const updateEditSession = (update) => {
+    setEditDraft((current) => {
+      const base = current?.requestId === active?.id ? current : editSession;
+      const changes = typeof update === "function" ? update(base) : update;
+      return { ...base, ...changes, requestId: active?.id };
+    });
+  };
+  const setEditDetails = (value) => updateEditSession((current) => ({
+    details: typeof value === "function" ? value(current.details) : value,
+  }));
+  const setIsEditing = (value) => updateEditSession({
+    isEditing: typeof value === "function" ? value(isEditing) : value,
+  });
+  const setEditFiles = (files) => updateEditSession({ files });
+  const setEditMessage = (message) => updateEditSession({ message });
 
   const refreshRequests = async () => {
     const response = await getMyRequests();
@@ -203,7 +212,6 @@ const TrackPanel = () => {
       setComplaintSubject("");
       setComplaintDescription("");
       setComplaintMessage("Complaint sent. An admin will review it.");
-      console.info("[citizen] complaint submitted", active.reference);
     } catch (requestError) {
       console.error("[citizen] complaint submission failed", requestError);
       setComplaintMessage(

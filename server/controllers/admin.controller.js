@@ -18,7 +18,6 @@ const generateAgentPin = () => {
 // Get admin dashboard stats
 export const getAdminDashboard = async (req, res, next) => {
   try {
-    console.log('📊 [ADMIN] Fetching dashboard stats');
 
     // Count citizens
     const citizens = await User.countDocuments({ role: "citizen" });
@@ -40,14 +39,6 @@ export const getAdminDashboard = async (req, res, next) => {
     // Count open complaints
     const openComplaints = await Complaint.countDocuments({ status: "open" });
 
-    console.log('✅ [SUCCESS] Dashboard stats:', {
-      citizens,
-      agents,
-      pendingAgents,
-      activeRequests,
-      completedRequests,
-      openComplaints,
-    });
 
     return res.json({
       status: "success",
@@ -121,7 +112,6 @@ export const getAgents = async (req, res, next) => {
   try {
     const { status } = req.query; // pending, active, rejected, suspended
 
-    console.log('👥 [ADMIN] Fetching agents, filter:', status || 'all');
 
     const filter = {};
     if (status && ["pending", "active", "rejected", "suspended"].includes(status)) {
@@ -132,7 +122,6 @@ export const getAgents = async (req, res, next) => {
       .populate("user", "name phone email createdAt")
       .sort({ appliedAt: -1 });
 
-    console.log(`✅ [ADMIN] Found ${agents.length} agents`);
 
     // Format for frontend
     const formattedAgents = agents.map((agent) => ({
@@ -174,10 +163,8 @@ export const updateAgentStatus = async (req, res, next) => {
     const { id } = req.params;
     const { status } = req.body; // active, rejected, suspended
 
-    console.log(`🔄 [ADMIN] Updating agent ${id} status to:`, status);
 
     if (!["active", "rejected", "suspended"].includes(status)) {
-      console.log('❌ [ADMIN] Invalid status:', status);
       return res.status(400).json({
         status: "error",
         message: "Invalid status. Use: active, rejected, or suspended.",
@@ -187,7 +174,6 @@ export const updateAgentStatus = async (req, res, next) => {
     const agent = await Agent.findById(id);
 
     if (!agent) {
-      console.log('❌ [ADMIN] Agent not found:', id);
       return res.status(404).json({
         status: "error",
         message: "Agent not found.",
@@ -231,7 +217,6 @@ export const updateAgentStatus = async (req, res, next) => {
     if (status === "active") agent.verifiedOn = new Date();
     await agent.save();
 
-    console.log(`✅ [ADMIN] Agent status updated: ${status}`);
 
     return res.json({
       status: "success",
@@ -249,7 +234,6 @@ export const getAdminRequests = async (req, res, next) => {
   try {
     const { status } = req.query;
 
-    console.log('📋 [ADMIN] Fetching requests, filter:', status || 'all');
 
     const filter = {};
     if (status) {
@@ -261,7 +245,6 @@ export const getAdminRequests = async (req, res, next) => {
       .populate("agent", "name")
       .sort({ createdAt: -1 });
 
-    console.log(`✅ [ADMIN] Found ${requests.length} requests`);
 
     // Format for frontend
     const formattedRequests = requests.map((request) => ({
@@ -315,7 +298,6 @@ export const uploadAdminRequestDocument = async (req, res, next) => {
       }),
     });
 
-    console.log(`📎 [ADMIN] Final document attached to ${request.reference}: ${filename}`);
     return res.json({
       status: "success",
       message: "Final document attached. The citizen can download it from Track Request.",
@@ -332,10 +314,8 @@ export const assignAgentToRequest = async (req, res, next) => {
     const { id } = req.params;
     const { agentId } = req.body;
 
-    console.log(`🔗 [ADMIN] Assigning agent ${agentId} to request ${id}`);
 
     if (!agentId) {
-      console.log('❌ [ADMIN] Agent ID missing');
       return res.status(400).json({
         status: "error",
         message: "Agent ID is required.",
@@ -345,7 +325,6 @@ export const assignAgentToRequest = async (req, res, next) => {
     const request = await ServiceRequest.findById(id);
 
     if (!request) {
-      console.log('❌ [ADMIN] Request not found:', id);
       return res.status(404).json({
         status: "error",
         message: "Request not found.",
@@ -355,14 +334,12 @@ export const assignAgentToRequest = async (req, res, next) => {
     const agent = await Agent.findById(agentId).populate("user", "name");
 
     if (!agent || agent.verificationStatus !== "active") {
-      console.log('❌ [ADMIN] Agent not found or not active:', agentId);
       return res.status(404).json({
         status: "error",
         message: "Agent not found or not active.",
       });
     }
 
-    console.log(`✅ [ADMIN] Found agent: ${agent.name}`);
 
     // Update request
     request.agent = agentId;
@@ -390,7 +367,6 @@ export const assignAgentToRequest = async (req, res, next) => {
     agent.totalRequests += 1;
     await agent.save();
 
-    console.log(`✅ [ADMIN] Assignment complete. Timeline updated, agent stats incremented`);
 
     return res.json({
       status: "success",
@@ -478,11 +454,9 @@ export const resolveComplaint = async (req, res, next) => {
 // Get all services
 export const getServices = async (req, res, next) => {
   try {
-    console.log('🛠️ [ADMIN-SERVICES] Fetching all services');
 
     const services = await Service.find().sort({ serviceId: 1 });
 
-    console.log(`✅ [ADMIN-SERVICES] Found ${services.length} services`);
 
     // Format for frontend
     const formattedServices = services.map((service) => ({
@@ -515,11 +489,9 @@ export const updateService = async (req, res, next) => {
     const { id } = req.params;
     const { charge, timeline, summary } = req.body;
 
-    console.log(`🔄 [ADMIN-SERVICES] Updating service ${id}:`, { charge, timeline, summary });
 
     // Validate required fields
     if (!charge || !timeline || !summary) {
-      console.log('❌ [ADMIN-SERVICES] Missing required fields');
       return res.status(400).json({
         status: "error",
         message: "Charge, timeline, and summary are required.",
@@ -529,7 +501,6 @@ export const updateService = async (req, res, next) => {
     const service = await Service.findById(id);
 
     if (!service) {
-      console.log('❌ [ADMIN-SERVICES] Service not found:', id);
       return res.status(404).json({
         status: "error",
         message: "Service not found.",
@@ -543,7 +514,6 @@ export const updateService = async (req, res, next) => {
 
     await service.save();
 
-    console.log(`✅ [ADMIN-SERVICES] Service updated: ${service.name}`);
 
     return res.json({
       status: "success",

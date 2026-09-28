@@ -69,7 +69,6 @@ const AgentRequests = () => {
       setError('');
       const response = await getAgentRequests('all');
       setRequests(response.data.requests);
-      console.info('[agent] requests loaded', response.count);
     } catch (requestError) {
       console.error('[agent] requests load failed', requestError);
       setError(requestError.response?.data?.message || 'Could not load requests. Try again.');
@@ -86,7 +85,6 @@ const AgentRequests = () => {
         const response = await getAgentRequests('all');
         if (!isCurrent) return;
         setRequests(response.data.requests);
-        console.info('[agent] requests loaded', response.count);
       } catch (requestError) {
         if (!isCurrent) return;
         console.error('[agent] requests load failed', requestError);
@@ -116,7 +114,6 @@ const AgentRequests = () => {
       setBusyId(requestId);
       setBusyAction('decision');
       await decideAgentRequest(requestId, decision);
-      console.info('[agent] request decision saved', { requestId, decision });
       await fetchRequests();
       return true;
     } catch (requestError) {
@@ -141,7 +138,6 @@ const AgentRequests = () => {
       setBusyId(requestId);
       setBusyAction('status');
       await updateAgentRequestStatus(requestId, status);
-      console.info('[agent] request status saved', { requestId, status });
       await fetchRequests();
     } catch (requestError) {
       console.error('[agent] request status failed', requestError);
@@ -160,7 +156,6 @@ const AgentRequests = () => {
       setBusyId(id);
       setBusyAction('note');
       await addAgentRequestNote(id, note);
-      console.info('[agent] request note saved', { requestId: id });
       setNoteDrafts((current) => ({ ...current, [id]: '' }));
       await fetchRequests();
       return true;
@@ -210,7 +205,6 @@ const AgentRequests = () => {
       setBusyAction('upload');
       setUploadingDocumentId(requestId);
       await uploadAgentRequestDocument(requestId, file);
-      console.info('[agent] final document uploaded', { requestId, file: file.name });
       await fetchRequests();
       setAttachmentFeedback((current) => ({
         ...current,

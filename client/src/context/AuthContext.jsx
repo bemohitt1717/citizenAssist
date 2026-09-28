@@ -12,7 +12,6 @@ export const AuthProvider = ({ children }) => {
       const token = getToken();
 
       if (!token) {
-        console.info("[auth debug] session restore: no token");
         setIsLoading(false);
         return;
       }
@@ -20,20 +19,10 @@ export const AuthProvider = ({ children }) => {
       try {
         const response = await getMe();
         setUser(response.data.user);
-        console.info("[auth debug] session restored", {
-          role: response.data.user.role,
-        });
       } catch (error) {
         if (error.response?.status === 401) {
           removeToken();
-          console.info(
-            "[auth debug] session expired or rejected: token removed",
-          );
         } else {
-          console.info(
-            "[auth debug] session restore failed",
-            error.response?.status,
-          );
         }
         setUser(null);
       } finally {
@@ -47,13 +36,11 @@ export const AuthProvider = ({ children }) => {
   const login = (token, loggedInUser) => {
     setToken(token);
     setUser(loggedInUser);
-    console.info("[auth debug] session stored", { role: loggedInUser.role });
   };
 
   const logout = () => {
     removeToken();
     setUser(null);
-    console.info("[auth debug] session cleared");
   };
 
   return (

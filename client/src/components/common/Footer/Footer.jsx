@@ -3,6 +3,7 @@ import Logo from '../Logo/Logo';
 import Icon from '../../ui/Icon/Icon';
 import { SERVICES } from '../../../constants/services';
 import { useAuth } from '../../../context/authContext';
+import { openCookiePreferences } from '../../../utils/cookieConsent';
 import './Footer.css';
 
 /* PLACEHOLDERS — replace before any real deployment. No live helpline or
@@ -112,6 +113,15 @@ const Footer = () => {
       <p className="ca-footer__copy">
         <span data-numeric>&copy; 2026</span> Citizen Assist
       </p>
+
+      <nav className="ca-footer__policies" aria-label="Legal policies">
+        <Link className="ca-footer__link" to="/terms-and-conditions">Terms and Conditions</Link>
+        <Link className="ca-footer__link" to="/privacy-policy">Privacy Policy</Link>
+        <Link className="ca-footer__link" to="/cookie-policy">Cookie Policy</Link>
+        <button className="ca-footer__link" type="button" onClick={openCookiePreferences}>
+          Cookie preferences
+        </button>
+      </nav>
     </div>
   </footer>
 );

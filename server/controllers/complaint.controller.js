@@ -45,11 +45,6 @@ export const createComplaint = async (req, res, next) => {
       description: description.trim(),
     });
 
-    console.log("📞 [COMPLAINT] Created:", {
-      complaint: complaint._id.toString(),
-      request: request.reference,
-      citizen: req.user._id.toString(),
-    });
 
     return res.status(201).json({
       status: "success",

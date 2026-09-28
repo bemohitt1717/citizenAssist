@@ -1,9 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BrandedOpening, HomeRefreshOpening } from './LoadingStates';
+import { HomeReadyContext } from './homeReadyContext';
 
 const HOME_INTRO_KEY = 'citizen-assist-home-intro-seen';
-const HomeReadyContext = createContext(() => {});
 
 const shouldSkipMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -20,24 +20,25 @@ const getOpeningMode = (pathname) => {
   return navigation?.type === 'reload' ? 'refresh' : null;
 };
 
-export const useMarkHomeReady = () => useContext(HomeReadyContext);
-
 const HomeIntroGate = ({ children }) => {
   const { pathname } = useLocation();
   const [openingMode, setOpeningMode] = useState(() => getOpeningMode(pathname));
   const [homeReady, setHomeReady] = useState(false);
   const [isRefreshLeaving, setIsRefreshLeaving] = useState(false);
-  const refreshStartedAt = useRef(window.performance?.now?.() ?? Date.now());
+  const hasLeftHome = useRef(false);
+  const refreshStartedAt = useRef(0);
   const markHomeReady = useCallback(() => setHomeReady(true), []);
   const finishIntro = useCallback(() => setOpeningMode(null), []);
+  const visibleOpeningMode = pathname === '/' && !hasLeftHome.current ? openingMode : null;
 
   useLayoutEffect(() => {
     if (pathname !== '/') {
-      if (openingMode) setOpeningMode(null);
+      hasLeftHome.current = true;
+      document.documentElement.classList.remove('ca-home-intro-active', 'ca-home-refresh-active');
       return undefined;
     }
 
-    if (openingMode === 'intro') {
+    if (visibleOpeningMode === 'intro') {
       document.documentElement.classList.add('ca-home-intro-active');
       try {
         window.sessionStorage.setItem(HOME_INTRO_KEY, 'seen');
@@ -48,13 +49,14 @@ const HomeIntroGate = ({ children }) => {
       return () => document.documentElement.classList.remove('ca-home-intro-active');
     }
 
-    if (openingMode === 'refresh') {
+    if (visibleOpeningMode === 'refresh') {
       document.documentElement.classList.add('ca-home-refresh-active');
+      refreshStartedAt.current = window.performance.now();
       return () => document.documentElement.classList.remove('ca-home-refresh-active');
     }
 
     return undefined;
-  }, [openingMode, pathname]);
+  }, [openingMode, pathname, visibleOpeningMode]);
 
   useEffect(() => {
     if (openingMode !== 'refresh') return undefined;
@@ -66,7 +68,7 @@ const HomeIntroGate = ({ children }) => {
   useEffect(() => {
     if (openingMode !== 'refresh' || !homeReady) return undefined;
 
-    const elapsed = (window.performance?.now?.() ?? Date.now()) - refreshStartedAt.current;
+    const elapsed = window.performance.now() - refreshStartedAt.current;
     const waitForMinimum = Math.max(0, 500 - elapsed);
     let exitTimer;
     const minimumTimer = window.setTimeout(() => {
@@ -83,8 +85,8 @@ const HomeIntroGate = ({ children }) => {
   return (
     <HomeReadyContext.Provider value={markHomeReady}>
       {children}
-      {openingMode === 'intro' && <BrandedOpening onComplete={finishIntro} />}
-      {openingMode === 'refresh' && <HomeRefreshOpening isLeaving={isRefreshLeaving} />}
+      {visibleOpeningMode === 'intro' && <BrandedOpening onComplete={finishIntro} />}
+      {visibleOpeningMode === 'refresh' && <HomeRefreshOpening isLeaving={isRefreshLeaving} />}
     </HomeReadyContext.Provider>
   );
 };

@@ -41,7 +41,6 @@ const AgentProfile = () => {
           experience: loadedProfile.experience,
           services: loadedProfile.services,
         });
-        console.info('[agent] profile loaded', loadedProfile.id);
       } catch (requestError) {
         if (isCurrent) setError(requestError.response?.data?.message || 'Could not load your profile. Try again.');
       } finally {
@@ -84,7 +83,6 @@ const AgentProfile = () => {
       }
 
       setIsSaved(true);
-      console.info('[agent] profile saved');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Could not save your profile. Try again.');
     } finally {

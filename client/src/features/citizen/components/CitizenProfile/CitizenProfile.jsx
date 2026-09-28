@@ -46,9 +46,11 @@ const CitizenProfileContent = () => {
         setName(profile.name || '');
         setEmail(profile.email || '');
 
-        if (user) {
-          setUser({ ...user, name: profile.name || '', email: profile.email || '' });
-        }
+        setUser((current) => current && ({
+          ...current,
+          name: profile.name || '',
+          email: profile.email || '',
+        }));
       } catch (requestError) {
         console.error('[citizen] profile load failed', requestError);
         setError(requestError.response?.data?.message || 'Could not load your profile. Try again.');
@@ -58,7 +60,7 @@ const CitizenProfileContent = () => {
     };
 
     loadProfile();
-  }, []);
+  }, [setUser]);
 
   const save = async () => {
     if (isSaving) return;
@@ -69,7 +71,6 @@ const CitizenProfileContent = () => {
 
     try {
       setIsSaving(true);
-      console.log('💾 [PROFILE] Updating citizen profile:', { name, email });
       const response = await updateProfile({ name: name.trim(), email: email.trim() });
       const updatedUser = response.data.user;
 
@@ -118,7 +119,6 @@ const CitizenProfileContent = () => {
       try {
         setIsLinkingMobile(true);
         setLinkError('');
-        console.log('📱 [LINK-MOBILE] Linking mobile number:', linkPhone);
 
         const response = await linkMobile(linkPhone, linkPin);
         const updatedUser = response.data.user;
@@ -128,7 +128,6 @@ const CitizenProfileContent = () => {
           ...updatedUser,
         }));
 
-        console.log('✅ [LINK-MOBILE] Mobile linked successfully');
         alert('Mobile number linked successfully!');
         
         // Reset form
@@ -163,7 +162,6 @@ const CitizenProfileContent = () => {
     try {
       setIsLinkingGoogle(true);
       setError('');
-      console.log('🔗 [LINK-GOOGLE] Received Google credential');
 
       const response = await linkGoogle(credentialResponse.credential);
       const updatedUser = response.data.user;
@@ -174,7 +172,6 @@ const CitizenProfileContent = () => {
       }));
 
       setEmail(updatedUser.email || '');
-      console.log('✅ [LINK-GOOGLE] Google account linked successfully');
       alert('Google account linked successfully!');
       setShowGoogleButton(false); // Hide button after success
     } catch (requestError) {

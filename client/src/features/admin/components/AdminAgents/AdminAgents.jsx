@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Icon from '../../../../components/ui/Icon/Icon';
 import { Button } from '../../../../components/ui/button';
 import { Spinner } from '../../../../components/ui/spinner';
@@ -30,23 +30,20 @@ const AdminAgents = () => {
   const [busyAgentId, setBusyAgentId] = useState(null);
   const [actionError, setActionError] = useState('');
 
-  // Fetch all agents on mount
-  useEffect(() => {
-    fetchAgents();
-  }, []);
-
-  const fetchAgents = async () => {
+  const fetchAgents = useCallback(async () => {
     try {
-      console.log('🔍 [ADMIN-AGENTS] Fetching all agents...');
       const response = await getAgents(); // Get all agents (no filter)
       setAgents(response.data.agents);
-      console.log(`✅ [ADMIN-AGENTS] Loaded ${response.data.agents.length} agents`);
     } catch (error) {
       console.error('❌ [ADMIN-AGENTS] Failed to fetch agents:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchAgents();
+  }, [fetchAgents]);
 
   const rows = agents.filter((agent) => agent.status === filterId);
 
@@ -60,10 +57,8 @@ const AdminAgents = () => {
     setBusyAgentId(agentId);
     setActionError('');
     try {
-      console.log('✅ [ADMIN-AGENTS] Verifying agent:', agentId);
       const response = await updateAgentStatus(agentId, 'active');
       setIssuedPin(response.data?.pin ? { pin: response.data.pin, mobile: response.data.mobile } : null);
-      console.log('✅ [ADMIN-AGENTS] Agent verified successfully');
       // Refresh list
       await fetchAgents();
     } catch (error) {
@@ -80,9 +75,7 @@ const AdminAgents = () => {
     setBusyAgentId(rejecting.id);
     setActionError('');
     try {
-      console.log('🚫 [ADMIN-AGENTS] Rejecting agent:', rejecting.id);
       await updateAgentStatus(rejecting.id, 'rejected');
-      console.log('✅ [ADMIN-AGENTS] Agent rejected successfully');
       setRejecting(null);
       // Refresh list
       await fetchAgents();
@@ -99,9 +92,7 @@ const AdminAgents = () => {
     setBusyAgentId(agentId);
     setActionError('');
     try {
-      console.log('⏸️  [ADMIN-AGENTS] Suspending agent:', agentId);
       await updateAgentStatus(agentId, 'suspended');
-      console.log('✅ [ADMIN-AGENTS] Agent suspended successfully');
       // Refresh list
       await fetchAgents();
     } catch (error) {
