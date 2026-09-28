@@ -38,11 +38,6 @@ const Hero = () => {
         </span>
       </h1>
 
-      <p className="ca-hero__lede">
-        See the documents, fee and usual time for each service before you start. An approved agent
-        helps with the paperwork. The government office issues your certificate.
-      </p>
-
       <div className="ca-hero__actions">
         <a className="ca-pill ca-pill--solid ca-hero__action" href="#services">
           View services

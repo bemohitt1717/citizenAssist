@@ -78,10 +78,6 @@ const HowItWorks = () => {
       <div className="ca-hiw__inner">
         <header className="ca-hiw__head">
           <h2 className="ca-hiw__title">From picking a service to holding the certificate</h2>
-
-          <p className="ca-hiw__lede">
-            Choose a service, send your details and documents, then follow each update.
-          </p>
         </header>
 
         <div className="ca-hiw__body">

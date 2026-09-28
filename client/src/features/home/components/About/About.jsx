@@ -23,11 +23,6 @@ const About = () => {
           <h2 className="ca-about__title">
             Not a government office. The help you need for dealing with one.
           </h2>
-
-          <p className="ca-about__lede">
-            Citizen Assist is independent. We do not issue certificates. We list the documents and
-            fees, connect you with a checked agent, and let you follow your request.
-          </p>
         </header>
 
         <div

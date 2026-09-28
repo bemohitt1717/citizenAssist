@@ -10,7 +10,7 @@ export const PROCESS_STEPS = [
   {
     id: 'choose',
     label: 'Pick the service',
-    detail: 'See the documents, fee and usual time before you apply.',
+    detail: 'Open a service page and review the document checklist.',
   },
   {
     id: 'submit',

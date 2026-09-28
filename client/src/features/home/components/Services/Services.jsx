@@ -87,10 +87,6 @@ const Services = () => {
           <h2 className="ca-services__title">
             Six services, with every requirement written down first
           </h2>
-
-          <p className="ca-services__lede">
-            Choose a service to see the documents, fee and usual time before you apply.
-          </p>
         </header>
 
         {usingFallback && (
